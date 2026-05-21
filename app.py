@@ -13,7 +13,7 @@ from flask_cors import CORS
 from cert_generator import hacer_certificado
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["https://alejosl0801.github.io", "http://localhost", "http://127.0.0.1", "*"])
 
 # ===== CONFIGURACIÓN =====
 EMAIL_USER = os.environ.get('EMAIL_USER', 'ventas_previfuego@hotmail.com')
