@@ -18,11 +18,8 @@ CORS(app)
 # ===== CONFIGURACIÓN =====
 EMAIL_USER = os.environ.get('EMAIL_USER', 'ventas_previfuego@hotmail.com')
 EMAIL_PASS = os.environ.get('EMAIL_PASS', '')
-CC_FIJOS = [
-    'sandra.guanuna@kfc.com.ec',
-    'velia.sanchez@kfc.com.ec',
-    'ventas_previfuego@hotmail.com',
-]
+CC_FIJOS = []  # MODO PRUEBA — solo va a tu correo
+MODO_PRUEBA = True  # Cambiar a False cuando estés listo para producción
 
 # ===== PATRONES DE CORREO POR MARCA =====
 def correo_local(codigo):
@@ -105,13 +102,13 @@ def generar_certificado():
             try: os.unlink(t)
             except: pass
 
-        # Enviar correo si hay credenciales
-        correo_destino = correo_local(codigo)
+        # Enviar correo
+        correo_destino = EMAIL_USER  # MODO PRUEBA: solo a tu correo
         enviado = False
-        if EMAIL_PASS and correo_destino:
+        if EMAIL_PASS:
             enviado = enviar_correo(
-                para=correo_destino,
-                cc=CC_FIJOS,
+                para=EMAIL_USER,
+                cc=[],
                 nombre_pdf=nombre_pdf,
                 pdf_bytes=pdf_bytes,
                 local_nombre=empresa,
