@@ -87,7 +87,7 @@ function pfRenderDashboard() {
 
   // ── Métricas principales
   h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 12px 12px">';
-  h += pfStatCard(d.visitasMes,     "Visitas mes",   "var(--a)");
+  h += pfStatCard(d.visitasMes,     "Visitas del mes", "var(--a)");
   h += pfStatCard(d.visitasHoy,     "Hoy",           "var(--r)");
   h += pfStatCard(d.totalLocales,   "Locales",       "var(--n)");
   h += '</div>';
@@ -188,26 +188,15 @@ function pfInyectarDashboard() {
   }
 
   if (!document.getElementById("adm-p5")) {
-    var sc = admScr.querySelector(".sc");
     var panel = document.createElement("div");
     panel.id = "adm-p5"; panel.className = "adm-panel";
     panel.innerHTML = '<div id="pf-dash-contenido"><div style="padding:40px 16px;text-align:center;color:var(--g3)">Cargando dashboard...</div></div>';
-    if (sc) sc.appendChild(panel); else admScr.appendChild(panel);
+    admScr.appendChild(panel);
   }
 
   // Parchear admTab para incluir tab 5
-  var _origAdm = window.admTab;
-  window.admTab = function(n) {
-    if (n === 5) {
-      pfAdmTab(5);
-    } else {
-      _origAdm(n);
-      var b5 = document.getElementById("adm-t5");
-      var p5 = document.getElementById("adm-p5");
-      if (b5) b5.className = "adm-tab-btn";
-      if (p5) p5.className = "adm-panel";
-    }
-  };
+  // Tab 5 manejado por coordinator.js
+  if (window.PF_TAB_HANDLERS) window.PF_TAB_HANDLERS[5] = function(){ pfRenderDashboard(); };
 }
 
 function pfAdmTab(n) {

@@ -32,7 +32,8 @@ function pfProximoMantenimiento(nombreLocal, ultimaVisita) {
   try {
     var p    = ultimaVisita.split("/");
     var d    = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
-    var freq = pfEsGrupoKFC(nombreLocal) ? PF_FREQ.kfc : PF_FREQ.independiente;
+    // Mantenimiento: 1 año para todos. Recarga: 3 años KFC, 1 año independientes
+  var freq = PF_FREQ.independiente; // mantenimiento siempre 1 año
     d.setDate(d.getDate() + freq);
     return d;
   } catch(e) { return null; }
@@ -177,7 +178,7 @@ function pfRenderAprobacion() {
   } else {
     h += '<div style="margin:0 12px 10px;padding:12px 14px;background:var(--nc);border-radius:12px;border:1.5px solid var(--n)">';
     h += '<div style="font-size:13px;font-weight:700;color:var(--n)">⏳ Pendiente de aprobación</div>';
-    h += '<div style="font-size:12px;color:var(--g4);margin-top:2px">Fabiola debe revisar y aprobar antes de que Raúl inicie</div></div>';
+    h += '<div style="font-size:12px;color:var(--g4);margin-top:2px">Fabiola debe revisar y aprobar antes de que el técnico inicie</div></div>';
     h += '<div style="margin:0 12px 10px">';
     h += '<button onclick="pfAprobarRecorrido()" style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--v);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">✅ Aprobar recorrido</button>';
     h += '</div>';
@@ -278,7 +279,7 @@ function pfInyectarCampoEmail() {
   div.style.cssText = "margin:0 12px 10px";
   div.innerHTML =
     '<div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Email del encargado (opcional)</div>' +
-    '<input id="pf-email-enc" type="email" placeholder="encargado@empresa.com" style="width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;color:var(--ng)">' +
+    '<input id="pf-email-enc" type="email" placeholder="encargado@empresa.com" autocomplete="email" inputmode="email" style="width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;color:var(--ng)">' +
     '<div style="font-size:11px;color:var(--g3);margin-top:4px">Si lo ingresas, el certificado se envía automáticamente por email</div>';
 
   // Insertar antes del último elemento del sc
@@ -293,15 +294,15 @@ window.addEventListener("load", function() {
   // Parchear irFirma para inyectar campo email
   var _irFirmaOrig2 = window.irFirma;
   window.irFirma = function() {
-    _irFirmaOrig2 && _irFirmaOrig2();
-    setTimeout(pfInyectarCampoEmail, 250);
+    if (typeof _irFirmaOrig2 === "function") _irFirmaOrig2();
+    setTimeout(pfInyectarCampoEmail, 300);
   };
 
-  // Parchear seleccionarUsuario para mostrar banner a Fabiola
-  var _selOrig = window.seleccionarUsuario;
-  window.seleccionarUsuario = function(key) {
-    _selOrig(key);
-    if (key === "fabiola") {
+  // Detectar Fabiola desde ir() — sin parchear seleccionarUsuario
+  var _irOrig2 = window.ir;
+  window.ir = function(id) {
+    if (_irOrig2) _irOrig2(id);
+    if (id === "s1" && typeof USUARIO_ACTUAL !== "undefined" && USUARIO_ACTUAL === "fabiola") {
       setTimeout(pfMostrarBannerAprobacion, 400);
     }
   };
@@ -318,16 +319,5 @@ window.addEventListener("load", function() {
     }
   };
 
-  // Parchear admTab para soportar tab 6
-  var _admTabPrev = window.admTab;
-  window.admTab = function(n) {
-    if (n === 6) { pfAdmTab6(6); }
-    else {
-      _admTabPrev(n);
-      var b6 = document.getElementById("adm-t6");
-      var p6 = document.getElementById("adm-p6");
-      if (b6) b6.className = "adm-tab-btn";
-      if (p6) p6.className = "adm-panel";
-    }
-  };
+  // Tab 6 registrado en coordinator.js
 });

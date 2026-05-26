@@ -125,7 +125,7 @@ function pfAbrirCRM(nombreLocal) {
   if (!modal) {
     modal = document.createElement("div");
     modal.id = "pf-crm-modal";
-    modal.style.cssText = "position:fixed;inset:0;background:var(--g1);z-index:300;overflow-y:auto;display:none";
+    modal.style.cssText = "position:fixed;inset:0;background:var(--g1);z-index:300;overflow-y:auto;display:none;padding-bottom:80px";
     document.body.appendChild(modal);
   }
   modal.innerHTML = h;
@@ -256,7 +256,7 @@ function pfRenderProductividad() {
     h += '<div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin:10px 0 6px">Últimas visitas</div>';
     ultimas.forEach(function(v) {
       h += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid var(--bo)">';
-      h += '<div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">'+v.local||"—"+'</div>';
+      h += '<div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">'+( v.punto || v.nota || "—")+'</div>';
       h += '<div style="font-size:11px;color:var(--g3)">'+v.fecha+'</div></div>';
     });
 
@@ -301,15 +301,6 @@ window.addEventListener("load", function() {
   pfInyectarProductividad();
 
   // Parchear admTab para tabs 7
-  var _prev = window.admTab;
-  window.admTab = function(n) {
-    if (n === 7) pfAdmTab7(7);
-    else {
-      _prev(n);
-      var b7 = document.getElementById("adm-t7");
-      var p7 = document.getElementById("adm-p7");
-      if (b7) b7.className = "adm-tab-btn";
-      if (p7) p7.className = "adm-panel";
-    }
-  };
+  // Tab 7 manejado por coordinator.js
+  if (window.PF_TAB_HANDLERS) window.PF_TAB_HANDLERS[7] = function(){ pfRenderProductividad(); };
 });

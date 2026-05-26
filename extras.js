@@ -141,7 +141,7 @@ function pfInyectarTimestampFirma() {
 
   var div = document.createElement("div");
   div.id = "pf-ts-firma";
-  div.style.cssText = "margin:0 12px 10px;padding:10px 14px;background:var(--ac);border-radius:12px;border:1.5px solid var(--a);font-size:12px;color:var(--a)";
+  div.style.cssText = "margin:0 12px 10px;padding:10px 14px;background:var(--ac);border-radius:12px;border:1.5px solid var(--a);font-size:12px;color:var(--a);box-sizing:border-box";
   div.innerHTML = '<div style="font-weight:700;margin-bottom:4px">🔐 Firma digital con respaldo</div><div id="pf-ts-texto" style="font-family:monospace;font-size:11px;color:var(--g4)">Obteniendo datos...</div>';
 
   // Insertar antes del botón de firmar / al inicio del sc
@@ -158,7 +158,7 @@ function pfActualizarTimestampUI() {
   if (ts.lat) txt += "\nGPS: " + ts.lat + ", " + ts.lng;
   else txt += "\nGPS: no disponible";
   txt += "\nTécnico: " + (typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "—");
-  el.style.whiteSpace = "pre";
+  el.style.whiteSpace = "pre-wrap";
   el.textContent = txt;
 }
 
@@ -166,8 +166,8 @@ function pfActualizarTimestampUI() {
 var PF_FIRMA_TS = null;
 
 window.addEventListener("load", function() {
-  // Capturar GPS al abrir la app
-  pfCapturarGPS();
+  // GPS se captura al abrir la pantalla de firma, no en load
+  // pfCapturarGPS(); -- movido a irFirma
 
   // Parchear irFirma para inyectar timestamp
   var _irFirmaOrig = window.irFirma;

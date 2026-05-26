@@ -81,7 +81,7 @@ function hacerPDF(fc) {
       doc.setFont("helvetica","bold"); doc.setFontSize(7.5); tR();
       doc.text("AUTORIZADO POR:", ML+5, yy+7);
       doc.setFont("helvetica","bold"); doc.setFontSize(12); tN();
-      doc.text("Alejandro Lopez", ML+5, yy+15);
+      doc.text("Alejandro López", ML+5, yy+15);
       doc.setFont("helvetica","normal"); doc.setFontSize(9); tG();
       doc.text("Jefe de Operaciones  —  Previfuego / Pyroshield", ML+5, yy+22);
       doc.text("RUC: 0952773976001", ML+5, yy+28);
@@ -113,8 +113,8 @@ function hacerPDF(fc) {
     doc.text("SEGURIDAD INDUSTRIAL Y CONTRA INCENDIOS", HX+(HW-sW)/2, y+16);
     doc.setFont("helvetica","normal"); doc.setFontSize(6.2); tG();
     var iL = [
-      "RUC.: 0952773976001  |  ASESORAMIENTO · RECARGA · MANTENIMIENTO · VENTAS",
-      "PQS (ABC) · GAS CARBONICO · HALOTRON",
+      "RUC: 0952773976001  |  ASESORAMIENTO · RECARGA · MANTENIMIENTO · VENTAS",
+      "PQS (ABC) · GAS CARBÓNICO · HALOTRON",
       "DISEÑO E INSTALACIÓN DE RED HIDRÁULICA CONTRA INCENDIOS",
       "SISTEMAS DE CO2 PARA COCINAS, GENERADORES, TRANSFORMADORES, ETC",
       "INSTALACIÓN DE LÁMPARAS DE EMERGENCIA Y DETECTORES DE HUMO"
@@ -152,7 +152,7 @@ function hacerPDF(fc) {
     // Párrafo principal
     var localNom = LOCAL_ACTUAL.nombre.toUpperCase();
     var puntNom  = PUNTO_ACTUAL ? PUNTO_ACTUAL.nombre.toUpperCase() : localNom;
-    var ptxt = "INSPECCIÓN Y MANTENIMIENTO DE EXTINTORES PORTÁTILES UBICADOS EN LOS DISTINTOS PUNTOS ESTRATÉGICOS DEL LOCAL «"+localNom+"» UBICADO EN "+puntNom+", SIGUIENDO LAS NORMAS NFPA10.";
+    var ptxt = "INSPECCIÓN Y MANTENIMIENTO DE EXTINTORES PORTÁTILES UBICADOS EN LOS DISTINTOS PUNTOS ESTRATÉGICOS DEL LOCAL «"+localNom+"» UBICADO EN "+puntNom+", SIGUIENDO LA NORMA NFPA 10.";
     doc.setFont("helvetica","normal"); doc.setFontSize(9); tN();
     var ptxtL = doc.splitTextToSize(ptxt, CW);
     for (var i = 0; i < ptxtL.length; i++) { doc.text(ptxtL[i], ML, y); y += 4.8; }
@@ -165,7 +165,7 @@ function hacerPDF(fc) {
     y += 7;
 
     doc.setFont("helvetica","normal"); doc.setFontSize(9); tN();
-    var items = ["REVISION INTEGRAL DE LOS CILINDROS","INSPECCIÓN DE CABEZALES","INSPECCIÓN DE CORNETAS / MANGUERAS","PESAJE / TARA","MANTENIMIENTO PREVENTIVO-CORRECTIVO","RECARGA DEL AGENTE"];
+    var items = ["REVISIÓN INTEGRAL DE LOS CILINDROS","INSPECCIÓN DE CABEZALES","INSPECCIÓN DE CORNETAS / MANGUERAS","PESAJE Y VERIFICACIÓN DE PESO","MANTENIMIENTO PREVENTIVO-CORRECTIVO","RECARGA DEL AGENTE"];
     for (var i = 0; i < items.length; i++) {
       fR(); doc.rect(ML+3, y-2.2, 2.2, 2.2, "F");
       tN(); doc.text(items[i], ML+8, y);
@@ -228,7 +228,7 @@ function hacerPDF(fc) {
 
     // Párrafo garantía
     doc.setFont("helvetica","normal"); doc.setFontSize(8.8); tN();
-    var gar = "Los extintores detallados se encuentran operativos de acuerdo con la norma NFPA10 y normativa ecuatoriana vigente. Cada extintor cuenta con sus respectivos precintos y seguros metálicos, etiqueta de control de carga, accesorios en buen estado y agente extintor en óptimas condiciones, garantizando su funcionamiento con vigencia de un (1) año a partir de su último mantenimiento.";
+    var gar = "Los extintores detallados se encuentran operativos de acuerdo con la norma NFPA10 y normativa ecuatoriana vigente. Cada extintor cuenta con sus respectivos precintos y seguros metálicos, etiqueta de control de carga, accesorios en buen estado y agente extintor en óptimas condiciones, garantizando su funcionamiento con vigencia de un (1) año a partir de su último mantenimiento.".;
     var garL = doc.splitTextToSize(gar, CW);
     for (var i = 0; i < garL.length; i++) { doc.text(garL[i], ML, y); y += 4.6; }
     y += 8;
@@ -401,11 +401,6 @@ function hacerPDF(fc) {
         accesorios:ACCS.map(function(a){ return {nombre:a.n, precio:a.p}; })
       };
       fetch(SCRIPT_URL, {method:"POST", body:JSON.stringify(payload)}).catch(function(){});
-    }
-
-    // Registrar visita en ficha del local (retiros.js)
-    if (window.pfOnLocalCompletado) {
-      pfOnLocalCompletado(LOCAL_ACTUAL, PUNTO_ACTUAL, TIPO_TRABAJO, TECNICO_NOMBRE, "");
     }
 
     ir("senv");

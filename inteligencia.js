@@ -135,7 +135,7 @@ function pfCalendarioMes(offsetMes) {
     if (!visitas.length) return;
 
     var ultFecha = visitas[0].fecha;
-    var proxFecha = pfProximoMantenimiento ? pfProximoMantenimiento(nombre, ultFecha) : null;
+    var proxFecha = (typeof pfProximoMantenimiento === "function") ? pfProximoMantenimiento(nombre, ultFecha) : null;
     if (!proxFecha) return;
 
     // Verificar si la próxima fecha cae en el mes objetivo
@@ -235,7 +235,7 @@ function pfAnalisisIA() {
     "Responde en español, de forma directa y práctica. Máximo 300 palabras.";
 
   PF_IA_CARGANDO = true;
-  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--g3)"><div style="font-size:24px;margin-bottom:8px">🤖</div>Analizando datos con IA...</div>';
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--g3)"><div style="font-size:32px;margin-bottom:8px">🤖</div><div style="font-size:14px;font-weight:700;margin-bottom:6px">Analizando datos...</div><div style="width:40px;height:40px;border:3px solid var(--g2);border-top-color:var(--r);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto"></div></div>';
 
   fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -313,17 +313,5 @@ function pfAdmTabN(n) {
 window.addEventListener("load", function() {
   pfInyectarInteligencia();
 
-  var _prev = window.admTab;
-  window.admTab = function(n) {
-    if (n >= 8 && n <= 10) pfAdmTabN(n);
-    else {
-      _prev(n);
-      for (var i = 8; i <= 10; i++) {
-        var b = document.getElementById("adm-t"+i);
-        var p = document.getElementById("adm-p"+i);
-        if (b) b.className = "adm-tab-btn";
-        if (p) p.className = "adm-panel";
-      }
-    }
-  };
+  // Tabs 8-10 manejados por coordinator.js
 });

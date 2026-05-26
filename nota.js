@@ -185,7 +185,7 @@ function generarNotaPDF(tipo) {
 
   NOTA_CONTADOR++;
   localStorage.setItem("pf_notaCount", NOTA_CONTADOR);
-  var numNota = String(NOTA_CONTADOR).padStart(7, "0");
+  var numNota = String(NOTA_CONTADOR).padStart(4, "0");
 
   // Leer campos del formulario
   var cliente  = (document.getElementById("nota-cliente") || {}).value || NOTA_ACTUAL.cliente;
@@ -245,11 +245,11 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     doc.setFont("helvetica","normal"); doc.setFontSize(7); tG();
     var infoLines = [
       "RUC.: 0952773976001",
-      "ASESORAMIENTO · RECARGA · MANTENIMIENTOS · VENTAS",
-      "PQS (ABC) GAS CARBONICO – HALOTRON",
-      "ESTUDIO, DISEÑO E INSTALACION DE RED HIDRAULICA CONTRA INCENDIOS",
-      "SISTEMAS DE CO2 PARA COCINAS, GENERADORES, TRANSFORMADORES, ETC",
-      "INSTALACION DE LAMPARAS DE EMERGENCIA, DETECTORES DE HUMO, ETC."
+      "ASESORAMIENTO · RECARGA · MANTENIMIENTO · VENTAS",
+      "PQS (ABC) GAS CARBÓNICO – HALOTRON",
+      "ESTUDIO, DISEÑO E INSTALACIÓN DE RED HIDRÁULICA CONTRA INCENDIOS",
+      "SISTEMAS DE CO2 PARA COCINAS, GENERADORES, TRANSFORMADORES, ETC.",
+      "INSTALACIÓN DE LÁMPARAS DE EMERGENCIA, DETECTORES DE HUMO, ETC."
     ];
     for (var i=0; i<infoLines.length; i++) {
       doc.text(infoLines[i], ML+32, 26+i*3.2);
@@ -388,7 +388,7 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     doc.setFont("helvetica","bold"); doc.setFontSize(7); tG();
     doc.text("OBSERVACIÓN:", ML+2, obsY+5);
     doc.setFont("helvetica","normal"); doc.setFontSize(7.5); tN();
-    var obs = "NO NOS RESPONSABILIZAMOS POR TRABAJOS ABANDONADOS DESPUÉS DE 30 DÍAS.";
+    var obs = "NO NOS HACEMOS RESPONSABLES DE EQUIPOS NO RETIRADOS DESPUÉS DE 30 DÍAS.";
     var obsL = doc.splitTextToSize(obs, obsW-4);
     for (var i=0; i<obsL.length; i++) doc.text(obsL[i], ML+2, obsY+10+i*4);
 
@@ -457,7 +457,7 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     // ── PIE ──────────────────────────────────────────────────
     fR(); doc.rect(0, PH-10, PW, 10, "F");
     doc.setFont("helvetica","bold"); doc.setFontSize(6.8); tW();
-    doc.text("DIR: PORTETE #3007 Y GALLEGOS LARA  |  TELEF.:04-2192274 · 0986772944 · 0978997247 · 0983583325", PW/2, PH-3.8, {align:"center"});
+    doc.text("DIR: PORTETE #3007 Y GALLEGOS LARA  |  TEL: 04-2374822 · 0978997247 · 09835883325", PW/2, PH-3.8, {align:"center"});
 
     // ── GUARDAR ──────────────────────────────────────────────
     var safeName = (LOCAL_ACTUAL ? LOCAL_ACTUAL.nombre : "LOCAL").replace(/[^a-zA-Z0-9]/g,"").substring(0,15);

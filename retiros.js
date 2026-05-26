@@ -23,7 +23,7 @@ function pfRegistrarRetiro(local, punto, tecnico, desc) {
     hora: new Date().toLocaleTimeString("es-EC", {hour:"2-digit", minute:"2-digit"}),
     local: local.nombre,
     punto: punto ? punto.nombre : "",
-    tecnico: tecnico || "Raúl Romero",
+    tecnico: tecnico || (typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "Técnico"),
     descripcion: desc || local.mision || "",
     estado: "pendiente",
     fechaEntrega: null
@@ -63,7 +63,7 @@ function pfRegistrarVisita(local, punto, tipo, tecnico, nota) {
     fecha: fechaHoy(),
     hora: new Date().toLocaleTimeString("es-EC", {hour:"2-digit", minute:"2-digit"}),
     tipo: tipo || "mantenimiento",
-    tecnico: tecnico || "Raúl Romero",
+    tecnico: tecnico || (typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "Técnico"),
     nota: nota || "",
     punto: punto ? punto.nombre : ""
   });
@@ -81,7 +81,7 @@ function pfDiasTranscurridos(fechaStr) {
 function pfGetAlertas() {
   return pfGetRetiros().filter(function(r){
     return r.estado === "pendiente" && pfDiasTranscurridos(r.fecha) >= 7;
-  }).map(function(r){ return { retiro:r, dias:pfDiasTranscurridos(r.fecha) }; });
+  }).map(function(r){ var d = pfDiasTranscurridos(r.fecha); return { retiro:r, dias:d }; });
 }
 
 // ── MODAL FICHA DEL LOCAL ─────────────────────────────────────
@@ -153,7 +153,7 @@ function pfAbrirFicha(nombreLocal) {
   if (!modal) {
     modal = document.createElement("div");
     modal.id = "pf-ficha-modal";
-    modal.style.cssText = "position:fixed;inset:0;background:var(--g1);z-index:300;overflow-y:auto;display:none";
+    modal.style.cssText = "position:fixed;inset:0;background:var(--g1);z-index:300;overflow-y:auto;display:none;padding-bottom:80px";
     document.body.appendChild(modal);
   }
   modal.innerHTML = h;
@@ -237,31 +237,14 @@ function pfInyectarPanelRetiros() {
   }
 
   if (!document.getElementById("adm-p4")) {
-    var sc = admScr.querySelector(".sc");
     var panel = document.createElement("div");
     panel.id = "adm-p4"; panel.className = "adm-panel";
     panel.innerHTML = '<div style="padding:12px 0"><div class="slbl">Retiros registrados</div><div id="pf-retiros-alertas"></div><div id="pf-retiros-lista"></div></div>';
-    if (sc) sc.appendChild(panel); else admScr.appendChild(panel);
+    admScr.appendChild(panel);
   }
 
-  var _orig = window.admTab;
-  window.admTab = function(n) {
-    if (n === 4) {
-      for (var i = 1; i <= 4; i++) {
-        var b = document.getElementById("adm-t"+i);
-        var p = document.getElementById("adm-p"+i);
-        if (b) b.className = "adm-tab-btn"+(i===4?" on":"");
-        if (p) p.className = "adm-panel"+(i===4?" on":"");
-      }
-      pfRenderRetiros(); pfRenderAlertas();
-    } else {
-      _orig(n);
-      var b4 = document.getElementById("adm-t4");
-      var p4 = document.getElementById("adm-p4");
-      if (b4) b4.className = "adm-tab-btn";
-      if (p4) p4.className = "adm-panel";
-    }
-  };
+  // Tab 4 manejado por coordinator.js
+  if (window.PF_TAB_HANDLERS) window.PF_TAB_HANDLERS[4] = function(){ pfRenderRetiros(); pfRenderAlertas(); };
 }
 
 // ── BADGE DE ALERTAS ─────────────────────────────────────────
@@ -278,26 +261,5 @@ window.addEventListener("load", function() {
   pfActualizarBadge();
   setInterval(pfActualizarBadge, 60000);
 
-  // Hook confirmarSin
-  var _orig = window.confirmarSin;
-  window.confirmarSin = function() {
-    var localSnap = LOCAL_ACTUAL ? JSON.parse(JSON.stringify(LOCAL_ACTUAL)) : null;
-    var puntoSnap = PUNTO_ACTUAL ? JSON.parse(JSON.stringify(PUNTO_ACTUAL)) : null;
-    var tipoSnap  = TIPO_TRABAJO;
-    var tecSnap   = TECNICO_NOMBRE;
-    _orig();
-    if (localSnap) {
-      setTimeout(function() {
-        if (tipoSnap === "retiro") pfRegistrarRetiro(localSnap, puntoSnap, tecSnap, localSnap.mision);
-        else pfRegistrarVisita(localSnap, puntoSnap, tipoSnap, tecSnap, "");
-      }, 300);
-    }
-  };
-
-  // Exponer para pdf.js
-  window.pfOnLocalCompletado = function(local, punto, tipo, tecnico, nota) {
-    if (!local) return;
-    if (tipo === "retiro") pfRegistrarRetiro(local, punto, tecnico, nota || local.mision);
-    else pfRegistrarVisita(local, punto, tipo, tecnico, nota || "");
-  };
+  // confirmarSin y pfOnLocalCompletado manejados por coordinator.js
 });

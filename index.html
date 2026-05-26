@@ -6,8 +6,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#9E1212">
+<link rel="manifest" href="manifest.json">
 <meta name="description" content="Previfuego Field — App de técnicos de campo">
-<title>Previfuego Field</title>
+<link rel="stylesheet" href="style.css?v=3.3">
+<title>Previfuego Field v3.3</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{--r:#9E1212;--rc:#FFF0F0;--v:#1A7A4A;--vc:#EFF8F2;--n:#C25A00;--nc:#FFF4EC;--a:#1A5FAA;--ac:#EEF4FF;--g1:#F5F5F3;--g2:#E8E8E5;--g3:#AEADA8;--g4:#6B6A66;--ng:#1C1C1A;--bo:#E0DFD9;}
@@ -175,10 +177,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
   <div class="login-wrap">
     <div class="login-logo"><img class="logo-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Previfuego"></div>
     <div class="login-title">Previfuego Field</div>
-    <div class="login-sub">¿Quién eres?</div>
+    <div class="login-sub">Selecciona tu perfil</div>
     <button class="usr-btn" onclick="seleccionarUsuario('raul')"><div class="usr-ico">👷</div><div class="usr-inf"><div class="usr-nom">Raúl Romero</div><div class="usr-rol">Técnico Operativo y Logístico</div></div><div class="usr-arr">›</div></button>
-    <button class="usr-btn" onclick="seleccionarUsuario('juan')"><div class="usr-ico">🚗</div><div class="usr-inf"><div class="usr-nom">Juan</div><div class="usr-rol">Técnico Operativo y Logístico</div></div><div class="usr-arr">›</div></button>
-    <button class="usr-btn" onclick="seleccionarUsuario('fabiola')"><div class="usr-ico">💼</div><div class="usr-inf"><div class="usr-nom">Fabiola</div><div class="usr-rol">Administración</div></div><div class="usr-arr">›</div></button>
+    <button class="usr-btn" onclick="seleccionarUsuario('juan')"><div class="usr-ico">👷</div><div class="usr-inf"><div class="usr-nom">Juan</div><div class="usr-rol">Técnico Operativo y Logístico</div></div><div class="usr-arr">›</div></button>
+    <button class="usr-btn" onclick="seleccionarUsuario('fabiola')"><div class="usr-ico">💼</div><div class="usr-inf"><div class="usr-nom">Fabiola</div><div class="usr-rol">Administración y Taller</div></div><div class="usr-arr">›</div></button>
     <button class="usr-btn" onclick="seleccionarUsuario('alejandro')" style="border-color:var(--r)"><div class="usr-ico">👔</div><div class="usr-inf"><div class="usr-nom">Alejandro</div><div class="usr-rol">Jefe de Operaciones</div></div><div class="usr-arr" style="color:var(--r)">›</div></button>
   </div>
 </div>
@@ -297,7 +299,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
   <div class="sc">
     <div style="padding:20px;text-align:center"><div style="width:64px;height:64px;border-radius:20px;background:var(--r);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:32px">&#128119;</div><div class="sperf-nom" style="font-size:20px;font-weight:700">Raúl Romero</div><div class="sperf-rol" style="font-size:14px;color:var(--g4);margin-top:4px">Técnico Operativo y Logístico</div></div>
     <div id="sperf-stats" style="margin:0 12px 8px"></div>
-    <div class="cd" style="margin-bottom:12px"><div style="padding:14px;border-bottom:1px solid var(--bo)"><div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Empresa</div><div style="font-size:15px;font-weight:700">Previfuego / Pyroshield</div></div><div style="padding:14px"><div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Versión</div><div id="sperf-ver" style="font-size:15px;font-weight:700">Previfuego Field v3.0</div></div></div>
+    <div class="cd" style="margin-bottom:12px"><div style="padding:14px;border-bottom:1px solid var(--bo)"><div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Empresa</div><div style="font-size:15px;font-weight:700">Previfuego / Pyroshield</div></div><div style="padding:14px"><div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Versión</div><div id="sperf-ver" style="font-size:15px;font-weight:700">Previfuego Field v3.3</div></div></div>
     <div class="bw" style="margin-bottom:80px"><button type="button" class="btn btn-g" onclick="cerrarSesion()">&#8592; Cambiar usuario</button></div>
   </div>
   <div class="nav">
@@ -449,15 +451,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
   </div>
 </div>
 
-<script src="logo.js"></script>
-<script src="app.js?v=3.3"></script>
-<script src="pdf.js?v=3.3"></script>
-<script src="nota.js?v=3.3"></script>
-<script src="retiros.js?v=1.0"></script>
-<script src="dashboard.js?v=1.0"></script>
-<script src="extras.js?v=1.0"></script>
-<script src="mejoras2.js?v=1.0"></script>
-<script src="crm.js?v=1.0"></script>
-<script src="inteligencia.js?v=1.0"></script>
+<script src="logo.js" defer></script>
+<script src="app.js?v=3.3" defer></script>
+<script src="pdf.js?v=3.3" defer></script>
+<script src="nota.js?v=3.3" defer></script>
+<script src="retiros.js?v=1.1" defer></script>
+<script src="dashboard.js?v=1.0" defer></script>
+<script src="extras.js?v=1.0" defer></script>
+<script src="mejoras2.js?v=1.0" defer></script>
+<script src="crm.js?v=1.0" defer></script>
+<script src="inteligencia.js?v=1.0" defer></script>
+<script src="coordinator.js?v=1.0" defer></script>
 </body>
 </html>
