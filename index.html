@@ -170,7 +170,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
     <div style="text-align:right"><div style="font-size:12px;color:var(--g4);font-weight:600" id="s1f"></div><div style="font-size:12px;color:var(--r);font-weight:700" id="s1p">0/0</div></div>
   </div>
   <div class="pw"><div class="pf" id="s1pf" style="width:0%"></div></div>
-  <div class="sc" id="s1list"><div class="slbl">Jornada de hoy</div></div>
+  <div class="sc" id="s1list">
+    <div id="s1-nota" style="display:none;margin:8px 12px 0;padding:10px 13px;background:var(--ac);color:var(--a);border-radius:10px;font-size:13px;font-weight:500"></div>
+    <div class="slbl">Jornada de hoy</div>
+  </div>
   <div class="nav">
     <div class="ni on" onclick="ir('s1')"><div class="nii">&#128506;</div><div class="nil">Recorrido</div></div>
     <div class="ni" onclick="ir('shist')"><div class="nii">&#128203;</div><div class="nil">Historial</div></div>
@@ -268,8 +271,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
 <div class="screen" id="sperf">
   <div class="tb"><div class="logo" id="logo-sperf"><img id="logo-img-sperf" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Previfuego"></div><div class="ti" style="margin-left:4px"><div class="tt">Perfil</div><div class="ts">Previfuego Field</div></div></div>
   <div class="sc">
-    <div style="padding:20px;text-align:center"><div style="width:64px;height:64px;border-radius:20px;background:var(--r);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:32px">&#128119;</div><div style="font-size:20px;font-weight:700">Raúl Romero</div><div style="font-size:14px;color:var(--g4);margin-top:4px">Técnico — Previfuego</div></div>
-    <div class="cd" style="margin-bottom:80px"><div style="padding:14px;border-bottom:1px solid var(--bo)"><div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Empresa</div><div style="font-size:15px;font-weight:700">Previfuego / Pyroshield</div></div><div style="padding:14px"><div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Versión</div><div style="font-size:15px;font-weight:700">Previfuego Field v3.1</div></div></div>
+    <div style="padding:20px;text-align:center"><div style="width:64px;height:64px;border-radius:20px;background:var(--r);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:32px">&#128119;</div><div id="sperf-nom" style="font-size:20px;font-weight:700">Raúl Romero</div><div style="font-size:14px;color:var(--g4);margin-top:4px">Técnico — Previfuego</div></div>
+    <div class="cd" style="margin-bottom:80px"><div style="padding:14px;border-bottom:1px solid var(--bo)"><div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Empresa</div><div style="font-size:15px;font-weight:700">Previfuego / Pyroshield</div></div><div style="padding:14px"><div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Versión</div><div id="sperf-ver" style="font-size:15px;font-weight:700">Previfuego Field v2.0</div></div></div>
   </div>
   <div class="nav">
     <div class="ni" onclick="ir('s1')"><div class="nii">&#128506;</div><div class="nil">Recorrido</div></div>
