@@ -1014,7 +1014,7 @@ window.addEventListener("load", function() {
   var saved = localStorage.getItem("pf_usuario");
   if (saved && USUARIOS[saved]) seleccionarUsuario(saved);
   else ir("slogin");
-};
+});
 
 // ── TABS ADMIN ───────────────────────────────────────────────
 function admTab(n) {
