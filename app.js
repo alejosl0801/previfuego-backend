@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════
 
 // ── CONFIG ──────────────────────────────────────────────────
-var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbygjruhc4qtMYHfzeAqTbMbRvuN0Obi6ftxqYFiZdTakZlduzkp_J2lL0HjHhOvzIA/exec";
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPY2DhypwIrP1M9sUTJNpWRkofw6PBCDh6dzo9sMy75rBQB4T4ehmnRMoaXaUbuDL9/exec";
 
 // ── ACCESORIOS ──────────────────────────────────────────────
 var ACCESORIOS=[
