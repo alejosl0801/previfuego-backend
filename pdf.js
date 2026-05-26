@@ -228,7 +228,7 @@ function hacerPDF(fc) {
 
     // Párrafo garantía
     doc.setFont("helvetica","normal"); doc.setFontSize(8.8); tN();
-    var gar = "Los extintores detallados se encuentran operativos de acuerdo con la norma NFPA10 y normativa ecuatoriana vigente. Cada extintor cuenta con sus respectivos precintos y seguros metálicos, etiqueta de control de carga, accesorios en buen estado y agente extintor en óptimas condiciones, garantizando su funcionamiento con vigencia de un (1) año a partir de su último mantenimiento.".;
+    var gar = "Los extintores detallados se encuentran operativos de acuerdo con la norma NFPA10 y normativa ecuatoriana vigente. Cada extintor cuenta con sus respectivos precintos y seguros metálicos, etiqueta de control de carga, accesorios en buen estado y agente extintor en óptimas condiciones, garantizando su funcionamiento con vigencia de un (1) año a partir de su último mantenimiento.";
     var garL = doc.splitTextToSize(gar, CW);
     for (var i = 0; i < garL.length; i++) { doc.text(garL[i], ML, y); y += 4.6; }
     y += 8;

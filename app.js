@@ -272,9 +272,9 @@ function renderPizarraSeccion(seccion, elId) {
     if (item.nota) h += '<div style="font-size:11px;color:var(--g4);margin-top:2px">'+item.nota+'</div>';
     h += '</div>';
     h += '<div style="display:flex;gap:6px;flex-shrink:0">';
-    if (item.estado !== "done") h += '<button class="piz-btn piz-ok"  onclick="pizarraAccion('"'+seccion+"'",'+i+',"done")">✓</button>';
-    if (item.estado === "done") h += '<button class="piz-btn piz-undo" onclick="pizarraAccion(''+seccion+'','+i+','undo')">↩</button>';
-    h += '<button class="piz-btn piz-del" onclick="pizarraAccion(''+seccion+'','+i+','del')">✕</button>';
+    if (item.estado !== "done") h += '<button class="piz-btn piz-ok" onclick="pizarraAccion(\"'+seccion+'\",'+i+',\"done\")">✓</button>';
+    if (item.estado === "done") h += '<button class="piz-btn piz-undo" onclick="pizarraAccion(\"'+seccion+'\",'+i+',\"undo\")">↩</button>';
+    h += '<button class="piz-btn piz-del" onclick="pizarraAccion(\"'+seccion+'\",'+i+',\"del\")">✕</button>';
     h += '</div></div>';
   }
   if (items.length === 0) h = '<div style="font-size:13px;color:var(--g3);padding:8px 0">Sin tareas</div>';
