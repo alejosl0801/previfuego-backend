@@ -403,6 +403,11 @@ function hacerPDF(fc) {
       fetch(SCRIPT_URL, {method:"POST", body:JSON.stringify(payload)}).catch(function(){});
     }
 
+    // Registrar visita en ficha del local (retiros.js)
+    if (window.pfOnLocalCompletado) {
+      pfOnLocalCompletado(LOCAL_ACTUAL, PUNTO_ACTUAL, TIPO_TRABAJO, TECNICO_NOMBRE, "");
+    }
+
     ir("senv");
 
   } catch(err) {

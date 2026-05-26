@@ -512,16 +512,20 @@ function renderPuntos() {
       var ico  = TIPO_ICON[tipo]  || "📋";
       var col  = TIPO_COLOR[tipo] || "var(--g4)";
       var bg   = TIPO_BG[tipo]    || "var(--g1)";
-      h += '<div class="cd'+(loc.done?" dn":"")+'" onclick="abrirLocal('+i+','+j+')">';
-      h += '<div class="pr">';
+      h += '<div class="cd'+(loc.done?" dn":"")+'">';
+      h += '<div class="pr" onclick="abrirLocal('+i+','+j+')">';
       h += '<div class="pn" style="'+(loc.done?'background:var(--vc);color:var(--v)':'background:'+bg+';color:'+col)+'">'+ico+'</div>';
       h += '<div class="pi"><div class="pnm">'+loc.nombre+'</div>';
       h += '<div class="psb">'+(loc.done?"Completado ✓":p.nombre)+'</div></div>';
       h += '<div class="pch">'+(loc.done?"✓":"›")+'</div></div>';
       if (loc.mision && !loc.done) {
         var misionCorta = loc.mision.length > 80 ? loc.mision.substring(0,80)+"..." : loc.mision;
-        h += '<div style="padding:0 14px 10px;font-size:12px;color:var(--g4);line-height:1.5">'+misionCorta+'</div>';
+        h += '<div style="padding:0 14px 6px;font-size:12px;color:var(--g4);line-height:1.5">'+misionCorta+'</div>';
       }
+      h += '<div style="padding:0 12px 10px;display:flex;gap:6px">';
+      h += '<button type="button" onclick="event.stopPropagation();abrirLocal('+i+','+j+')" style="flex:1;padding:8px;border-radius:10px;border:none;background:var(--r);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">'+(loc.done?"Ver detalle":"Ir al trabajo")+'</button>';
+      h += '<button type="button" onclick="event.stopPropagation();pfAbrirFicha(\''+loc.nombre.replace(/'/g,"")+'\')" style="padding:8px 12px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;color:var(--g4);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📋 Ficha</button>';
+      h += '</div>';
       h += '</div>';
     }
   }

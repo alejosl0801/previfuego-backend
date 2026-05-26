@@ -1,0 +1,303 @@
+// ═══════════════════════════════════════════════════════════
+//  PREVIFUEGO — retiros.js  v1.1
+//  Registro automático de retiros + Ficha digital del local
+//  + Alertas de retiro sin entrega
+// ═══════════════════════════════════════════════════════════
+
+function pfGetRetiros() {
+  try { return JSON.parse(localStorage.getItem("pf_retiros") || "[]"); } catch(e) { return []; }
+}
+function pfSaveRetiros(arr) { localStorage.setItem("pf_retiros", JSON.stringify(arr)); }
+function pfGetFichas() {
+  try { return JSON.parse(localStorage.getItem("pf_fichas") || "{}"); } catch(e) { return {}; }
+}
+function pfSaveFichas(obj) { localStorage.setItem("pf_fichas", JSON.stringify(obj)); }
+
+// ── REGISTRO DE RETIRO ───────────────────────────────────────
+function pfRegistrarRetiro(local, punto, tecnico, desc) {
+  var retiros = pfGetRetiros();
+  var id = "ret_" + Date.now();
+  var r = {
+    id: id,
+    fecha: fechaHoy(),
+    hora: new Date().toLocaleTimeString("es-EC", {hour:"2-digit", minute:"2-digit"}),
+    local: local.nombre,
+    punto: punto ? punto.nombre : "",
+    tecnico: tecnico || "Raúl Romero",
+    descripcion: desc || local.mision || "",
+    estado: "pendiente",
+    fechaEntrega: null
+  };
+  retiros.unshift(r);
+  pfSaveRetiros(retiros);
+  pfRegistrarVisitaEnFicha(local.nombre, {
+    fecha: r.fecha, hora: r.hora, tipo: "retiro",
+    tecnico: r.tecnico, nota: r.descripcion, retiroId: id
+  });
+  return r;
+}
+
+function pfMarcarEntregado(retiroId) {
+  var retiros = pfGetRetiros();
+  for (var i = 0; i < retiros.length; i++) {
+    if (retiros[i].id === retiroId) {
+      retiros[i].estado = "entregado";
+      retiros[i].fechaEntrega = fechaHoy();
+      break;
+    }
+  }
+  pfSaveRetiros(retiros);
+  pfRenderRetiros();
+}
+
+// ── FICHA DEL LOCAL ──────────────────────────────────────────
+function pfRegistrarVisitaEnFicha(nombreLocal, visita) {
+  var fichas = pfGetFichas();
+  if (!fichas[nombreLocal]) fichas[nombreLocal] = { nombre: nombreLocal, visitas: [] };
+  fichas[nombreLocal].visitas.unshift(visita);
+  pfSaveFichas(fichas);
+}
+
+function pfRegistrarVisita(local, punto, tipo, tecnico, nota) {
+  pfRegistrarVisitaEnFicha(local.nombre, {
+    fecha: fechaHoy(),
+    hora: new Date().toLocaleTimeString("es-EC", {hour:"2-digit", minute:"2-digit"}),
+    tipo: tipo || "mantenimiento",
+    tecnico: tecnico || "Raúl Romero",
+    nota: nota || "",
+    punto: punto ? punto.nombre : ""
+  });
+}
+
+// ── ALERTAS ──────────────────────────────────────────────────
+function pfDiasTranscurridos(fechaStr) {
+  try {
+    var p = fechaStr.split("/");
+    var d = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+    return Math.floor((new Date() - d) / 86400000);
+  } catch(e) { return 0; }
+}
+
+function pfGetAlertas() {
+  return pfGetRetiros().filter(function(r){
+    return r.estado === "pendiente" && pfDiasTranscurridos(r.fecha) >= 7;
+  }).map(function(r){ return { retiro:r, dias:pfDiasTranscurridos(r.fecha) }; });
+}
+
+// ── MODAL FICHA DEL LOCAL ─────────────────────────────────────
+function pfAbrirFicha(nombreLocal) {
+  var fichas  = pfGetFichas();
+  var ficha   = fichas[nombreLocal] || { nombre: nombreLocal, visitas: [] };
+  var retiros = pfGetRetiros().filter(function(r){ return r.local === nombreLocal; });
+  var retPend = retiros.filter(function(r){ return r.estado === "pendiente"; });
+
+  var tipoLabel = { retiro:"📦 Retiro", entrega:"🚚 Entrega", mantenimiento:"🔧 Mantenimiento", instalacion:"🔩 Instalación", cobro:"💰 Cobro", otro:"📋 Otro" };
+  var tipoColor = { retiro:"var(--n)", entrega:"var(--v)", mantenimiento:"var(--a)", instalacion:"var(--r)", cobro:"var(--g4)", otro:"var(--g4)" };
+
+  var h = "";
+
+  // Header
+  h += '<div style="background:var(--r);padding:16px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10">';
+  h += '<div><div style="font-size:18px;font-weight:700;color:#fff">'+nombreLocal+'</div>';
+  h += '<div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">'+ficha.visitas.length+' visita(s) · '+retPend.length+' retiro(s) pendiente(s)</div></div>';
+  h += '<button onclick="pfCerrarFicha()" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:24px;width:38px;height:38px;border-radius:10px;cursor:pointer;line-height:1">✕</button>';
+  h += '</div>';
+
+  // Alerta retiros pendientes
+  if (retPend.length > 0) {
+    h += '<div style="margin:12px 12px 0;padding:10px 14px;background:var(--rc);border-radius:12px;border:1.5px solid var(--r)">';
+    h += '<div style="font-size:13px;font-weight:700;color:var(--r);margin-bottom:6px">⚠ Extintores pendientes de entrega</div>';
+    for (var i = 0; i < retPend.length; i++) {
+      var dias = pfDiasTranscurridos(retPend[i].fecha);
+      h += '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-top:1px solid rgba(158,18,18,.15);margin-top:4px">';
+      h += '<div style="font-size:12px;color:var(--ng)">Retirado el '+retPend[i].fecha+' ('+dias+' día'+(dias!==1?'s':'')+')</div>';
+      h += '<button onclick="pfMarcarEntregado(\''+retPend[i].id+'\');pfAbrirFicha(\''+nombreLocal.replace(/'/g,"")+'\')" style="background:var(--v);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">✓ Entregado</button>';
+      h += '</div>';
+    }
+    h += '</div>';
+  }
+
+  // Resumen estadístico
+  var totalVisitas = ficha.visitas.length;
+  var totalRetiros = retiros.length;
+  var totalEntregados = retiros.filter(function(r){ return r.estado==="entregado"; }).length;
+
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:12px">';
+  h += '<div class="si"><div class="sv" style="color:var(--a)">'+totalVisitas+'</div><div class="sl">Visitas</div></div>';
+  h += '<div class="si"><div class="sv" style="color:var(--n)">'+totalRetiros+'</div><div class="sl">Retiros</div></div>';
+  h += '<div class="si"><div class="sv" style="color:var(--v)">'+totalEntregados+'</div><div class="sl">Entregados</div></div>';
+  h += '</div>';
+
+  // Historial de visitas
+  h += '<div class="slbl">Historial de visitas</div>';
+  if (ficha.visitas.length === 0) {
+    h += '<div style="padding:24px 16px;text-align:center;color:var(--g3);font-size:14px">Sin historial aún.<br>Las visitas se registran automáticamente.</div>';
+  } else {
+    for (var i = 0; i < ficha.visitas.length; i++) {
+      var v   = ficha.visitas[i];
+      var col = tipoColor[v.tipo] || "var(--g4)";
+      var lbl = tipoLabel[v.tipo] || v.tipo;
+      h += '<div style="margin:0 12px 8px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:11px 14px">';
+      h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">';
+      h += '<div style="font-size:13px;font-weight:700;color:'+col+'">'+lbl+'</div>';
+      h += '<div style="font-size:11px;color:var(--g3)">'+v.fecha+(v.hora?' · '+v.hora:'')+'</div></div>';
+      h += '<div style="font-size:12px;color:var(--g4)">'+v.tecnico+(v.punto?' · '+v.punto:'')+'</div>';
+      if (v.nota) h += '<div style="font-size:12px;color:var(--g4);margin-top:4px;line-height:1.5;border-top:1px solid var(--bo);padding-top:4px">'+v.nota+'</div>';
+      h += '</div>';
+    }
+  }
+  h += '<div style="height:80px"></div>';
+
+  // Modal
+  var modal = document.getElementById("pf-ficha-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "pf-ficha-modal";
+    modal.style.cssText = "position:fixed;inset:0;background:var(--g1);z-index:300;overflow-y:auto;display:none";
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = h;
+  modal.style.display = "block";
+  modal.scrollTop = 0;
+}
+
+function pfCerrarFicha() {
+  var modal = document.getElementById("pf-ficha-modal");
+  if (modal) modal.style.display = "none";
+}
+
+// ── PANEL RETIROS EN ADMIN ────────────────────────────────────
+function pfRenderRetiros() {
+  var el = document.getElementById("pf-retiros-lista");
+  if (!el) return;
+  var retiros = pfGetRetiros();
+  if (!retiros.length) {
+    el.innerHTML = '<div style="padding:24px 16px;text-align:center;color:var(--g3);font-size:14px">No hay retiros registrados aún.</div>';
+    return;
+  }
+  var h = "";
+  for (var i = 0; i < retiros.length; i++) {
+    var r    = retiros[i];
+    var dias = pfDiasTranscurridos(r.fecha);
+    var alerta = r.estado === "pendiente" && dias >= 7;
+    var colorBg  = r.estado === "entregado" ? "var(--vc)"  : alerta ? "var(--rc)"  : "#fff";
+    var colorBor = r.estado === "entregado" ? "var(--v)"   : alerta ? "var(--r)"   : "var(--bo)";
+    var colorTx  = r.estado === "entregado" ? "var(--v)"   : alerta ? "var(--r)"   : "var(--ng)";
+    var estadoTxt = r.estado === "entregado" ? "✓ Entregado "+r.fechaEntrega
+                  : alerta ? "⚠ "+dias+" días sin entregar"
+                  : dias+"d pendiente";
+    h += '<div style="margin:0 12px 8px;background:'+colorBg+';border:1.5px solid '+colorBor+';border-radius:14px;overflow:hidden">';
+    h += '<div style="padding:12px 14px">';
+    h += '<div style="display:flex;align-items:flex-start;gap:8px">';
+    h += '<div style="flex:1"><div style="font-size:15px;font-weight:700;color:'+colorTx+'">'+r.local+'</div>';
+    h += '<div style="font-size:12px;color:var(--g4);margin-top:2px">'+r.fecha+' · '+r.hora+' · '+r.tecnico+'</div>';
+    if (r.descripcion) h += '<div style="font-size:12px;color:var(--g4);margin-top:3px;line-height:1.5">'+r.descripcion+'</div>';
+    h += '</div>';
+    h += '<div style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap;background:'+(r.estado==='entregado'?'var(--vc)':alerta?'var(--rc)':'var(--nc)')+';color:'+colorTx+'">'+estadoTxt+'</div>';
+    h += '</div>';
+    if (r.estado === "pendiente") {
+      h += '<div style="padding:6px 12px 10px;display:flex;gap:6px">';
+      h += '<button onclick="pfMarcarEntregado(\''+r.id+'\')" style="flex:1;background:var(--v);color:#fff;border:none;border-radius:10px;padding:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✓ Marcar entregado</button>';
+      h += '<button onclick="pfAbrirFicha(\''+r.local.replace(/'/g,"")+'\')" style="padding:8px 12px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;color:var(--g4);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📋 Ficha</button>';
+      h += '</div>';
+    }
+    h += '</div>';
+  }
+  el.innerHTML = h;
+}
+
+function pfRenderAlertas() {
+  var el = document.getElementById("pf-retiros-alertas");
+  if (!el) return;
+  var alertas = pfGetAlertas();
+  if (!alertas.length) { el.innerHTML = ""; return; }
+  var h = '<div style="margin:0 12px 10px;padding:12px 14px;background:var(--rc);border-radius:12px;border:1.5px solid var(--r)">';
+  h += '<div style="font-size:13px;font-weight:700;color:var(--r);margin-bottom:6px">⚠ '+alertas.length+' retiro(s) sin entregar hace más de 7 días</div>';
+  for (var i = 0; i < alertas.length; i++) {
+    var a = alertas[i];
+    h += '<div style="font-size:13px;color:var(--ng);padding:4px 0;border-top:1px solid rgba(158,18,18,.15);margin-top:4px">';
+    h += '<strong>'+a.retiro.local+'</strong> — '+a.retiro.fecha+' ('+a.dias+' días)</div>';
+  }
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+// ── INYECTAR TAB EN ADMIN ─────────────────────────────────────
+function pfInyectarPanelRetiros() {
+  var tabBar = document.querySelector(".adm-tab");
+  var admScr = document.getElementById("sadmin");
+  if (!tabBar || !admScr) return;
+
+  if (!document.getElementById("adm-t4")) {
+    var btn = document.createElement("button");
+    btn.id = "adm-t4"; btn.className = "adm-tab-btn";
+    btn.textContent = "📦 Retiros";
+    btn.onclick = function(){ admTab(4); };
+    tabBar.appendChild(btn);
+  }
+
+  if (!document.getElementById("adm-p4")) {
+    var sc = admScr.querySelector(".sc");
+    var panel = document.createElement("div");
+    panel.id = "adm-p4"; panel.className = "adm-panel";
+    panel.innerHTML = '<div style="padding:12px 0"><div class="slbl">Retiros registrados</div><div id="pf-retiros-alertas"></div><div id="pf-retiros-lista"></div></div>';
+    if (sc) sc.appendChild(panel); else admScr.appendChild(panel);
+  }
+
+  var _orig = window.admTab;
+  window.admTab = function(n) {
+    if (n === 4) {
+      for (var i = 1; i <= 4; i++) {
+        var b = document.getElementById("adm-t"+i);
+        var p = document.getElementById("adm-p"+i);
+        if (b) b.className = "adm-tab-btn"+(i===4?" on":"");
+        if (p) p.className = "adm-panel"+(i===4?" on":"");
+      }
+      pfRenderRetiros(); pfRenderAlertas();
+    } else {
+      _orig(n);
+      var b4 = document.getElementById("adm-t4");
+      var p4 = document.getElementById("adm-p4");
+      if (b4) b4.className = "adm-tab-btn";
+      if (p4) p4.className = "adm-panel";
+    }
+  };
+}
+
+// ── BADGE DE ALERTAS ─────────────────────────────────────────
+function pfActualizarBadge() {
+  var btn = document.getElementById("adm-t4");
+  if (!btn) return;
+  var n = pfGetAlertas().length;
+  btn.textContent = n > 0 ? "📦 Retiros ("+n+"⚠)" : "📦 Retiros";
+}
+
+// ── HOOK CON app.js y pdf.js ──────────────────────────────────
+window.addEventListener("load", function() {
+  pfInyectarPanelRetiros();
+  pfActualizarBadge();
+  setInterval(pfActualizarBadge, 60000);
+
+  // Hook confirmarSin
+  var _orig = window.confirmarSin;
+  window.confirmarSin = function() {
+    var localSnap = LOCAL_ACTUAL ? JSON.parse(JSON.stringify(LOCAL_ACTUAL)) : null;
+    var puntoSnap = PUNTO_ACTUAL ? JSON.parse(JSON.stringify(PUNTO_ACTUAL)) : null;
+    var tipoSnap  = TIPO_TRABAJO;
+    var tecSnap   = TECNICO_NOMBRE;
+    _orig();
+    if (localSnap) {
+      setTimeout(function() {
+        if (tipoSnap === "retiro") pfRegistrarRetiro(localSnap, puntoSnap, tecSnap, localSnap.mision);
+        else pfRegistrarVisita(localSnap, puntoSnap, tipoSnap, tecSnap, "");
+      }, 300);
+    }
+  };
+
+  // Exponer para pdf.js
+  window.pfOnLocalCompletado = function(local, punto, tipo, tecnico, nota) {
+    if (!local) return;
+    if (tipo === "retiro") pfRegistrarRetiro(local, punto, tecnico, nota || local.mision);
+    else pfRegistrarVisita(local, punto, tipo, tecnico, nota || "");
+  };
+});
