@@ -32,8 +32,9 @@ function pfProximoMantenimiento(nombreLocal, ultimaVisita) {
   try {
     var p    = ultimaVisita.split("/");
     var d    = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
-    // Mantenimiento: 1 año para todos. Recarga: 3 años KFC, 1 año independientes
-  var freq = PF_FREQ.independiente; // mantenimiento siempre 1 año
+    // SIEMPRE mantenimiento = 1 año para todos los clientes
+  // La recarga (3 años KFC) se controla por separado en el semáforo
+  var freq = PF_FREQ.independiente;
     d.setDate(d.getDate() + freq);
     return d;
   } catch(e) { return null; }

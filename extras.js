@@ -13,7 +13,7 @@ function pfAgregarMarcaAgua(canvas, ctx) {
   var ahora   = new Date();
   var fecha   = ahora.toLocaleDateString("es-EC", {day:"2-digit", month:"2-digit", year:"numeric"});
   var hora    = ahora.toLocaleTimeString("es-EC", {hour:"2-digit", minute:"2-digit"});
-  var tecnico = (typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "Técnico");
+  var tecnico = (typeof TECNICO_NOMBRE !== "undefined" && TECNICO_NOMBRE) ? TECNICO_NOMBRE : "Técnico Previfuego";
   var local   = (typeof LOCAL_ACTUAL !== "undefined" && LOCAL_ACTUAL ? LOCAL_ACTUAL.nombre : "");
   var lineas  = [
     "PREVIFUEGO",

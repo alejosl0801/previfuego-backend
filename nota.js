@@ -176,6 +176,21 @@ function enteroALetras(n) {
 }
 
 // ── GENERAR PDF NOTA DE ENTREGA ──────────────────────────────
+function notaTienePrecios() {
+  // Con precios: accesorios en mantenimiento (ambos tipos de cliente)
+  // Sin precios: entrega de mercadería, instalación, constancia
+  if (typeof TIPO_TRABAJO === "undefined") return true;
+  if (TIPO_TRABAJO === "instalacion") return false;
+  if (TIPO_TRABAJO === "entrega") {
+    // Entrega de mercadería/importación: sin precios
+    var mision = (LOCAL_ACTUAL && LOCAL_ACTUAL.mision) ? LOCAL_ACTUAL.mision.toLowerCase() : "";
+    if (/mercader|importa|pedido|distribuidor/.test(mision)) return false;
+    // Entrega de extintores: con precios si hay accesorios
+    return NOTA_ITEMS.some(function(i){ return i.puni > 0; });
+  }
+  return true; // mantenimiento: siempre con precios
+}
+
 function generarNotaPDF(tipo) {
   // tipo: "entrega" o "accesorios"
   var items = tipo === "accesorios" ? ACCS.map(function(a){ return {cant:1, desc:a.n, puni:a.p, total:a.p}; }) : NOTA_ITEMS;

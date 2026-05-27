@@ -381,7 +381,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
 
 <!-- ═══ NOTA DE ENTREGA ═══ -->
 <div class="screen" id="snota">
-  <div class="tb"><div class="bk" onclick="ir('s2')">&#8249;</div><div class="ti" style="margin-left:4px"><div class="tt">Nota de Entrega</div><div class="ts">Completa los datos</div></div><div class="bdg br" id="nota-badge">Nota</div></div>
+  <div class="tb"><div class="bk" onclick="ir('s2')">&#8249;</div><div class="ti" style="margin-left:4px"><div class="tt">Nota de Entrega</div><div class="ts">Completa los datos</div></div><div class="bdg br" id="nota-badge">Accesorios</div></div>
   <div class="sc">
     <div class="slbl">Datos del cliente</div>
     <div style="margin:0 12px 10px">
@@ -392,11 +392,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div>
           <div class="nota-lbl" style="text-align:left;margin-bottom:4px">RUC / CI</div>
-          <input class="nota-campo" id="nota-ruc" placeholder="RUC">
+          <input class="nota-campo" id="nota-ruc" placeholder="RUC" inputmode="numeric">
         </div>
         <div>
           <div class="nota-lbl" style="text-align:left;margin-bottom:4px">TELÉFONO</div>
-          <input class="nota-campo" id="nota-tel" placeholder="Teléfono">
+          <input class="nota-campo" id="nota-tel" placeholder="Teléfono" inputmode="tel">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -405,8 +405,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
           <input class="nota-campo" id="nota-fecha" placeholder="Fecha">
         </div>
         <div>
-          <div class="nota-lbl" style="text-align:left;margin-bottom:4px">LOCAL</div>
+          <div class="nota-lbl" style="text-align:left;margin-bottom:4px">LOCAL / MARCA</div>
           <input class="nota-campo" id="nota-local" placeholder="Nombre del local">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div class="nota-lbl" style="text-align:left;margin-bottom:4px">N° PROFORMA</div>
+          <input class="nota-campo" id="nota-proforma" placeholder="Nº proforma (opcional)" inputmode="numeric">
+        </div>
+        <div>
+          <div class="nota-lbl" style="text-align:left;margin-bottom:4px">MARCA</div>
+          <input class="nota-campo" id="nota-marca" placeholder="KFC, CAJUN, etc.">
         </div>
       </div>
     </div>
