@@ -6,7 +6,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#9E1212">
-<link rel="manifest" href="manifest.json">
 <meta name="description" content="Previfuego Field — App de técnicos de campo">
 <link rel="stylesheet" href="style.css?v=3.3">
 <title>Previfuego Field v3.3</title>
@@ -34,7 +33,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
 .pi{flex:1;min-width:0;}.pnm{font-size:16px;font-weight:700;color:var(--ng);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .dn .pnm{color:var(--g3);}.psb{font-size:13px;color:var(--g4);margin-top:2px;}
 .pch{font-size:22px;color:var(--g2);}.dn .pch{color:var(--v);}
-.nav{background:#fff;border-top:1.5px solid var(--bo);display:flex;padding:8px 0 12px;flex-shrink:0;position:fixed;bottom:0;left:0;right:0;z-index:10;}
+.nav{background:#fff;border-top:1.5px solid var(--bo);display:flex;padding:8px 0 12px;flex-shrink:0;position:fixed;bottom:0;left:0;right:0;z-index:20;}
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;cursor:pointer;}
 .nii{font-size:22px;color:var(--g3);}.nil{font-size:10px;color:var(--g3);font-weight:500;}
 .ni.on .nii,.ni.on .nil{color:var(--r);}.ni.on .nil{font-weight:700;}
@@ -47,7 +46,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
 .erow:last-child{border:none;}.eloc{font-size:15px;color:var(--g4);flex:1;}
 .etip{font-family:monospace;font-size:11px;color:var(--r);background:var(--rc);padding:2px 6px;border-radius:5px;}
 .ew{font-family:monospace;font-size:13px;font-weight:700;color:var(--ng);width:50px;text-align:right;}
-.eck{width:28px;height:28px;border-radius:9px;border:1.5px solid var(--g2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;cursor:pointer;}
+.eck{width:36px;height:36px;border-radius:9px;border:1.5px solid var(--g2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;cursor:pointer;}
 .eck.ok{background:var(--v);border-color:var(--v);color:#fff;}
 .fs2{margin:0 12px 10px;background:#fff;border-radius:14px;overflow:hidden;border:1.5px solid var(--bo);}
 .fs2.fok{border-color:var(--v);}.fs2.fpend{border-color:var(--r);border-style:dashed;}
@@ -57,7 +56,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
 .ftip{font-size:15px;font-weight:700;color:var(--ng);}.fdsc{font-size:12px;color:var(--g4);margin-top:1px;}
 .fbg{margin-left:auto;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;flex-shrink:0;}
 .fbok{background:var(--vc);color:var(--v);}.fbpd{background:var(--rc);color:var(--r);}.fbop{background:var(--g1);color:var(--g4);}
-.fprev{height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:var(--g1);overflow:hidden;position:relative;}
+.fprev{height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:var(--g1);overflow:hidden;position:relative;}
 .fprev.has{background:var(--vc);}.fprev input{display:none;}
 .fprev img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
 .fact{padding:8px 12px 10px;display:flex;gap:6px;}
@@ -75,7 +74,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
 .nb.sn{border-color:var(--n);background:var(--nc);color:var(--n);}.nb.so{border-color:var(--v);background:var(--vc);color:var(--v);}
 .ait{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--nc);border-radius:10px;border:1px solid #EAA060;margin-bottom:6px;}
 .anm{font-size:14px;font-weight:500;color:var(--ng);}.apr{font-family:monospace;font-size:13px;font-weight:700;color:var(--n);}
-.arm{font-size:20px;color:var(--n);cursor:pointer;padding:2px 6px;}
+.arm{font-size:20px;color:var(--n);cursor:pointer;padding:8px 10px;}
 .aab{display:flex;align-items:center;justify-content:space-between;padding:11px 12px;background:var(--g1);border-radius:10px;border:1.5px dashed var(--g2);cursor:pointer;font-size:14px;font-weight:500;color:var(--g4);}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99;display:none;}
 .ov.show{display:block;}
@@ -132,7 +131,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
 .fab{position:fixed;bottom:68px;right:14px;z-index:11;width:44px;height:44px;border-radius:50%;background:var(--r);color:#fff;border:none;font-size:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);}
 /* PIZARRA */
 .piz-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--bo);margin-bottom:7px;}
-.piz-btn{width:28px;height:28px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.piz-btn{width:36px;height:36px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;}
 .piz-ok{background:var(--vc);color:var(--v);}
 .piz-del{background:var(--rc);color:var(--r);}
 .piz-undo{background:var(--g2);color:var(--g4);}
@@ -142,8 +141,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
 .piz-tab-btn{flex:1;padding:9px;border-radius:10px;border:1.5px solid var(--bo);background:var(--g1);font-size:13px;font-weight:700;color:var(--g4);cursor:pointer;font-family:inherit;}
 .piz-tab-btn.on{background:var(--r);color:#fff;border-color:var(--r);}
 /* TABS ADMIN */
-.adm-tab{display:flex;border-bottom:2px solid var(--bo);margin-bottom:0;flex-shrink:0;}
-.adm-tab-btn{flex:1;padding:12px 8px;border:none;background:transparent;font-family:inherit;font-size:13px;font-weight:700;color:var(--g4);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;}
+.adm-tab{display:flex;border-bottom:2px solid var(--bo);margin-bottom:0;flex-shrink:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.adm-tab-btn{flex:none;min-width:72px;white-space:nowrap;padding:10px 8px;border:none;background:transparent;font-family:inherit;font-size:12px;font-weight:700;color:var(--g4);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;}
 .adm-tab-btn.on{color:var(--r);border-bottom-color:var(--r);}
 .adm-panel{display:none;flex:1;overflow-y:auto;padding-bottom:80px;}
 .adm-panel.on{display:block;}
@@ -214,7 +213,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
     <div class="cd"><div style="padding:14px;font-size:15px;color:var(--ng);line-height:1.6;white-space:pre-wrap" id="s2m"></div></div>
     <div id="s2es" style="display:none"><div class="slbl">Extintores</div><div class="cd"><div id="s2el"></div></div></div>
     <div class="bw"><button type="button" class="btn btn-r" id="s2-btn-fot" onclick="ir('sfot')">📷 Registrar fotos y firma</button></div>
-    <div class="bw" style="padding-top:0"><button type="button" class="btn btn-v" onclick="abrirNotaEntrega(LOCAL_ACTUAL._pi, LOCAL_ACTUAL._li)" style="background:#1A5FAA">📄 Generar nota de entrega</button></div>
+    <div class="bw" style="padding-top:0" id="s2-btn-nota"><button type="button" class="btn btn-v" onclick="abrirNotaEntrega(LOCAL_ACTUAL._pi, LOCAL_ACTUAL._li)" style="background:#1A5FAA">📄 Generar nota de entrega</button></div>
     <div class="bw" style="padding-top:0"><button type="button" class="btn btn-g" id="s2-btn-sin" onclick="confirmarSin()">✓ Completar sin registro</button></div>
     <div style="height:80px"></div>
   </div>
@@ -382,7 +381,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
 
 <!-- ═══ NOTA DE ENTREGA ═══ -->
 <div class="screen" id="snota">
-  <div class="tb"><div class="bk" onclick="ir('s2')">&#8249;</div><div class="ti" style="margin-left:4px"><div class="tt">Nota de Entrega</div><div class="ts">Completa los datos</div></div><div class="bdg br">Digital</div></div>
+  <div class="tb"><div class="bk" onclick="ir('s2')">&#8249;</div><div class="ti" style="margin-left:4px"><div class="tt">Nota de Entrega</div><div class="ts" id="snota-subtitulo">Nota de entrega</div></div><div class="bdg br">Digital</div></div>
   <div class="sc">
     <div class="slbl">Datos del cliente</div>
     <div style="margin:0 12px 10px">

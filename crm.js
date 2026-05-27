@@ -276,7 +276,7 @@ function pfInyectarProductividad() {
   var btn = document.createElement("button");
   btn.id = "adm-t7"; btn.className = "adm-tab-btn";
   btn.textContent = "👷 Prod.";
-  btn.onclick = function(){ pfAdmTab7(7); };
+  btn.onclick = function(){ admTab(7); };
   tabBar.appendChild(btn);
 
   var sc = admScr.querySelector(".sc");
@@ -302,5 +302,4 @@ window.addEventListener("load", function() {
 
   // Parchear admTab para tabs 7
   // Tab 7 manejado por coordinator.js
-  if (window.PF_TAB_HANDLERS) window.PF_TAB_HANDLERS[7] = function(){ pfRenderProductividad(); };
 });

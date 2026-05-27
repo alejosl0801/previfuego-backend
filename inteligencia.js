@@ -20,7 +20,7 @@ function pfClasificarClientes() {
   var clientes = Object.keys(fichas).map(function(nombre) {
     var ficha    = fichas[nombre];
     var visitas  = ficha.visitas || [];
-    var esKFC    = pfEsGrupoKFC ? pfEsGrupoKFC(nombre) : false;
+    var esKFC    = (typeof pfEsGrupoKFC === "function") ? pfEsGrupoKFC(nombre) : false;
 
     // Contar tipos
     var tipos = { mantenimiento:0, retiro:0, entrega:0, instalacion:0, cobro:0 };
@@ -286,7 +286,7 @@ function pfInyectarInteligencia() {
     var btn = document.createElement("button");
     btn.id = t.id; btn.className = "adm-tab-btn";
     btn.textContent = t.label;
-    btn.onclick = (function(n){ return function(){ pfAdmTabN(n); }; })(t.n);
+    btn.onclick = (function(n){ return function(){ admTab(n); }; })(t.n);
     tabBar.appendChild(btn);
 
     var sc = admScr.querySelector(".sc");

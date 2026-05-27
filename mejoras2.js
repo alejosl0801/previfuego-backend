@@ -124,10 +124,9 @@ function pfInyectarSemaforo() {
   var btn = document.createElement("button");
   btn.id = "adm-t6"; btn.className = "adm-tab-btn";
   btn.textContent = "🚦 Venc.";
-  btn.onclick = function(){ pfAdmTab6(6); };
+  btn.onclick = function(){ admTab(6); };
   tabBar.appendChild(btn);
 
-  var sc = admScr.querySelector(".sc");
   var panel = document.createElement("div");
   panel.id = "adm-p6"; panel.className = "adm-panel";
   panel.innerHTML =
@@ -135,7 +134,7 @@ function pfInyectarSemaforo() {
     '<div class="slbl">Semáforo de vencimientos</div>' +
     '<div id="pf-semaforo-lista"></div>' +
     '<div style="height:80px"></div></div>';
-  if (sc) sc.appendChild(panel); else admScr.appendChild(panel);
+  admScr.appendChild(panel);
 }
 
 function pfAdmTab6(n) {
@@ -221,7 +220,12 @@ function pfMostrarBannerAprobacion() {
   if (!lista) return;
   var aprobado = localStorage.getItem("pf_recorrido_aprobado") === "si";
   var txt      = localStorage.getItem("pf_recorrido_texto") || "";
-  if (!txt) return;
+  if (!txt) {
+    var banner = document.getElementById("pf-aprobacion-banner");
+    if (!banner) { banner = document.createElement("div"); banner.id = "pf-aprobacion-banner"; lista.parentNode.insertBefore(banner, lista); }
+    banner.innerHTML = '<div style="margin:10px 12px;padding:12px 14px;background:var(--nc);border-radius:12px;border:1.5px solid var(--n);font-size:13px;color:var(--n)">⏳ Alejandro no ha publicado el recorrido de hoy aún.</div>';
+    return;
+  }
 
   var banner = document.getElementById("pf-aprobacion-banner");
   if (!banner) {
@@ -291,12 +295,7 @@ window.addEventListener("load", function() {
   pfInyectarSemaforo();
   pfInyectarAprobacion();
 
-  // Parchear irFirma para inyectar campo email
-  var _irFirmaOrig2 = window.irFirma;
-  window.irFirma = function() {
-    if (typeof _irFirmaOrig2 === "function") _irFirmaOrig2();
-    setTimeout(pfInyectarCampoEmail, 300);
-  };
+  // irFirma coordinado por coordinator.js
 
   // Detectar Fabiola desde ir() — sin parchear seleccionarUsuario
   var _irOrig2 = window.ir;
@@ -307,17 +306,7 @@ window.addEventListener("load", function() {
     }
   };
 
-  // Parchear pfOnLocalCompletado para enviar email
-  var _pfOnOrig = window.pfOnLocalCompletado;
-  window.pfOnLocalCompletado = function(local, punto, tipo, tecnico, nota) {
-    _pfOnOrig && _pfOnOrig(local, punto, tipo, tecnico, nota);
-    // Enviar email si hay uno ingresado
-    var emailEl = document.getElementById("pf-email-enc");
-    if (emailEl && emailEl.value && local) {
-      var certNum = typeof CERT_CONTADOR !== "undefined" ? "CERT-"+local.nombre.substring(0,8).toUpperCase().replace(/[^A-Z0-9]/g,"")+"-"+new Date().getFullYear()+"-"+String(CERT_CONTADOR).padStart(3,"0") : "—";
-      pfEnviarEmailCertificado(certNum, local.nombre, emailEl.value);
-    }
-  };
+  // pfOnLocalCompletado coordinado por coordinator.js
 
   // Tab 6 registrado en coordinator.js
 });

@@ -169,22 +169,12 @@ window.addEventListener("load", function() {
   // GPS se captura al abrir la pantalla de firma, no en load
   // pfCapturarGPS(); -- movido a irFirma
 
-  // Parchear irFirma para inyectar timestamp
-  var _irFirmaOrig = window.irFirma;
-  window.irFirma = function() {
-    pfCapturarGPS();
-    _irFirmaOrig();
-    setTimeout(function() {
-      pfInyectarTimestampFirma();
-      pfActualizarTimestampUI();
-      PF_FIRMA_TS = pfGetTimestampFirma();
-    }, 200);
-  };
+  // irFirma coordinado por coordinator.js
 
   // Parchear marcarFirmado para guardar timestamp
   var _marcarFirmadoOrig = window.marcarFirmado;
   window.marcarFirmado = function() {
-    _marcarFirmadoOrig();
+    if (typeof _marcarFirmadoOrig === "function") _marcarFirmadoOrig();
     PF_FIRMA_TS = pfGetTimestampFirma();
     pfActualizarTimestampUI();
   };
@@ -275,9 +265,10 @@ function pfInyectarBackupEnPerfil() {
 
 window.addEventListener("load", function() {
   // Inyectar backup en perfil cuando se abre
+  // Inyectar backup en perfil usando MutationObserver seguro
   var _renderPerfilOrig = window.renderPerfil;
   window.renderPerfil = function() {
-    _renderPerfilOrig();
-    pfInyectarBackupEnPerfil();
+    if (typeof _renderPerfilOrig === "function") _renderPerfilOrig();
+    setTimeout(pfInyectarBackupEnPerfil, 100);
   };
 });

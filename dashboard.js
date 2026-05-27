@@ -183,7 +183,7 @@ function pfInyectarDashboard() {
     var btn = document.createElement("button");
     btn.id = "adm-t5"; btn.className = "adm-tab-btn";
     btn.textContent = "📊 Dashboard";
-    btn.onclick = function(){ pfAdmTab(5); };
+    btn.onclick = function(){ admTab(5); };
     tabBar.appendChild(btn);
   }
 

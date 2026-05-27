@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════
 //  PREVIFUEGO FIELD — app.js  v3.1
-//  Bloque A: PDF fixes + tipo trabajo + fotos libres + roles
+//  v3.3 — Actualizado con módulos adicionales
 // ═══════════════════════════════════════════════════════════
 
 var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsGUa-Z31KwPkixPxM8tLgEoyj7HsYRmdic8-HCuE9ZLjBfCYSGPJKmNDT9jOITxlO/exec";
@@ -368,7 +368,7 @@ function publicarRecorrido() {
   localStorage.setItem("pf_recorrido_jornadas", JSON.stringify(jornadas));
   // Compatibilidad: guardar puntos de primera jornada como data legacy
   localStorage.setItem("pf_recorrido_data", JSON.stringify(jornadas[0].puntos));
-  var payload = { accion:"publicar_recorrido", fecha:fechaHoy(), tecnico:"Raúl Romero", texto:txt, jornadas:jornadas };
+  var payload = { accion:"publicar_recorrido", fecha:fechaHoy(), tecnico:TECNICO_NOMBRE||"Raúl Romero", texto:txt, jornadas:jornadas };
   fetch(SCRIPT_URL, { method:"POST", body:JSON.stringify(payload) })
     .then(function(r){ return r.json(); })
     .catch(function(){})
@@ -500,7 +500,7 @@ function renderPuntos() {
     var col   = jorActual.jornada === "TARDE" ? "var(--a)" : "var(--r)";
     h += '<div style="margin:8px 12px 4px;padding:10px 14px;background:'+col+';border-radius:12px;display:flex;align-items:center;justify-content:space-between">';
     h += '<div style="font-size:14px;font-weight:700;color:#fff">'+emoji+' '+jorActual.label+'</div>';
-    h += '<button onclick="renderSelectorJornada()" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;cursor:pointer">Cambiar</button>';
+    h += '<button type="button" onclick="renderSelectorJornada()" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:20px;cursor:pointer;min-height:44px">Cambiar</button>';
     h += '</div>';
   }
   for (var i = 0; i < PUNTOS.length; i++) {
@@ -590,14 +590,21 @@ function abrirLocal(pi, li) {
   }
 
   // Botón según tipo de trabajo
-  var btnFot = document.getElementById("s2-btn-fot");
-  var btnSin = document.getElementById("s2-btn-sin");
+  var btnFot  = document.getElementById("s2-btn-fot");
+  var btnSin  = document.getElementById("s2-btn-sin");
+  var btnNota = document.getElementById("s2-btn-nota");
   if (TIPO_TRABAJO === TIPOS_TRABAJO.COBRO) {
-    if (btnFot) btnFot.style.display = "none";
-    if (btnSin) btnSin.textContent = "✓ Marcar como completado";
+    if (btnFot)  btnFot.style.display  = "none";
+    if (btnNota) btnNota.style.display = "none";
+    if (btnSin)  btnSin.textContent = "✓ Marcar como completado";
+  } else if (TIPO_TRABAJO === TIPOS_TRABAJO.RETIRO) {
+    if (btnFot)  { btnFot.style.display = "flex"; btnFot.textContent = "📷 " + labelBotonFotos(); }
+    if (btnNota) btnNota.style.display = "none";
+    if (btnSin)  btnSin.textContent = "✓ Completar sin registro";
   } else {
-    if (btnFot) { btnFot.style.display = "flex"; btnFot.textContent = "📷 " + labelBotonFotos(); }
-    if (btnSin) btnSin.textContent = "✓ Completar sin registro";
+    if (btnFot)  { btnFot.style.display = "flex"; btnFot.textContent = "📷 " + labelBotonFotos(); }
+    if (btnNota) btnNota.style.display = "block";
+    if (btnSin)  btnSin.textContent = "✓ Completar sin registro";
   }
 
   var sfott = document.getElementById("sfott"); if (sfott) sfott.textContent = loc.nombre;
@@ -951,7 +958,7 @@ function irSig() {
 function renderHistorial() {
   var lista = document.getElementById("hist-l");
   if (!lista) return;
-  if (HISTORIAL.length === 0) { lista.innerHTML = '<div class="empty">Aún no hay certificados hoy</div>'; return; }
+  if (HISTORIAL.length === 0) { lista.innerHTML = '<div class="empty">Aún no hay registros hoy</div>'; return; }
   var h = '<div class="slbl">Hoy</div>';
   for (var i = 0; i < HISTORIAL.length; i++) {
     var hi = HISTORIAL[i];
