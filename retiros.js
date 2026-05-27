@@ -7,11 +7,27 @@
 function pfGetRetiros() {
   try { return JSON.parse(localStorage.getItem("pf_retiros") || "[]"); } catch(e) { return []; }
 }
-function pfSaveRetiros(arr) { localStorage.setItem("pf_retiros", JSON.stringify(arr)); }
+function pfSaveRetiros(arr) {
+  try {
+    localStorage.setItem("pf_retiros", JSON.stringify(arr));
+  } catch(e) {
+    if (e.name === "QuotaExceededError") {
+      pfModal("⚠️ Almacenamiento lleno. Haz un backup desde Perfil y borra datos antiguos.");
+    }
+  }
+}
 function pfGetFichas() {
   try { return JSON.parse(localStorage.getItem("pf_fichas") || "{}"); } catch(e) { return {}; }
 }
-function pfSaveFichas(obj) { localStorage.setItem("pf_fichas", JSON.stringify(obj)); }
+function pfSaveFichas(obj) {
+  try {
+    localStorage.setItem("pf_fichas", JSON.stringify(obj));
+  } catch(e) {
+    if (e.name === "QuotaExceededError") {
+      pfModal("⚠️ Almacenamiento lleno. Haz un backup desde Perfil y borra datos antiguos.");
+    }
+  }
+}
 
 // ── REGISTRO DE RETIRO ───────────────────────────────────────
 function pfRegistrarRetiro(local, punto, tecnico, desc) {
@@ -43,16 +59,18 @@ function pfRegistrarRetiro(local, punto, tecnico, desc) {
 
 function pfMarcarEntregado(retiroId) {
   var retiros = pfGetRetiros();
+  // #041 FIX: guardar referencia al retiro ANTES de modificar la lista
+  var retiroEntregado = null;
   for (var i = 0; i < retiros.length; i++) {
     if (retiros[i].id === retiroId) {
+      retiroEntregado = JSON.parse(JSON.stringify(retiros[i])); // snapshot
       retiros[i].estado = "entregado";
       retiros[i].fechaEntrega = fechaHoy();
       break;
     }
   }
   // Registrar entrega en ficha del local
-  var retiroEntregado = null;
-  var allRetiros = pfGetRetiros();
+  var allRetiros = retiros; // usar la lista ya modificada
   for (var i = 0; i < allRetiros.length; i++) {
     if (allRetiros[i].id === retiroId) { retiroEntregado = allRetiros[i]; break; }
   }

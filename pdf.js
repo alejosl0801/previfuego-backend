@@ -13,8 +13,12 @@ function generarPDF() {
       FD["antes"]   = fotoAntes.fb64;
     }
   }
-  if (NOV === null) { pfModal("Indica si hay novedades antes de continuar."); return; }
-  if (NOV === "si" && ACCS.length === 0) { pfModal("Seleccionaste \"Accesorios dañados\" pero no agregaste ninguno."); return; }
+  // NOV solo requerido para MANTENIMIENTO
+  var tiposConNov = ["mantenimiento"];
+  if (tiposConNov.indexOf(TIPO_TRABAJO) !== -1) {
+    if (NOV === null) { pfModal("Indica si hay novedades antes de continuar."); return; }
+    if (NOV === "si" && ACCS.length === 0) { pfModal("Seleccionaste \"Accesorios dañados\" pero no agregaste ninguno."); return; }
+  }
   var fc = 0;
   for (var k in FB64) { if (FB64[k]) fc++; }
   if (fc === 0) { pfModal("Necesitas al menos 1 foto para generar el certificado."); return; }
@@ -61,7 +65,23 @@ function hacerPDF(fc) {
     var now = new Date();
     var MES = String(now.getMonth()+1).padStart(2,"0");
     var ANO = now.getFullYear();
-    var MA  = MES+"/"+ANO, MAS = MES+"/"+(ANO+1);
+    // #027 FIX: usar fecha real del último mant desde fichas si existe
+    var MA  = MES+"/"+ANO; // fallback: hoy
+    var MAS = MES+"/"+(ANO+1);
+    try {
+      var _fichas = JSON.parse(localStorage.getItem("pf_fichas") || "{}");
+      var _ficha  = _fichas[LOCAL_ACTUAL.nombre];
+      if (_ficha && _ficha.visitas) {
+        var _ultMant = _ficha.visitas.filter(function(v){ return v.tipo==="mantenimiento" || v.tipo==="entrega"; });
+        if (_ultMant.length > 0) {
+          var _fp = _ultMant[0].fecha.split("/");
+          if (_fp.length >= 3) {
+            MA  = _fp[1]+"/"+_fp[2]; // MM/YYYY del último mant real
+            MAS = _fp[1]+"/"+(parseInt(_fp[2])+1);
+          }
+        }
+      }
+    } catch(e) {}
 
     CERT_CONTADOR++;
     localStorage.setItem("pf_certCount", CERT_CONTADOR);
@@ -189,7 +209,12 @@ function hacerPDF(fc) {
     y += 5;
 
     // Tabla extintores — SOLO si hay extintores
+    // #030 FIX: si no hay extintores en BD, mostrar fila placeholder
     var exts = (LOCAL_ACTUAL.ext && LOCAL_ACTUAL.ext.length > 0) ? LOCAL_ACTUAL.ext : [];
+    if (exts.length === 0) {
+      // Agregar fila genérica para que el certificado no quede sin tabla
+      exts = [{ tipo: "PQS", lbs: "—", serie: "—", ult: MA, prox: MAS }];
+    }
     if (exts.length > 0) {
       var gmap = {};
       for (var i = 0; i < exts.length; i++) {
@@ -279,15 +304,32 @@ function hacerPDF(fc) {
     }
 
     if (fv.length > 0) {
-      // Distribuir fotos: máx 2 por fila
+      // #028 FIX: distribuir fotos con tamaño adaptativo para evitar overflow
+      // Máx 4 fotos en pág 2 sin salirse — si hay más, reducir tamaño
       var fotasPorFila = fv.length === 1 ? 1 : 2;
-      var fw = fv.length === 1 ? 100 : (CW - 5) / 2;
-      var fh = fw * 0.75;
+      // Altura disponible en pág 2 para fotos: ~180mm (descontando header, firma, pie)
+      var alturaDisp = 180;
+      var filasTotales = Math.ceil(fv.length / fotasPorFila);
+      var fw, fh;
+      if (fv.length === 1) {
+        fw = 100; fh = fw * 0.75;
+      } else {
+        fw = (CW - 5) / 2;
+        fh = fw * 0.72;
+        // Si no caben todas las filas, reducir proporcionalmente
+        var alturaTotal = filasTotales * (fh + 10);
+        if (alturaTotal > alturaDisp) {
+          var factor = alturaDisp / alturaTotal;
+          fw = fw * factor; fh = fh * factor;
+        }
+      }
       for (var i = 0; i < fv.length; i++) {
         var col    = i % fotasPorFila;
         var fila   = Math.floor(i / fotasPorFila);
         var fx     = ML + col * (fw + 5) + (fv.length === 1 ? (CW-fw)/2 : 0);
-        var fy     = p2y + fila * (fh + 12);
+        var fy     = p2y + fila * (fh + 10);
+        // Si se sale de la página, detener
+        if (fy + fh > PH - 20) break;
         try {
           doc.setFillColor(200,200,200); doc.rect(fx+1.5, fy+1.5, fw, fh, "F");
           fR(); doc.rect(fx-1, fy-1, fw+2, fh+2, "F");
@@ -297,14 +339,15 @@ function hacerPDF(fc) {
           doc.text(etiqU[i]||"", fx+fw/2, fy+fh-2.5, {align:"center"});
         } catch(e) {}
       }
-      var filas = Math.ceil(fv.length / fotasPorFila);
-      p2y += filas * (fh + 12);
+      p2y += filasTotales * (fh + 10);
     }
 
     // Firma — con tamaño correcto
-    if (FIRMADO && canvas && canvas.width > 50) {
+    // #039 FIX: usar firma guardada si canvas fue reiniciado
+    var _firmaB64pdf = (typeof FIRMA_GUARDADA_B64 !== "undefined" && FIRMA_GUARDADA_B64) ? FIRMA_GUARDADA_B64 : (canvas && FIRMADO ? canvas.toDataURL("image/png") : null);
+    if (_firmaB64pdf) {
       try {
-        var sigData = canvas.toDataURL("image/png");
+        var sigData = _firmaB64pdf;
         dR(); doc.setLineWidth(0.5); doc.line(ML, p2y, ML+CW, p2y); p2y += 6;
         doc.setFont("helvetica","bold"); doc.setFontSize(8.5); tR();
         doc.text("FIRMA DEL ENCARGADO:", ML, p2y); p2y += 5;
@@ -348,9 +391,14 @@ function hacerPDF(fc) {
     // Nombre archivo = mismo que CERT_NUM pero seguro para sistema de archivos
     var nom = CERT_NUM.replace(/[^a-zA-Z0-9\-]/g,"-") + ".pdf";
     var blob     = doc.output("blob");
-    var blobUrl  = URL.createObjectURL(blob);
+    // #016 #029 FIX: conservar URL hasta que el usuario navegue a otro local
+    // Revocar solo la URL anterior de ESTE local (no todas)
+    if (window._ULTIMO_BLOB_URL) {
+      try { URL.revokeObjectURL(window._ULTIMO_BLOB_URL); } catch(e) {}
+    }
+    var blobUrl = URL.createObjectURL(blob);
+    window._ULTIMO_BLOB_URL = blobUrl;
     URLS_GENERADAS.push(blobUrl);
-    if (URLS_GENERADAS.length > 10) URL.revokeObjectURL(URLS_GENERADAS.shift());
 
     mostrarCargando(false);
 
@@ -380,7 +428,7 @@ function hacerPDF(fc) {
     if (ACCS.length > 0) {
       var tot = 0;
       for (var i = 0; i < ACCS.length; i++) tot += ACCS[i].p;
-      var iva = tot * 0.15;
+      var _tasaIVA = parseFloat(localStorage.getItem('pf_iva') || '0.15'); var iva = tot * _tasaIVA;
       var notaC = document.getElementById("nota-c");
       var notaM = document.getElementById("nota-m");
       if (notaC) notaC.style.display = "block";
@@ -424,15 +472,19 @@ function hacerPDF(fc) {
 
     ir("senv");
 
-    // Registrar visita en fichas (para semáforo y dashboard)
-    if (typeof pfOnLocalCompletado === "function") {
-      pfOnLocalCompletado(LOCAL_ACTUAL, PUNTO_ACTUAL, TIPO_TRABAJO, TECNICO_NOMBRE, "");
-    }
-
   } catch(err) {
     mostrarCargando(false);
-    console.error(err);
     pfModal("Error generando el PDF: "+err.message);
+    return;
   }
+
+  // #032 FIX: registrar visita FUERA del try/catch de PDF pero en su propio try/catch
+  try {
+    if (typeof pfOnLocalCompletado === "function") {
+      pfOnLocalCompletado(LOCAL_ACTUAL, PUNTO_ACTUAL, TIPO_TRABAJO,
+        (typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "Técnico"), "");
+    }
+  } catch(e2) { console.warn("pfOnLocalCompletado error:", e2); }
+  // fin generarPDF
 }
 

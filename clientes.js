@@ -1,7 +1,9 @@
 // ═══════════════════════════════════════════════════════════
-//  PREVIFUEGO — clientes.js  v1.0
+//  PREVIFUEGO — clientes.js  v2.0
 //  Base de datos de 341 clientes
-//  Generado automáticamente desde PREVIFUEGO_BASE_DE_DATOS_v2
+//  Actualizado desde PREVIFUEGO_BASE_DE_DATOS_v2
+//  #085: KFC ahora incluye campo mes (pendiente llenar)
+//  #086: Independientes tienen código IND-NNN generado
 // ═══════════════════════════════════════════════════════════
 
 var PF_CLIENTES = [
@@ -2406,7 +2408,7 @@ var PF_CLIENTES = [
     "freqRec": "3 años"
   },
   {
-    "codigo": "",
+    "codigo": "IND-001",
     "grupo": "Independiente",
     "marca": "TORO ASADO",
     "nombre": "TORO ASADO PLANTA",
@@ -2418,67 +2420,67 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-002",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA CENTENARIO",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-003",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA CRISTO",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-004",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA ENTRE RIOS",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-005",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA ESTEROS",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-006",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA SAMANES",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-007",
     "grupo": "Independiente",
     "marca": "NOVOCENTRO",
     "nombre": "NOVOCENTRO DURAN",
@@ -2490,7 +2492,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-008",
     "grupo": "Independiente",
     "marca": "PAPA JOHNS",
     "nombre": "PJ BUENA VISTA",
@@ -2502,19 +2504,19 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-009",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO CORAL CEIBOS",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-010",
     "grupo": "Independiente",
     "marca": "SHIATSUCORP",
     "nombre": "SHIATSUCORP DURAN",
@@ -2526,91 +2528,91 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-011",
     "grupo": "Independiente",
     "marca": "MUNDICABLES",
     "nombre": "MUNDICABLES",
     "razon": "MUNDICABLES S.A.",
-    "ruc": "0992923172001",
+    "ruc": "992923172001",
     "responsable": "",
     "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-012",
     "grupo": "Independiente",
     "marca": "INDUTORRES",
     "nombre": "INDUTORRES",
     "razon": "INDUTORRES S.A.",
-    "ruc": "0990881561001",
+    "ruc": "990881561001",
     "responsable": "",
     "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-013",
     "grupo": "Independiente",
     "marca": "SECOMATICO",
     "nombre": "SECOMATICO",
     "razon": "LAVANDERIA SECOMATICO SA",
-    "ruc": "0990058229001",
+    "ruc": "990058229001",
     "responsable": "",
     "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-014",
     "grupo": "Independiente",
     "marca": "BONTEX",
     "nombre": "BONTEX",
     "razon": "BONTEX S.A.",
-    "ruc": "0992273429001",
+    "ruc": "992273429001",
     "responsable": "",
     "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-015",
     "grupo": "Independiente",
     "marca": "KURMA",
     "nombre": "KURMA",
     "razon": "INMOBILIARIA KURMA S.A.",
-    "ruc": "0990872988001",
+    "ruc": "990872988001",
     "responsable": "",
     "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-016",
     "grupo": "Independiente",
     "marca": "KHOURY",
     "nombre": "INMOBILIARIA KHOURY",
     "razon": "INMOBILIARIA KHOURY CIA. LTDA.",
-    "ruc": "0990062900001",
+    "ruc": "990062900001",
     "responsable": "",
     "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-017",
     "grupo": "Independiente",
     "marca": "FUJIFILM",
     "nombre": "FUJIFILM",
     "razon": "MONTENEGRO SALAS VICTOR MANUEL",
-    "ruc": "0925739997001",
+    "ruc": "925739997001",
     "responsable": "",
     "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-018",
     "grupo": "Independiente",
     "marca": "NOVOEVENTOS",
     "nombre": "COLEGIO SAN LUIS REY DE FRANCIA",
@@ -2622,31 +2624,31 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-019",
     "grupo": "Independiente",
     "marca": "ING. CHANE",
     "nombre": "ING CHANE",
     "razon": "ING. MARCO ANTONIO CHANE LEON",
-    "ruc": "0903180503001",
+    "ruc": "903180503001",
     "responsable": "",
     "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-020",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA PLAZA TIA CENTRAL",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-021",
     "grupo": "Independiente",
     "marca": "PAPA JOHNS",
     "nombre": "PAPIZZEC MILAGRO",
@@ -2658,7 +2660,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-022",
     "grupo": "Independiente",
     "marca": "PAPA JOHNS",
     "nombre": "PJ GARZOTA",
@@ -2670,43 +2672,43 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-023",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "EMPANADAS PACO CITY MALL",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-024",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "EMPANADAS PACO VERMONT PLAZA",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-025",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO RIOC CEIBOS",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-026",
     "grupo": "Independiente",
     "marca": "CEBICHES",
     "nombre": "CEBICHES RIOC CEIBOS",
@@ -2718,7 +2720,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-027",
     "grupo": "Independiente",
     "marca": "CEBICHES",
     "nombre": "IVAN RIVADENEIRA CEBICHES EL DORADO",
@@ -2730,7 +2732,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-028",
     "grupo": "Independiente",
     "marca": "KOBE",
     "nombre": "KOBE PLANTA",
@@ -2742,7 +2744,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-029",
     "grupo": "Independiente",
     "marca": "NOE",
     "nombre": "NOE BOCCA SAMBO",
@@ -2754,7 +2756,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-030",
     "grupo": "Independiente",
     "marca": "NOE",
     "nombre": "NOE MALL DEL SOL",
@@ -2766,103 +2768,103 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-031",
     "grupo": "Independiente",
     "marca": "FEDERAL",
     "nombre": "FEDERAL",
     "razon": "IMPORTADORA FEDERAL S.A.",
-    "ruc": "0990011451001",
+    "ruc": "990011451001",
     "responsable": "",
     "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-032",
     "grupo": "Independiente",
     "marca": "ROLORTIZ",
     "nombre": "ROLORTIZ",
     "razon": "IMPORTADORA ROLORTIZ CIA. LTDA.",
-    "ruc": "0190157075001",
+    "ruc": "190157075001",
     "responsable": "",
     "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-033",
     "grupo": "Independiente",
     "marca": "GASEC",
     "nombre": "GASEC",
     "razon": "GASEC S.A.",
-    "ruc": "0992143576001",
+    "ruc": "992143576001",
     "responsable": "",
     "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-034",
     "grupo": "Independiente",
     "marca": "SOCELEC",
     "nombre": "SOCELEC",
     "razon": "SOCIEDAD ELECTRONICA S.A. SOCELEC",
-    "ruc": "0190370585001",
+    "ruc": "190370585001",
     "responsable": "",
     "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-035",
     "grupo": "Independiente",
     "marca": "FIGURA Y SALUD / YOPIURA",
     "nombre": "FIGURA Y SALUD",
     "razon": "BERREZUETA RIOS FERNANDO JAVIER",
-    "ruc": "0917103939001",
+    "ruc": "917103939001",
     "responsable": "",
     "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-036",
     "grupo": "Independiente",
     "marca": "FIGURA Y SALUD / YOPIURA",
     "nombre": "YOPIURA ENTRE RIOS",
     "razon": "BERREZUETA RIOS FERNANDO JAVIER",
-    "ruc": "0917103939001",
+    "ruc": "917103939001",
     "responsable": "",
     "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-037",
     "grupo": "Independiente",
     "marca": "PHARMEDICAL",
     "nombre": "PHARMEDICAL PARQUE COLON",
     "razon": "GIL POVEDA NADIA VIVIANA",
-    "ruc": "0922856802",
+    "ruc": "922856802",
     "responsable": "",
     "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-038",
     "grupo": "Independiente",
     "marca": "ALMODOBAR",
     "nombre": "ALMODOBAR GUAYARTE",
     "razon": "ALMODOBAR",
-    "ruc": "0993142905001",
+    "ruc": "993142905001",
     "responsable": "",
     "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-039",
     "grupo": "Independiente",
     "marca": "TORO ASADO",
     "nombre": "TORO ASADO DURAN",
@@ -2874,7 +2876,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-040",
     "grupo": "Independiente",
     "marca": "TORO ASADO",
     "nombre": "TORO RIOC EL DORADO",
@@ -2886,19 +2888,19 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-041",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA PLAZA TIA LA JOYA",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-042",
     "grupo": "Independiente",
     "marca": "PAPA JOHNS",
     "nombre": "PAPA JOHNS VILLA CLUB",
@@ -2910,31 +2912,31 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-043",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PLAZA TIA EL CAMINO PACO",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-044",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PLAZA TIA LA JOYA PACO",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-045",
     "grupo": "Independiente",
     "marca": "KOBE",
     "nombre": "KOBE SUPERCINES ORELLANA",
@@ -2946,7 +2948,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-046",
     "grupo": "Independiente",
     "marca": "CONGAS",
     "nombre": "CONGAS PORTOVIEJO",
@@ -2958,31 +2960,31 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-047",
     "grupo": "Independiente",
     "marca": "PROBANEN",
     "nombre": "PROBANEN",
     "razon": "PROBANEN S.A.S.",
-    "ruc": "0993388441001",
+    "ruc": "993388441001",
     "responsable": "",
     "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-048",
     "grupo": "Independiente",
     "marca": "MARCELO FREIRE",
     "nombre": "FREIRE VILLA CLUB",
     "razon": "MARCELO FREIRE S.A.",
-    "ruc": "0990638861001",
+    "ruc": "990638861001",
     "responsable": "",
     "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-049",
     "grupo": "Independiente",
     "marca": "TORO ASADO",
     "nombre": "TORO PICHINCHA Y LUQUE",
@@ -2994,7 +2996,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-050",
     "grupo": "Independiente",
     "marca": "NOVOCENTRO",
     "nombre": "NOVOCENTRO JUAN MONTALVO",
@@ -3006,7 +3008,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-051",
     "grupo": "Independiente",
     "marca": "NOVOCENTRO",
     "nombre": "NOVOCENTRO LAS AGUAS",
@@ -3018,7 +3020,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-052",
     "grupo": "Independiente",
     "marca": "PAPA JOHNS",
     "nombre": "PAPA JOHNS SAMBO CORAL",
@@ -3030,67 +3032,67 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-053",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO 9 DE OCT Y G AVILES",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "ABRIL",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-054",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO COMISARIATO VIA A LA C",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "ABRIL",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-055",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO MALL DEL RIO",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "ABRIL",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-056",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO PLAZA TIA SALITRE",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "ABRIL",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-057",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO TERMINAL",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "ABRIL",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-058",
     "grupo": "Independiente",
     "marca": "CEBICHES",
     "nombre": "CEBICHES BUENA VISTA SOCIEDAD DE HECHO",
@@ -3102,7 +3104,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-059",
     "grupo": "Independiente",
     "marca": "CEBICHES",
     "nombre": "CEBICHES CITY MALL",
@@ -3114,7 +3116,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-060",
     "grupo": "Independiente",
     "marca": "CEBICHES",
     "nombre": "CEBICHES DE LA RUMIÑAHUI URDESA",
@@ -3126,7 +3128,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-061",
     "grupo": "Independiente",
     "marca": "CEBICHES",
     "nombre": "CEBICHES RIOCENTRO PUNTILLA",
@@ -3138,7 +3140,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-062",
     "grupo": "Independiente",
     "marca": "CEBICHES",
     "nombre": "CEBICHES SAN MARINO",
@@ -3150,7 +3152,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-063",
     "grupo": "Independiente",
     "marca": "SHIATSUCORP",
     "nombre": "SHIATSU DORADO",
@@ -3162,7 +3164,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-064",
     "grupo": "Independiente",
     "marca": "SHIATSUCORP",
     "nombre": "SHIATSUCORP CITY MALL",
@@ -3174,7 +3176,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-065",
     "grupo": "Independiente",
     "marca": "SHIATSUCORP",
     "nombre": "SHIATSUCORP MALL DEL SUR",
@@ -3186,55 +3188,55 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-066",
     "grupo": "Independiente",
     "marca": "IKURA",
     "nombre": "IKURA",
     "razon": "IKURA ASIAN FOOD S.A.S.",
-    "ruc": "0993381020001",
+    "ruc": "993381020001",
     "responsable": "",
     "mes": "ABRIL",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-067",
     "grupo": "Independiente",
     "marca": "AGO SAS",
     "nombre": "AGO SAS",
     "razon": "AGO S.A.S.",
-    "ruc": "0993332208001",
+    "ruc": "993332208001",
     "responsable": "",
     "mes": "ABRIL",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-068",
     "grupo": "Independiente",
     "marca": "MARCELO FREIRE",
     "nombre": "FREIRE ALLYSON ALBORADA",
     "razon": "MARCELO FREIRE S.A.",
-    "ruc": "0990638861001",
+    "ruc": "990638861001",
     "responsable": "",
     "mes": "ABRIL",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-069",
     "grupo": "Independiente",
     "marca": "LITTLE ITALY",
     "nombre": "LITTLE ITALY MALL DEL SOL",
     "razon": "LITTLEITALY ECUADOR CIA. LTDA.",
-    "ruc": "0993033081001",
+    "ruc": "993033081001",
     "responsable": "",
     "mes": "ABRIL",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-070",
     "grupo": "Independiente",
     "marca": "TORO ASADO",
     "nombre": "TORO ASADO CHIMBORAZO",
@@ -3246,79 +3248,79 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-071",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA DURAN CENTRO",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-072",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA MUCHO LOTE",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-073",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA PASCUALES",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-074",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA PORTETE 17",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-075",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA PORTETE 38",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-076",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA SUBURBIO",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-077",
     "grupo": "Independiente",
     "marca": "NOVOCENTRO",
     "nombre": "NOVOCENTRO ORELLANA",
@@ -3330,31 +3332,31 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-078",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO RIOCENTRO SUR",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-079",
     "grupo": "Independiente",
     "marca": "KOREA MOTORS",
     "nombre": "KOREA MOTORS",
     "razon": "KOREA MOTORS LHG IMPORT S.A.",
-    "ruc": "0993004391001",
+    "ruc": "993004391001",
     "responsable": "",
     "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-080",
     "grupo": "Independiente",
     "marca": "TORO ASADO",
     "nombre": "BABAHOYO TORO ASADO",
@@ -3366,7 +3368,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-081",
     "grupo": "Independiente",
     "marca": "TORO ASADO",
     "nombre": "TORO ASADO DORADO",
@@ -3378,79 +3380,79 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-082",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA CHIMBORAZO Y VELEZ",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-083",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA ENTRADA DE LA 8",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-084",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA GUASMO",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-085",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA MILAGRO",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-086",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA SAN FELIPE",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-087",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA SAUCES",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-088",
     "grupo": "Independiente",
     "marca": "PAPA JOHNS",
     "nombre": "ALBORADA PAPIZZEC",
@@ -3462,7 +3464,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-089",
     "grupo": "Independiente",
     "marca": "PAPA JOHNS",
     "nombre": "MALL DEL SUR PAPIZZEC",
@@ -3474,7 +3476,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-090",
     "grupo": "Independiente",
     "marca": "PAPA JOHNS",
     "nombre": "RIOCENTRO DORADO PAPIZZEC",
@@ -3486,7 +3488,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-091",
     "grupo": "Independiente",
     "marca": "PAPA JOHNS",
     "nombre": "URDESA PAPIZZEC",
@@ -3498,55 +3500,55 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-092",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO MALL EL FORTIN ISLA",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-093",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO MALL FORTIN",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-094",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO PLANTA DURAN",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-095",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO TIA BASTION",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-096",
     "grupo": "Independiente",
     "marca": "SHIATSUCORP",
     "nombre": "SHIATSU MALL DEL SUR",
@@ -3558,79 +3560,79 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-097",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA DURAN",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-098",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA MUCHO LOTE 1",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-099",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO 9 OCT Y G AVILES",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-100",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO MALL DEL SUR",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-101",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO PLAZA TIA DURAN",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-102",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO VILLAGE",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-103",
     "grupo": "Independiente",
     "marca": "PAPA JOHNS",
     "nombre": "RIOC CEIBOS PAPIZZEC",
@@ -3642,31 +3644,31 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-104",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO MALL DEL NORTE",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-105",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO SHOPPING VIA A DAULE",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-106",
     "grupo": "Independiente",
     "marca": "KOBE",
     "nombre": "KOBE MALL DEL NORTE",
@@ -3678,7 +3680,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-107",
     "grupo": "Independiente",
     "marca": "KOBE",
     "nombre": "KOBE MALL DEL SOL",
@@ -3690,7 +3692,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-108",
     "grupo": "Independiente",
     "marca": "KOBE",
     "nombre": "KOBE PLAZA BATAN",
@@ -3702,7 +3704,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-109",
     "grupo": "Independiente",
     "marca": "SHIATSUCORP",
     "nombre": "SHIATSU MALL DEL NORTE",
@@ -3714,163 +3716,163 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-110",
     "grupo": "Independiente",
     "marca": "PROCORPORATION",
     "nombre": "PROCORPORATION",
     "razon": "PROCORPORATION S.A.",
-    "ruc": "0992361751001",
+    "ruc": "992361751001",
     "responsable": "",
     "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-111",
     "grupo": "Independiente",
     "marca": "PRODUCSOL",
     "nombre": "PRODUCSOL",
     "razon": "PRODUCSOL S.A.",
-    "ruc": "0992701692001",
+    "ruc": "992701692001",
     "responsable": "",
     "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-112",
     "grupo": "Independiente",
     "marca": "MARCELO FREIRE",
     "nombre": "FREIRE PEÑAFIEL MARJORIE",
     "razon": "MARCELO FREIRE S.A.",
-    "ruc": "0990638861001",
+    "ruc": "990638861001",
     "responsable": "",
     "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-113",
     "grupo": "Independiente",
     "marca": "MARCELO FREIRE",
     "nombre": "MARCELO FREIRE PEÑAFIEL",
     "razon": "MARCELO FREIRE S.A.",
-    "ruc": "0990638861001",
+    "ruc": "990638861001",
     "responsable": "",
     "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-114",
     "grupo": "Independiente",
     "marca": "MARCELO FREIRE",
     "nombre": "MARCELO FREIRE S.A.",
     "razon": "MARCELO FREIRE S.A.",
-    "ruc": "0990638861001",
+    "ruc": "990638861001",
     "responsable": "",
     "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-115",
     "grupo": "Independiente",
     "marca": "ING. CHANE",
     "nombre": "CHANE",
     "razon": "ING. MARCO ANTONIO CHANE LEON",
-    "ruc": "0903180503001",
+    "ruc": "903180503001",
     "responsable": "",
     "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-116",
     "grupo": "Independiente",
     "marca": "MARYAH SPA",
     "nombre": "MARYAH SPA CC LAS VITRINAS",
     "razon": "MARYAH SPA S.A.S.",
-    "ruc": "0993383841001",
+    "ruc": "993383841001",
     "responsable": "",
     "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-117",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO UNIV ESTATAL",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "SEPTIEMBRE",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-118",
     "grupo": "Independiente",
     "marca": "FIDEO NAPOLITANO",
     "nombre": "FIDEO NAPOLITANO",
     "razon": "INDUSTRIA DE FIDEO NAPOLITANO S.A. INFINASA",
-    "ruc": "0992234024001",
+    "ruc": "992234024001",
     "responsable": "",
     "mes": "SEPTIEMBRE",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-119",
     "grupo": "Independiente",
     "marca": "TORRES DEL SOL",
     "nombre": "TORRES DEL SOL",
     "razon": "EDIFICIO TORRES DEL SOL 1",
-    "ruc": "0992494867001",
+    "ruc": "992494867001",
     "responsable": "",
     "mes": "SEPTIEMBRE",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-120",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "EMPANADAS PACO MALECON",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "OCTUBRE",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-121",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "EMPANADAS PACO MALL DEL SOL",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "OCTUBRE",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-122",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO MUCHO LOTE COMISARIATO",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "OCTUBRE",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-123",
     "grupo": "Independiente",
     "marca": "SHIATSUCORP",
     "nombre": "SHIATSU MALL DEL SOL",
@@ -3882,43 +3884,43 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-124",
     "grupo": "Independiente",
     "marca": "JOYERIA MARTITHA",
     "nombre": "JOYERIA MARTITHA CENTRO",
     "razon": "MARTHA CECILIA CASTILLO VALDEZ",
-    "ruc": "0903482545001",
+    "ruc": "903482545001",
     "responsable": "",
     "mes": "OCTUBRE",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-125",
     "grupo": "Independiente",
     "marca": "JOYERIA MARTITHA",
     "nombre": "JOYERIA MARTITHA MALL DEL SOL",
     "razon": "MARTHA CECILIA CASTILLO VALDEZ",
-    "ruc": "0903482545001",
+    "ruc": "903482545001",
     "responsable": "",
     "mes": "OCTUBRE",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-126",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA VILLA CLUB",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-127",
     "grupo": "Independiente",
     "marca": "PAPA JOHNS",
     "nombre": "CIUDAD DEL SOL PAPIZZEC",
@@ -3930,43 +3932,43 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-128",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "KOBE PLAZA TIA JOYA",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-129",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO MALECON Y COLON",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-130",
     "grupo": "Independiente",
     "marca": "EMPANADAS PACO",
     "nombre": "PACO TIA VIA A LA COSTA",
     "razon": "EMPACALLE S.A.",
-    "ruc": "0993053910001",
+    "ruc": "993053910001",
     "responsable": "",
     "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-131",
     "grupo": "Independiente",
     "marca": "KOBE",
     "nombre": "KOBE BAMBOO PLAZA VIA A LA C",
@@ -3978,7 +3980,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-132",
     "grupo": "Independiente",
     "marca": "KOBE",
     "nombre": "KOBE URDESA",
@@ -3990,7 +3992,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-133",
     "grupo": "Independiente",
     "marca": "NOE",
     "nombre": "NOE SAN MARINO",
@@ -4002,19 +4004,19 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-134",
     "grupo": "Independiente",
     "marca": "EQUILIBRIUM",
     "nombre": "EQUILIBRIUM",
     "razon": "EDIFICIO EQUILIBRIUM CENTRO DE ARMONIA",
-    "ruc": "0992497815001",
+    "ruc": "992497815001",
     "responsable": "",
     "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-135",
     "grupo": "Independiente",
     "marca": "PELUQUERIA YENS",
     "nombre": "PELUQUERIA YENS",
@@ -4026,7 +4028,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-136",
     "grupo": "Independiente",
     "marca": "NOVOEVENTOS",
     "nombre": "CJNC31  PIAZZA MACHALA",
@@ -4038,7 +4040,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-137",
     "grupo": "Independiente",
     "marca": "TORO ASADO",
     "nombre": "EL TORO ASADO FORTIN",
@@ -4050,19 +4052,19 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-138",
     "grupo": "Independiente",
     "marca": "TORTAMANIA",
     "nombre": "TORTAMANIA URDESA",
     "razon": "TORTAMANIA S.A.S",
-    "ruc": "0993366752001",
+    "ruc": "993366752001",
     "responsable": "",
     "mes": "DICIEMBRE",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-139",
     "grupo": "Independiente",
     "marca": "NOVOCENTRO",
     "nombre": "NOVOCENTRO SAMBORONDON",
@@ -4074,7 +4076,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-140",
     "grupo": "Independiente",
     "marca": "KOBE",
     "nombre": "KOBE RIOC CEIBOS",
@@ -4086,7 +4088,7 @@ var PF_CLIENTES = [
     "freqRec": "1 año"
   },
   {
-    "codigo": "",
+    "codigo": "IND-141",
     "grupo": "Independiente",
     "marca": "KOBE",
     "nombre": "KOBE RIOC ENTRE RIOS",
@@ -4099,96 +4101,148 @@ var PF_CLIENTES = [
   }
 ];
 
-// ── BUSCAR CLIENTE POR NOMBRE ─────────────────────────────────
+
+// ── BÚSQUEDA DE CLIENTE ──────────────────────────────────────
+// Busca por: código exacto → nombre exacto → nombre sin código → todas las palabras → palabra única
 function pfBuscarCliente(nombreLocal) {
-  if (!nombreLocal) return null;
-  var n = nombreLocal.toLowerCase().replace(/[^a-z0-9 ]/g, "");
-  // Búsqueda exacta primero
+  if (!nombreLocal || !window.PF_CLIENTES) return null;
+  var q = nombreLocal.trim().toUpperCase();
+
+  // 1. Código exacto
   for (var i = 0; i < PF_CLIENTES.length; i++) {
-    var c = PF_CLIENTES[i];
-    var cn = (c.nombre || "").toLowerCase().replace(/[^a-z0-9 ]/g, "");
-    if (cn === n) return c;
+    if (PF_CLIENTES[i].codigo && PF_CLIENTES[i].codigo.toUpperCase() === q) return PF_CLIENTES[i];
   }
-  // Búsqueda parcial — el nombre del local contiene el del cliente o viceversa
-  var mejorMatch = null, mejorScore = 0;
+
+  // 2. Nombre exacto
   for (var i = 0; i < PF_CLIENTES.length; i++) {
-    var c = PF_CLIENTES[i];
-    var cn = (c.nombre || "").toLowerCase().replace(/[^a-z0-9 ]/g, "");
-    var marca = (c.marca || "").toLowerCase();
-    // Verificar si el código está en el nombre
-    if (c.codigo && nombreLocal.toUpperCase().indexOf(c.codigo) !== -1) return c;
-    // Score por palabras en común
-    var palabras = n.split(" ").filter(function(w) { return w.length > 2; });
-    var score = 0;
-    for (var j = 0; j < palabras.length; j++) {
-      if (cn.indexOf(palabras[j]) !== -1) score++;
-      if (marca.indexOf(palabras[j]) !== -1) score += 0.5;
-    }
-    if (score > mejorScore) { mejorScore = score; mejorMatch = c; }
+    if (PF_CLIENTES[i].nombre.toUpperCase() === q) return PF_CLIENTES[i];
   }
-  return mejorScore >= 1 ? mejorMatch : null;
-}
 
-// ── CLIENTES DE JUNIO ─────────────────────────────────────────
-var PF_CLIENTES_JUNIO = PF_CLIENTES.filter(function(c) {
-  return c.mes && c.mes.toUpperCase().indexOf("JUN") !== -1;
-});
-
-// Cajun también es junio (código J)
-PF_CLIENTES.forEach(function(c) {
-  if (c.codigo && c.codigo.charAt(0) === "J" && c.grupo === "Grupo KFC") {
-    if (!PF_CLIENTES_JUNIO.find(function(x) { return x.codigo === c.codigo; })) {
-      PF_CLIENTES_JUNIO.push(c);
-    }
-  }
-});
-
-console.log("PF_CLIENTES cargados:", PF_CLIENTES.length, "| Junio:", PF_CLIENTES_JUNIO.length);
-
-// ── BÚSQUEDA DE CLIENTE ────────────────────────────────────
-// Busca cliente por nombre del local (búsqueda flexible)
-// Retorna: { codigo, razon, ruc, marca, grupo, freqMant, freqRec, mes }
-function pfBuscarCliente(nombreLocal) {
-  if (!nombreLocal || !PF_CLIENTES) return null;
-  var n = nombreLocal.toUpperCase().trim();
-
-  // 1. Búsqueda exacta por nombre
+  // 3. Nombre del cliente contiene el query (sin código prefijo)
+  // ej: query = "K002 - 9 DE OCTUBRE", busca nombre que lo contenga
   for (var i = 0; i < PF_CLIENTES.length; i++) {
-    if (PF_CLIENTES[i].nombre.toUpperCase() === n) return PF_CLIENTES[i];
+    if (PF_CLIENTES[i].nombre.toUpperCase().indexOf(q) !== -1) return PF_CLIENTES[i];
+    if (q.indexOf(PF_CLIENTES[i].nombre.toUpperCase()) !== -1) return PF_CLIENTES[i];
   }
 
-  // 2. Búsqueda por código al inicio del nombre (ej: "K079 - MALL DEL SOL" → código K079)
-  var mCod = n.match(/^([A-Z][0-9]{2,3})\s*[-–]\s*/);
-  if (mCod) {
-    var cod = mCod[1];
+  // 4. Quitar código del query (ej "K002 - 9 DE OCTUBRE" → "9 DE OCTUBRE")
+  var sinCod = q.replace(/^[A-Z0-9\-]+ - /, '').trim();
+  if (sinCod !== q) {
     for (var i = 0; i < PF_CLIENTES.length; i++) {
-      if (PF_CLIENTES[i].codigo === cod) return PF_CLIENTES[i];
+      var nm = PF_CLIENTES[i].nombre.toUpperCase().replace(/^[A-Z0-9\-]+ - /, '').trim();
+      if (nm === sinCod || nm.indexOf(sinCod) !== -1 || sinCod.indexOf(nm) !== -1) return PF_CLIENTES[i];
     }
   }
 
-  // 3. Búsqueda parcial: el nombre del local contiene el nombre de la BD o viceversa
-  var bestMatch = null, bestScore = 0;
+  // 5. Todas las palabras del query están en el nombre
+  var palabras = q.split(/\s+/).filter(function(p){ return p.length > 2; });
   for (var i = 0; i < PF_CLIENTES.length; i++) {
-    var cn = PF_CLIENTES[i].nombre.toUpperCase();
-    // Quitar código del nombre de la BD para comparar
-    var cnSinCod = cn.replace(/^[A-Z][0-9]{2,3}\s*[-–]\s*/, '').trim();
-    if (n.indexOf(cnSinCod) !== -1 || cnSinCod.indexOf(n) !== -1) {
-      var score = cnSinCod.length;
-      if (score > bestScore) { bestScore = score; bestMatch = PF_CLIENTES[i]; }
-    }
+    var nm = PF_CLIENTES[i].nombre.toUpperCase();
+    if (palabras.length > 0 && palabras.every(function(p){ return nm.indexOf(p) !== -1; })) return PF_CLIENTES[i];
   }
-  if (bestMatch) return bestMatch;
 
-  // 4. Búsqueda por palabras clave (últimas 2 palabras significativas)
-  var palabras = n.split(/\s+/).filter(function(p){ return p.length > 3; });
-  if (palabras.length > 0) {
-    var keyword = palabras[palabras.length - 1]; // última palabra larga
-    for (var i = 0; i < PF_CLIENTES.length; i++) {
-      if (PF_CLIENTES[i].nombre.toUpperCase().indexOf(keyword) !== -1) {
-        return PF_CLIENTES[i];
+  // 6. Palabra única significativa (>= 4 chars)
+  for (var pi = 0; pi < palabras.length; pi++) {
+    if (palabras[pi].length >= 4) {
+      for (var i = 0; i < PF_CLIENTES.length; i++) {
+        if (PF_CLIENTES[i].nombre.toUpperCase().indexOf(palabras[pi]) !== -1) return PF_CLIENTES[i];
       }
     }
   }
 
   return null;
+}
+
+// ── CLIENTES CUSTOM (agregados desde la app) ─────────────────
+// #088 FIX: Alejandro puede agregar clientes sin editar GitHub
+// Se guardan en localStorage pf_clientes_custom
+function pfGetClientesCustom() {
+  try { return JSON.parse(localStorage.getItem("pf_clientes_custom") || "[]"); } catch(e) { return []; }
+}
+
+function pfAgregarClienteTemp(datos) {
+  // datos: {nombre, razon, ruc, grupo, marca, responsable, mes, freqMant, freqRec}
+  var custom = pfGetClientesCustom();
+  var idx = "CUST-" + String(custom.length + 1).padStart(3, "0");
+  var cliente = {
+    codigo:      datos.codigo || idx,
+    grupo:       datos.grupo || "Independiente",
+    marca:       datos.marca || "",
+    nombre:      (datos.nombre || "").toUpperCase().trim(),
+    razon:       datos.razon || datos.nombre || "",
+    ruc:         datos.ruc || "—",
+    responsable: datos.responsable || "",
+    mes:         datos.mes || "",
+    freqMant:    datos.freqMant || "1 año",
+    freqRec:     datos.freqRec || "1 año",
+    _custom:     true
+  };
+  // No duplicar
+  var existe = pfBuscarCliente(cliente.nombre);
+  if (existe) return existe;
+  custom.push(cliente);
+  localStorage.setItem("pf_clientes_custom", JSON.stringify(custom));
+  return cliente;
+}
+
+// Extender pfBuscarCliente para incluir clientes custom
+(function() {
+  var _pfBuscarBase = window.pfBuscarCliente || pfBuscarCliente;
+  window.pfBuscarCliente = function(nombreLocal) {
+    // Buscar primero en lista base
+    var res = _pfBuscarBase(nombreLocal);
+    if (res) return res;
+    // Luego en clientes custom
+    var custom = pfGetClientesCustom();
+    if (!custom.length) return null;
+    var q = (nombreLocal || "").trim().toUpperCase();
+    for (var i = 0; i < custom.length; i++) {
+      if (custom[i].nombre.toUpperCase() === q) return custom[i];
+      if (custom[i].codigo && custom[i].codigo.toUpperCase() === q) return custom[i];
+    }
+    return null;
+  };
+})();
+
+// UI para agregar cliente desde perfil admin
+function pfAbrirFormNuevoCliente() {
+  var campos = [
+    {id:"nc-nom",  label:"Nombre del local *",   type:"text",   req:true},
+    {id:"nc-razon",label:"Razón social",          type:"text",   req:false},
+    {id:"nc-ruc",  label:"RUC",                   type:"text",   req:false},
+    {id:"nc-resp", label:"Responsable",           type:"text",   req:false},
+    {id:"nc-mes",  label:"Mes de visita",         type:"text",   req:false},
+    {id:"nc-grupo",label:"Grupo (KFC/Indep.)",    type:"text",   req:false}
+  ];
+  var ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:flex-end;justify-content:center";
+  var inner = '<div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">';
+  inner += '<div style="font-size:17px;font-weight:700;color:var(--ng);margin-bottom:16px">➕ Nuevo cliente</div>';
+  campos.forEach(function(c) {
+    inner += '<div style="margin-bottom:10px">';
+    inner += '<div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;margin-bottom:4px">'+c.label+'</div>';
+    inner += '<input id="'+c.id+'" type="'+c.type+'" style="width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px">';
+    inner += '</div>';
+  });
+  inner += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
+  inner += '<button type="button" id="nc-cancel" style="padding:14px;border-radius:12px;border:1.5px solid var(--bo);background:#fff;color:var(--g4);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Cancelar</button>';
+  inner += '<button type="button" id="nc-ok" style="padding:14px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Guardar</button>';
+  inner += '</div></div>';
+  ov.innerHTML = inner;
+  document.body.appendChild(ov);
+  ov.querySelector("#nc-cancel").onclick = function() { document.body.removeChild(ov); };
+  ov.querySelector("#nc-ok").onclick = function() {
+    var nom = (ov.querySelector("#nc-nom").value || "").trim();
+    if (!nom) { alert("El nombre es obligatorio"); return; }
+    var cli = pfAgregarClienteTemp({
+      nombre:      nom,
+      razon:       ov.querySelector("#nc-razon").value.trim(),
+      ruc:         ov.querySelector("#nc-ruc").value.trim(),
+      responsable: ov.querySelector("#nc-resp").value.trim(),
+      mes:         ov.querySelector("#nc-mes").value.trim().toUpperCase(),
+      grupo:       ov.querySelector("#nc-grupo").value.trim() || "Independiente"
+    });
+    document.body.removeChild(ov);
+    if (typeof pfModal === "function") pfModal("✅ Cliente «"+cli.nombre+"» agregado temporalmente.\n\nRecuerda agregarlo al CSV y republicar clientes.js para que sea permanente.");
+  };
 }

@@ -171,7 +171,7 @@ function pfRenderCalendario() {
   var mesActual = mesesNombres[_mesIdx];
   if (typeof PF_CLIENTES !== "undefined") {
     PF_CLIENTES.forEach(function(cli) {
-      if (cli.mes && cli.mes.toUpperCase().indexOf(mesActual.substring(0,3)) !== -1) {
+      if (cli.mes && cli.mes.toUpperCase() === mesActual.toUpperCase()) {
         localesMes.push(cli);
       }
     });
@@ -213,8 +213,7 @@ function pfRenderCalendario() {
       });
     });
     h += '<div style="height:80px"></div>';
-    el.innerHTML = h;
-    return;
+    // #075 FIX: no hacer return — continuar para mostrar también cal.tocan (fichas locales)
   }
 
   if (!cal.tocan.length && !localesMes.length) {
@@ -222,7 +221,7 @@ function pfRenderCalendario() {
     return;
   }
 
-  // Clientes de fichas con próxima fecha en el mes (fallback sin BD)
+  // Clientes de fichas con próxima fecha en el mes (complementa los de BD)
   cal.tocan.forEach(function(item) {
       var dias    = item.dias;
       var urgente = dias < 0;
@@ -286,14 +285,13 @@ function pfAnalisisIA() {
   PF_IA_CARGANDO = true;
   el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--g3)"><div style="font-size:32px;margin-bottom:8px">🤖</div><div style="font-size:14px;font-weight:700;margin-bottom:6px">Analizando datos...</div><div style="width:40px;height:40px;border:3px solid var(--g2);border-top-color:var(--r);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto"></div></div>';
 
-  fetch("https://api.anthropic.com/v1/messages", {
+  // #077 FIX: rutear por Apps Script como proxy — nunca exponer API key en el cliente
+  var iaUrl = (typeof SCRIPT_URL !== "undefined") ? SCRIPT_URL : "";
+  if (!iaUrl) { el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--r)">Error: SCRIPT_URL no configurado.</div>'; return; }
+  fetch(iaUrl + "?accion=analisis_ia", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model:      "claude-sonnet-4-20250514",
-      max_tokens: 1000,
-      messages:   [{ role:"user", content: prompt }]
-    })
+    body: JSON.stringify({ accion: "analisis_ia", prompt: prompt })
   })
   .then(function(r){ return r.json(); })
   .then(function(data) {

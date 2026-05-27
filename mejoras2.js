@@ -17,7 +17,13 @@ var PF_FREQ = {
   independiente: 365      // Independientes → cada 1 año
 };
 
-var PF_GRUPO_KFC = ["INT FOOD","SHEMLON","DELI INT","PROMOTORA","NOVOEVENTOS","SUSHICORP","KFC","GUS","CAJUN","MENESTRAS","AMERICAN DELI","BASKIN","CINNABON","JUAN VALDEZ","NOVOCENTRO","KOBE","NOE"];
+var PF_GRUPO_KFC = ["INT FOOD","SHEMLON","DELI INT","PROMOTORA","NOVOEVENTOS","SUSHICORP","KFC","GUS","CAJUN","MENESTRAS","AMERICAN DELI","BASKIN","CINNABON","JUAN VALDEZ","NOVOCENTRO","KOBE","NOE",
+  "CASA RES","ILCAPPO","ESPAÑOL","DOLCE","CAFA","TROPIBURGER","HELADERIAS",
+  // Casa Res (SHEMLON) — códigos R (R00x con cero o sin cero)
+  "R001","R002","R003","R004","R005","R006","R007","R008","R009","R010","R011","R012",
+  "R01","R02","R03","R04","R05","R06","R07","R08","R09","R10","R11","R12",
+  // #108 FIX: SAN MARINO es Grupo KFC (Casa Res)
+  "SAN MARINO"];
 
 function pfEsGrupoKFC(nombreLocal) {
   var n = (nombreLocal || "").toUpperCase();
@@ -30,10 +36,19 @@ function pfEsGrupoKFC(nombreLocal) {
 function pfProximoMantenimiento(nombreLocal, ultimaVisita) {
   if (!ultimaVisita) return null;
   try {
-    var p    = ultimaVisita.split("/");
-    var d    = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
-    // Mantenimiento = 1 año para TODOS los clientes
-    var freq = PF_FREQ.independiente;
+    var p = ultimaVisita.split("/");
+    var d = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+    // #060 FIX: buscar freqMant real del cliente en BD
+    var freq = PF_FREQ.independiente; // default 1 año
+    if (typeof pfBuscarCliente === "function") {
+      var cli = pfBuscarCliente(nombreLocal);
+      if (cli && cli.freqMant) {
+        var fm = cli.freqMant.toLowerCase();
+        if (fm.indexOf("3") !== -1)      freq = 365 * 3;
+        else if (fm.indexOf("2") !== -1) freq = 365 * 2;
+        else                             freq = PF_FREQ.independiente;
+      }
+    }
     d.setDate(d.getDate() + freq);
     return d;
   } catch(e) { return null; }
@@ -50,6 +65,47 @@ function pfSemaforoColor(dias) {
   if (dias < 30)    return { bg:"var(--rc)", tx:"var(--r)", ico:"🔴", label:dias+"d" };
   if (dias < 90)    return { bg:"var(--nc)", tx:"var(--n)", ico:"🟡", label:dias+"d" };
   return              { bg:"var(--vc)", tx:"var(--v)", ico:"🟢", label:dias+"d" };
+}
+
+// Filtro activo del semáforo: "todos" | "vencidos" | "proximos" | "01".."12"
+var PF_SEM_FILTRO = "todos";
+
+function pfSetFiltroSemaforo(f) {
+  PF_SEM_FILTRO = f;
+  pfRenderSemaforo();
+}
+
+function pfGenerarRecorridoDesdeList(items) {
+  if (!items || !items.length) { pfModal("No hay locales en el filtro actual."); return; }
+  var texto = "RECORRIDO GENERADO DESDE SEMÁFORO\n";
+  texto += "Locales pendientes: " + items.length + "\n\n";
+  items.slice(0, 30).forEach(function(item, i) {
+    texto += "Punto " + (i+1) + " — " + item.nombre + "\n";
+    texto += "  Misión: Mantenimiento\n\n";
+  });
+  pfModal("📋 Texto copiado. Pégalo en el tab Recorrido.\n\n" + texto.substring(0, 200) + "...");
+  // Copiar al clipboard
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(texto).catch(function(){});
+  }
+}
+
+// #061 #062 #063 FIX: Filtros + generador de recorrido
+var PF_SEM_FILTRO = "todos";
+
+function pfSetFiltroSemaforo(f) { PF_SEM_FILTRO = f; pfRenderSemaforo(); }
+
+function pfGenerarRecorridoSemaforo(items) {
+  if (!items || !items.length) { pfModal("No hay locales con ese filtro."); return; }
+  var texto = "RECORRIDO — " + items.length + " LOCALES\n\n";
+  items.forEach(function(item, i) {
+    texto += "Punto " + (i+1) + " — " + item.nombre + "\n  Misión: Mantenimiento\n\n";
+  });
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(texto).then(function(){
+      pfModal("✅ Texto copiado. Pégalo en el tab Recorrido.");
+    }).catch(function(){ pfModal(texto.substring(0,300)); });
+  } else { pfModal(texto.substring(0,300)); }
 }
 
 function pfRenderSemaforo() {
@@ -97,8 +153,45 @@ function pfRenderSemaforo() {
   h += '<div style="background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:12px 8px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--g4)">'+locales.length+'</div><div style="font-size:11px;color:var(--g3)">Total</div></div>';
   h += '</div>';
 
+  // Aplicar filtro activo
+  var itemsFiltrados = items.filter(function(item) {
+    if (PF_SEM_FILTRO === "vencidos") return item.dias !== null && item.dias < 0;
+    if (PF_SEM_FILTRO === "proximos") return item.dias !== null && item.dias >= 0 && item.dias < 90;
+    if (PF_SEM_FILTRO === "sin_datos") return item.dias === null;
+    if (PF_SEM_FILTRO === "junio") return item.proxFecha && item.proxFecha.getMonth() === 5;
+    if (PF_SEM_FILTRO === "julio") return item.proxFecha && item.proxFecha.getMonth() === 6;
+    if (PF_SEM_FILTRO === "agosto") return item.proxFecha && item.proxFecha.getMonth() === 7;
+    return true;
+  });
+
+  // Barra de filtros
+  h += '<div style="display:flex;gap:6px;padding:0 12px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch">';
+  var filtros = [
+    {k:"todos",   l:"Todos ("+items.length+")"},
+    {k:"vencidos",l:"🔴 Vencidos ("+vencidos+")"},
+    {k:"proximos",l:"🟡 Próximos ("+proximos+")"},
+    {k:"sin_datos",l:"⬜ Sin datos"},
+    {k:"junio",   l:"Junio"},
+    {k:"julio",   l:"Julio"},
+    {k:"agosto",  l:"Agosto"}
+  ];
+  filtros.forEach(function(fi) {
+    var activo = PF_SEM_FILTRO === fi.k;
+    h += '<button onclick="pfSetFiltroSemaforo(\''+fi.k+'\')" style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1.5px solid '+
+      (activo?"var(--r)":"var(--bo)")+';background:'+
+      (activo?"var(--r)":"#fff")+';color:'+
+      (activo?"#fff":"var(--g4)")+';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">'+fi.l+'</button>';
+  });
+  h += '</div>';
+
+  // Botón generar recorrido desde filtro
+  if (itemsFiltrados.length > 0 && PF_SEM_FILTRO !== "todos") {
+    h += '<div style="padding:0 12px 10px"><button onclick="pfGenerarRecorridoSemaforo(window._pfSemItems)" style="width:100%;padding:11px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📋 Copiar recorrido con estos '+itemsFiltrados.length+' locales</button></div>';
+  }
+  window._pfSemItems = itemsFiltrados;
+
   // Lista
-  items.forEach(function(item) {
+  itemsFiltrados.forEach(function(item) {
     var sem   = pfSemaforoColor(item.dias);
     var esKFC = pfEsGrupoKFC(item.nombre);
     h += '<div style="margin:0 12px 6px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:10px 14px;display:flex;align-items:center;gap:10px">';
@@ -106,7 +199,17 @@ function pfRenderSemaforo() {
     h += '<div style="flex:1;min-width:0">';
     h += '<div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+item.nombre+'</div>';
     var freqLabel = esKFC ? "KFC · mant. anual · recarga 3 años" : "Independiente · mant. anual";
-    h += '<div style="font-size:11px;color:var(--g4);margin-top:1px">'+freqLabel+(item.ultVisita?" · último: "+item.ultVisita:" · sin visitas")+'</div>';
+    // #066 FIX: mostrar extintores del local si están en BD
+    var extInfo = "";
+    if (typeof pfBuscarCliente === "function") {
+      var _cli = pfBuscarCliente(item.nombre);
+      // extintores se leen de localStorage extintores si existen
+      try {
+        var _exts = JSON.parse(localStorage.getItem("pf_ext_"+item.nombre.replace(/[^a-z0-9]/gi,"_")) || "null");
+        if (_exts && _exts.length) extInfo = " · " + _exts.length + " ext.";
+      } catch(e) {}
+    }
+    h += '<div style="font-size:11px;color:var(--g4);margin-top:1px">'+freqLabel+extInfo+(item.ultVisita?" · último: "+item.ultVisita:" · sin visitas")+'</div>';
     h += '</div>';
     h += '<div style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:'+sem.bg+';color:'+sem.tx+';flex-shrink:0">'+sem.label+'</div>';
     h += '</div>';
@@ -142,84 +245,10 @@ function pfInyectarSemaforo() {
 
 // 39 — Aprobación removida, Alejandro publica directamente
 
-function pfRenderAprobacion() {
-  var el = document.getElementById("pf-aprob-contenido");
-  if (!el) return;
 
-  var txt   = localStorage.getItem("pf_recorrido_texto") || "";
-  var fecha = localStorage.getItem("pf_recorrido_fecha") || "—";
-  var aprobado = localStorage.getItem("pf_recorrido_aprobado") === "si";
-  var aprobadoPor = localStorage.getItem("pf_recorrido_aprobado_por") || "";
-  var aprobadoHora = localStorage.getItem("pf_recorrido_aprobado_hora") || "";
-
-  var h = "";
-
-  if (!txt) {
-    h = '<div style="padding:24px 16px;text-align:center;color:var(--g3);font-size:14px">Alejandro no ha publicado el recorrido de hoy aún.</div>';
-    el.innerHTML = h; return;
-  }
-
-  // Estado de aprobación
-  if (aprobado) {
-    h += '<div style="margin:0 12px 10px;padding:12px 14px;background:var(--vc);border-radius:12px;border:1.5px solid var(--v)">';
-    h += '<div style="font-size:13px;font-weight:700;color:var(--v)">✅ Recorrido aprobado</div>';
-    h += '<div style="font-size:12px;color:var(--g4);margin-top:2px">Por: '+aprobadoPor+' · '+aprobadoHora+'</div></div>';
-  } else {
-    h += '<div style="margin:0 12px 10px;padding:12px 14px;background:var(--nc);border-radius:12px;border:1.5px solid var(--n)">';
-    h += '<div style="font-size:13px;font-weight:700;color:var(--n)">⏳ Pendiente de aprobación</div>';
-    h += '<div style="font-size:12px;color:var(--g4);margin-top:2px">Fabiola debe revisar y aprobar antes de que el técnico inicie</div></div>';
-    h += '<div style="margin:0 12px 10px">';
-    h += '<button onclick="pfAprobarRecorrido()" style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--v);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">✅ Aprobar recorrido</button>';
-    h += '</div>';
-  }
-
-  // Preview del recorrido
-  h += '<div class="slbl">Recorrido del '+fecha+'</div>';
-  h += '<div style="margin:0 12px 10px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:12px 14px">';
-  h += '<pre style="font-size:12px;color:var(--g4);white-space:pre-wrap;line-height:1.6;font-family:inherit">'+txt+'</pre>';
-  h += '</div>';
-  h += '<div style="height:80px"></div>';
-
-  el.innerHTML = h;
-}
-
-function pfAprobarRecorrido() {} // removido
 
 // Inyectar en pantalla de Fabiola — se agrega como tab en su nav
-function pfInyectarAprobacion() {
-  // Panel de aprobación para Fabiola — se muestra en su pantalla s1 como banner
-  window.addEventListener("pfUsuarioSeleccionado", function(e) {
-    if (e.detail === "fabiola") pfMostrarBannerAprobacion();
-  });
-}
-
-function pfMostrarBannerAprobacion() {
-  // Aprobación removida — Alejandro publica directamente
-  return;
-  var lista = document.getElementById("s1list");
-  if (!lista) return;
-  var txt = localStorage.getItem("pf_recorrido_texto") || "";
-  if (!txt) return;
-
-  var banner = document.getElementById("pf-aprobacion-banner");
-  if (!banner) {
-    banner = document.createElement("div");
-    banner.id = "pf-aprobacion-banner";
-    lista.parentNode.insertBefore(banner, lista);
-  }
-
-  if (aprobado) {
-    var por  = localStorage.getItem("pf_recorrido_aprobado_por") || "";
-    var hora = localStorage.getItem("pf_recorrido_aprobado_hora") || "";
-    banner.innerHTML = '<div style="margin:10px 12px;padding:12px 14px;background:var(--vc);border-radius:12px;border:1.5px solid var(--v);font-size:13px;font-weight:700;color:var(--v)">✅ Recorrido aprobado por '+por+' a las '+hora+'</div>';
-  } else {
-    banner.innerHTML =
-      '<div style="margin:10px 12px;padding:12px 14px;background:var(--nc);border-radius:12px;border:1.5px solid var(--n)">' +
-      '<div style="font-size:13px;font-weight:700;color:var(--n);margin-bottom:8px">⏳ Recorrido pendiente de aprobación</div>' +
-      '<button onclick="pfAprobarRecorrido();pfMostrarBannerAprobacion()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--v);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ Aprobar y publicar a Raúl</button>' +
-      '</div>';
-  }
-}
+// Aprobación de recorrido eliminada — Alejandro publica directamente
 
 // ════════════════════════════════════════════════════════════
 //  25 — EMAIL AUTOMÁTICO DEL CERTIFICADO
@@ -267,8 +296,6 @@ function pfInyectarCampoEmail() {
 // ── INIT ──────────────────────────────────────────────────────
 window.addEventListener("load", function() {
   pfInyectarSemaforo();
-  pfInyectarAprobacion();
-
   // irFirma coordinado por coordinator.js
 
   // Detección de Fabiola: mejoras2 ya no necesita parchear ir() —

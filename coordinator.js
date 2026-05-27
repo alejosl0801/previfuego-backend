@@ -26,10 +26,7 @@ window.addEventListener("load", function() {
   // Tab 1 = Recorrido, Tab 2 = Pizarra, Tab 3 = Avance (app.js)
   window.PF_TAB_HANDLERS[1] = function() { /* solo activar panel */ };
   window.PF_TAB_HANDLERS[2] = function() { if (typeof renderPizarra === "function") renderPizarra(); };
-  window.PF_TAB_HANDLERS[3] = function() {
-    if (typeof renderCalendarioMes === "function") renderCalendarioMes();
-    if (typeof renderResumenJornadas === "function") renderResumenJornadas();
-  };
+  window.PF_TAB_HANDLERS[3] = function() { /* app.js ya maneja tab 3 */ };
   // Tab 4 = Retiros (retiros.js)
   window.PF_TAB_HANDLERS[4] = function() {
     if (typeof pfRenderRetiros  === "function") pfRenderRetiros();
@@ -64,6 +61,14 @@ window.addEventListener("load", function() {
   window.PF_TAB_HANDLERS[11] = function() {
     if (typeof pfRenderTaller === "function") pfRenderTaller();
   };
+  // Tab 12 = Tareas (app.js)
+  window.PF_TAB_HANDLERS[12] = function() {
+    if (typeof pfRenderTareas === "function") pfRenderTareas();
+  };
+  // Tab 13 = Config precios + clientes (app.js #019 #088)
+  window.PF_TAB_HANDLERS[13] = function() {
+    if (typeof pfRenderConfigPrecios === "function") pfRenderConfigPrecios();
+  };
 
   // ── Coordinador de irFirma ────────────────────────────────
   // irFirma base en app.js ya maneja _DESTINO_FIRMA y actualizarBotonFirma.
@@ -91,12 +96,11 @@ window.addEventListener("load", function() {
 
     if (typeof _confirmarSinBase === "function") _confirmarSinBase();
 
-    if (localSnap) {
-      setTimeout(function() {
-        if (typeof pfOnLocalCompletado === "function") {
-          pfOnLocalCompletado(localSnap, puntoSnap, tipoSnap, tecSnap, "");
-        }
-      }, 300);
+    // #083 FIX: ejecutar inmediatamente con snapshot, sin setTimeout que puede ejecutar en local equivocado
+    if (localSnap && typeof pfOnLocalCompletado === "function") {
+      try {
+        pfOnLocalCompletado(localSnap, puntoSnap, tipoSnap, tecSnap, "");
+      } catch(e) { console.warn("pfOnLocalCompletado error:", e); }
     }
   };
 
@@ -124,8 +128,8 @@ window.addEventListener("load", function() {
     if (typeof pfActualizarBadge === "function") pfActualizarBadge();
   };
 
-  // ── Fix: tabs del admin deben ser scrolleables en móvil ──
-  window.addEventListener("load", function() {
+  // ── Fix: tabs del admin scrolleables en móvil ── (#081 FIX: era load anidado, ahora directo)
+  (function() {
     var tabBar = document.querySelector(".adm-tab");
     if (tabBar) {
       tabBar.style.overflowX   = "auto";
@@ -163,7 +167,42 @@ window.addEventListener("load", function() {
 
     // Fix: badge de alertas al iniciar
     if (typeof pfActualizarBadge === "function") pfActualizarBadge();
-  });
+  })();
+
+
+  // Inyectar tab 13 Config
+  (function() {
+    var tabBar = document.querySelector(".adm-tab");
+    var admScr = document.getElementById("sadmin");
+    if (!tabBar || !admScr) return;
+    if (document.getElementById("adm-t13")) return;
+
+    // Botón tab
+    var btn = document.createElement("button");
+    btn.id = "adm-t13"; btn.className = "adm-tab-btn";
+    btn.textContent = "⚙ Config";
+    btn.onclick = function(){ admTab(13); };
+    tabBar.appendChild(btn);
+
+    // Panel
+    var panel = document.createElement("div");
+    panel.id = "adm-p13"; panel.className = "adm-panel";
+    panel.innerHTML =
+      '<div style="padding:12px 0">' +
+      '<div class="slbl">Precios de accesorios</div>' +
+      '<div id="pf-config-precios"><div style="padding:40px 16px;text-align:center;color:var(--g3)">Cargando...</div></div>' +
+      '<div class="slbl">Clientes</div>' +
+      '<div style="padding:0 12px 12px">' +
+      '<button type="button" onclick="pfAbrirFormNuevoCliente()" style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">➕ Agregar nuevo cliente</button>' +
+      '</div>' +
+      '<div style="height:80px"></div></div>';
+    admScr.appendChild(panel);
+
+    window.PF_TAB_HANDLERS[13] = function() {
+      if (typeof pfRenderConfigPrecios === "function") pfRenderConfigPrecios();
+    };
+  })();
+
 
   }); // end load
 })();

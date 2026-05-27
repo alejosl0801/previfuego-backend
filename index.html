@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
+  <meta property="og:title" content="Previfuego Field">
+  <meta property="og:description" content="App de operaciones de campo — Previfuego">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#9E1212">
+  <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#9E1212">
+  <link rel="manifest" href="manifest.json">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
 <meta name="description" content="Previfuego Field — App de técnicos de campo">
 <title>Previfuego Field v3.4</title>
@@ -58,7 +63,18 @@
     <div id="s2es" style="display:none"><div class="slbl">Extintores</div><div class="cd"><div id="s2el"></div></div></div>
     <div class="bw"><button type="button" class="btn btn-r" id="s2-btn-fot" onclick="ir('sfot')">📷 Registrar fotos y firma</button></div>
     <div class="bw" style="padding-top:0"><button type="button" class="btn btn-v" onclick="irFirmaParaNota()" style="background:#1A5FAA">📄 Generar nota de entrega</button></div>
-    <div class="bw" style="padding-top:0"><button type="button" class="btn btn-g" id="s2-btn-sin" onclick="confirmarSin()">✓ Completar sin registro</button></div>
+    <div id="s2-monto-sec" style="display:none;margin:0 12px 10px;background:#fff;border-radius:14px;border:1.5px solid var(--bo);padding:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Monto cobrado</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="font-size:18px;font-weight:700;color:var(--g4)">$</div>
+        <input id="s2-monto" type="number" step="0.01" min="0" placeholder="0.00" style="flex:1;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:16px;font-weight:700">
+      </div>
+      <input id="s2-monto-ref" type="text" placeholder="Referencia (cheque, transferencia...)" style="width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-top:8px">
+    </div>
+    <div class="bw" style="padding-top:0;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button type="button" class="btn btn-g" id="s2-btn-sin" onclick="confirmarSin()">✓ Completar</button>
+      <button type="button" class="btn btn-g" onclick="pfMarcarNoDisponible()" style="background:var(--nc);color:var(--n)">🔒 No disp.</button>
+    </div>
     <div style="height:80px"></div>
   </div>
   <div class="nav">
@@ -170,6 +186,7 @@
     <button class="adm-tab-btn"    id="adm-t2" onclick="admTab(2)">🗂️ Pizarra</button>
     <button class="adm-tab-btn"    id="adm-t3" onclick="admTab(3)">📊 Avance</button>
     <button class="adm-tab-btn"    id="adm-t11" onclick="admTab(11)">🔧 Taller</button>
+    <button class="adm-tab-btn"    id="adm-t12" onclick="admTab(12)">✅ Tareas</button>
   </div>
 
   <!-- TAB 1: Recorrido -->
@@ -252,6 +269,29 @@
     <div class="ni" onclick="ir('s1')"><div class="nii">&#128506;</div><div class="nil">Recorrido</div></div>
     <div class="ni" onclick="ir('shist');renderHistorial()"><div class="nii">&#128203;</div><div class="nil">Historial</div></div>
     <div class="ni on" onclick="ir('staller');pfRenderTallerTec()"><div class="nii">&#128295;</div><div class="nil">Taller</div></div>
+  </div>
+  <div class="adm-panel" id="adm-p12">
+    <div style="padding:12px 0">
+      <div class="slbl">Tareas independientes</div>
+      <div style="margin:0 12px 12px;background:#fff;border-radius:14px;border:1.5px solid var(--bo);padding:14px">
+        <div style="font-size:13px;font-weight:700;color:var(--ng);margin-bottom:10px">Nueva tarea</div>
+        <select id="pf-tar-tec" style="width:100%;padding:10px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:8px;background:#fff">
+          <option value="raul">Raúl Romero</option>
+          <option value="juan">Juan Arboleda</option>
+          <option value="fabiola">Fabiola Mejía</option>
+          <option value="todos">Todos</option>
+        </select>
+        <input id="pf-tar-desc" type="text" placeholder="Descripción de la tarea..." style="width:100%;padding:10px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:8px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">
+          <button onclick="pfSetPrioTarea('urgente',this)" class="piz-tab-btn" id="pbt-urgente">🔴 Urgente</button>
+          <button onclick="pfSetPrioTarea('normal',this)" class="piz-tab-btn on" id="pbt-normal">🔵 Normal</button>
+          <button onclick="pfSetPrioTarea('baja',this)" class="piz-tab-btn" id="pbt-baja">⬜ Baja</button>
+        </div>
+        <button onclick="pfCrearTarea()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">+ Crear tarea</button>
+      </div>
+      <div id="pf-tareas-lista"></div>
+      <div style="height:80px"></div>
+    </div>
   </div>
 </div>
 
@@ -353,5 +393,16 @@
 <script src="crm.js?v=1.0"></script>
 <script src="inteligencia.js?v=1.0"></script>
 <script src="coordinator.js?v=1.0"></script>
+
+<script>
+// #011 FIX: Registrar Service Worker para soporte offline
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/previfuego-backend/sw.js')
+      .then(function(reg) { console.log('SW registrado:', reg.scope); })
+      .catch(function(err) { console.warn('SW error:', err); });
+  });
+}
+</script>
 </body>
 </html>

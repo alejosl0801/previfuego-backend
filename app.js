@@ -26,6 +26,20 @@ var ACCESORIOS = [
   {id:"soporte_pared",   n:"Soporte de pared",          p:5.00}
 ];
 
+// ── PRECIOS PERSONALIZADOS (localStorage) ────────────────────
+// #019 FIX: Alejandro puede editar precios desde tab Config del admin
+// Los precios custom sobreescriben los de ACCESORIOS al cargar
+(function() {
+  try {
+    var preciosGuardados = JSON.parse(localStorage.getItem("pf_precios_accs") || "{}");
+    for (var i = 0; i < ACCESORIOS.length; i++) {
+      if (preciosGuardados[ACCESORIOS[i].id] !== undefined) {
+        ACCESORIOS[i].p = parseFloat(preciosGuardados[ACCESORIOS[i].id]) || ACCESORIOS[i].p;
+      }
+    }
+  } catch(e) {}
+})();
+
 // ── USUARIOS ─────────────────────────────────────────────────
 var USUARIOS = {
   raul:      { nombre:"Raúl Romero", rol:"Técnico Operativo y Logístico", emoji:"👷" },
@@ -105,10 +119,12 @@ function initFecha() {
 }
 
 function fechaHoy() {
+  // #timezone FIX: usar timezone de Ecuador (UTC-5)
   var d = new Date();
-  return String(d.getDate()).padStart(2,"0")+"/"+
-         String(d.getMonth()+1).padStart(2,"0")+"/"+
-         d.getFullYear();
+  var ec = new Date(d.toLocaleString("en-US", {timeZone: "America/Guayaquil"}));
+  return String(ec.getDate()).padStart(2,"0")+"/"+
+         String(ec.getMonth()+1).padStart(2,"0")+"/"+
+         ec.getFullYear();
 }
 
 // ── LOGO ─────────────────────────────────────────────────────
@@ -185,9 +201,9 @@ function parsearRecorrido(texto) {
   var localActual = null;
   var misionBuffer = [];
   var localIdCounter = 0;
-  var rePunto  = /^Punto\s+(\d+)\s*[–\-—]\s*(.+)$/i;
+  var rePunto  = /^Punto\s+(\d+)\s*[–\-—:]\s*(.+)$/i;
   var reMision = /^Misión\s*:/i;
-  var reBullet = /^\*\s+.+/;
+  var reBullet = /^[\*\-•]\s+.+/;  // #101 FIX: acepta *, -, • como bullets
 
   function guardarLocal() {
     if (localActual && puntoActual) {
@@ -372,13 +388,24 @@ function publicarRecorrido() {
   if (!txt) { pfModal("Escribe o pega el recorrido primero."); return; }
   var jornadas = parsearJornadas(txt);
   if (jornadas.length === 0) { pfModal("No se detectaron puntos. Verifica el formato."); return; }
+
+  // #023 FIX: detectar si el recorrido menciona una fecha futura
+  var fechaRecorrido = fechaHoy();
+  var mFecha = txt.match(/(\d{1,2})\s+DE\s+(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)/i);
+  if (mFecha) {
+    var meses = {ENERO:"01",FEBRERO:"02",MARZO:"03",ABRIL:"04",MAYO:"05",JUNIO:"06",JULIO:"07",AGOSTO:"08",SEPTIEMBRE:"09",OCTUBRE:"10",NOVIEMBRE:"11",DICIEMBRE:"12"};
+    var dia = mFecha[1].padStart(2,"0");
+    var mes = meses[mFecha[2].toUpperCase()];
+    var anio = new Date().getFullYear();
+    fechaRecorrido = dia+"/"+mes+"/"+anio;
+  }
+
   mostrarCargando(true, "Publicando recorrido...", "Guardando en el servidor");
   localStorage.setItem("pf_recorrido_texto",   txt);
-  localStorage.setItem("pf_recorrido_fecha",   fechaHoy());
+  localStorage.setItem("pf_recorrido_fecha",   fechaRecorrido);
   localStorage.setItem("pf_recorrido_jornadas", JSON.stringify(jornadas));
-  // Compatibilidad: guardar puntos de primera jornada como data legacy
   localStorage.setItem("pf_recorrido_data", JSON.stringify(jornadas[0].puntos));
-  var payload = { accion:"publicar_recorrido", fecha:fechaHoy(), tecnico:TECNICO_NOMBRE||"Alejandro", texto:txt, jornadas:jornadas };
+  var payload = { accion:"publicar_recorrido", fecha:fechaRecorrido, tecnico:TECNICO_NOMBRE||"Alejandro", texto:txt, jornadas:jornadas };
   fetch(SCRIPT_URL, { method:"POST", body:JSON.stringify(payload) })
     .then(function(r){ return r.json(); })
     .catch(function(){})
@@ -405,8 +432,15 @@ function limpiarRecorrido() {
 function cargarRecorrido() {
   mostrarCargando(true, "Cargando recorrido...", "Conectando con el servidor");
   var url = SCRIPT_URL + "?accion=recorrido_texto&fecha=" + encodeURIComponent(fechaHoy());
-  fetch(url)
-    .then(function(r){ if (!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+  // #022 FIX: timeout de 15 segundos
+  var _ctrl    = typeof AbortController !== "undefined" ? new AbortController() : null;
+  var _timeout = setTimeout(function() {
+    if (_ctrl) _ctrl.abort();
+    mostrarCargando(false);
+    pfModal("⏱ Sin respuesta del servidor. Verifica tu conexión e intenta de nuevo.");
+  }, 15000);
+  fetch(url, _ctrl ? { signal: _ctrl.signal } : {})
+    .then(function(r){ clearTimeout(_timeout); if (!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
     .then(function(data){
       mostrarCargando(false);
       if (data.ok && data.texto) {
@@ -560,8 +594,45 @@ function abrirLocal(pi, li) {
   LOCAL_ACTUAL._li = li;
   TIPO_TRABAJO    = loc.tipo || detectarTipoTrabajo(loc.mision);
 
-  // Reset fotos
+  // #017 FIX: preservar foto ANTES del retiro previo ANTES de resetear
+  var _fotoAntesRetiro = null;
+  if (TIPO_TRABAJO === "entrega" || (loc.tipo || "").indexOf("entrega") !== -1) {
+    try {
+      var _retiros = JSON.parse(localStorage.getItem("pf_retiros") || "[]");
+      var _retPrev = _retiros.filter(function(r){ return r.local === loc.nombre && r.estado === "pendiente"; });
+      if (_retPrev.length > 0 && _retPrev[0].fotoAntes) {
+        _fotoAntesRetiro = _retPrev[0].fotoAntes;
+      }
+    } catch(e) {}
+  }
+
+  // #017 FIX: preservar foto ANTES del retiro previo ANTES de resetear
+  var _fotoAntesRetiro = null;
+  var _tipoDetectado = loc.tipo || detectarTipoTrabajo(loc.mision || "");
+  if (_tipoDetectado === "entrega" || _tipoDetectado === TIPOS_TRABAJO.ENTREGA) {
+    try {
+      var _retiros = JSON.parse(localStorage.getItem("pf_retiros") || "[]");
+      var _retPrev = _retiros.filter(function(r){ return r.local === loc.nombre && r.estado === "pendiente"; });
+      if (_retPrev.length > 0 && _retPrev[0].fotoAntes) _fotoAntesRetiro = _retPrev[0].fotoAntes;
+    } catch(e) {}
+  }
+
+  // Reset fotos — revocar URLs anteriores para evitar memory leaks
+  for (var _k in FD) {
+    if (FD[_k] && typeof FD[_k] === 'string' && FD[_k].indexOf('blob:') === 0) {
+      try { URL.revokeObjectURL(FD[_k]); } catch(e) {}
+    }
+  }
   FD = {}; FB64 = {}; FOTOS_COUNT = 0;
+
+  // Restaurar foto ANTES del retiro si existe
+  if (_fotoAntesRetiro) { FB64["antes"] = _fotoAntesRetiro; FD["antes"] = _fotoAntesRetiro; }
+
+  // Restaurar foto ANTES si existe del retiro
+  if (_fotoAntesRetiro) {
+    FB64["antes"] = _fotoAntesRetiro;
+    FD["antes"]   = _fotoAntesRetiro;
+  }
   // Guardar ACCS del local anterior por si vuelve (no perder selección)
   if (LOCAL_ACTUAL && ACCS.length > 0) {
     try {
@@ -627,6 +698,12 @@ function abrirLocal(pi, li) {
   // Iniciar timer
   iniciarTimer();
   ir("s2");
+
+  // #097 FIX: mostrar campo monto si es COBRO
+  setTimeout(function() {
+    var monto_sec = document.getElementById("s2-monto-sec");
+    if (monto_sec) monto_sec.style.display = (TIPO_TRABAJO === TIPOS_TRABAJO.COBRO) ? "block" : "none";
+  }, 100);
 }
 
 function labelBotonFotos() {
@@ -727,7 +804,16 @@ function toggleExt(pi, li, idx) {
   var el = document.getElementById("eck_"+pi+"_"+li+"_"+idx);
   if (!el) return;
   el.classList.toggle("ok");
-  el.textContent = el.classList.contains("ok") ? "✓" : "";
+  var checked = el.classList.contains("ok");
+  el.textContent = checked ? "✓" : "";
+  // #018 FIX: persistir en PUNTOS[]
+  try {
+    if (PUNTOS[pi] && PUNTOS[pi].locales[li] && PUNTOS[pi].locales[li].ext) {
+      if (!PUNTOS[pi].locales[li]._extCheck) PUNTOS[pi].locales[li]._extCheck = {};
+      PUNTOS[pi].locales[li]._extCheck[idx] = checked;
+      localStorage.setItem("pf_recorrido_data", JSON.stringify(PUNTOS));
+    }
+  } catch(e) {}
 }
 
 function guardarFotoRetiro(nombreLocal, fb64) {
@@ -752,6 +838,16 @@ function confirmarSin() {
     ? "¿Marcar «"+LOCAL_ACTUAL.nombre+"» como completado?"
     : "¿Marcar «"+LOCAL_ACTUAL.nombre+"» como completado sin registro?";
   pfConfirm(_msg_cs, function() {
+    // #097 FIX: guardar monto si es COBRO
+    if (TIPO_TRABAJO === TIPOS_TRABAJO.COBRO) {
+      var montoEl = document.getElementById("s2-monto");
+      var refEl   = document.getElementById("s2-monto-ref");
+      var monto   = montoEl ? parseFloat(montoEl.value) || 0 : 0;
+      var ref     = refEl   ? refEl.value.trim() : "";
+      if (!LOCAL_ACTUAL._cobros) LOCAL_ACTUAL._cobros = [];
+      LOCAL_ACTUAL._cobros.push({ monto: monto, ref: ref, fecha: fechaHoy(),
+        hora: new Date().toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"}) });
+    }
     var duracion = detenerTimer();
     PUNTOS[LOCAL_ACTUAL._pi].locales[LOCAL_ACTUAL._li].done = true;
     // Guardar en jornada activa también
@@ -897,12 +993,18 @@ function setupCanvasEvents() {
   canvas.addEventListener("touchend",   function(){ drawing=false; if(trazado) marcarFirmado(); });
 }
 
+var FIRMA_GUARDADA_B64 = null; // #039 FIX: preservar firma entre cert y nota
+
 function marcarFirmado() {
   var fpw  = document.getElementById("fpw");
   var fsub = document.getElementById("fsub");
   if (fpw)  fpw.classList.add("sig");
   if (fsub) fsub.textContent = "Firma registrada ✓";
   FIRMADO = true;
+  // Guardar firma como base64 para que nota.js pueda usarla aunque el canvas se reinicie
+  if (canvas && canvas.width > 50) {
+    try { FIRMA_GUARDADA_B64 = canvas.toDataURL("image/png"); } catch(e) {}
+  }
 }
 
 function borrarFirma() {
@@ -1038,6 +1140,11 @@ function irSig() {
       if (!PUNTOS[i].locales[j].done) { abrirLocal(i,j); return; }
     }
   }
+  // #021 FIX: limpiar estado al terminar el recorrido
+  LOCAL_ACTUAL  = null;
+  PUNTO_ACTUAL  = null;
+  TIPO_TRABAJO  = null;
+  FIRMA_GUARDADA_B64 = null;
   ir("s1");
 }
 
@@ -1093,7 +1200,8 @@ function renderPerfil() {
 function cerrarSesion() {
   pfConfirm("¿Cambiar de usuario?", function() {
   localStorage.removeItem("pf_usuario");
-    USUARIO_ACTUAL = null; PUNTOS = []; HISTORIAL = [];
+    USUARIO_ACTUAL = null; PUNTOS = []; HISTORIAL = []; HISTORIAL_DIA = [];
+    FIRMA_GUARDADA_B64 = null; NOV = null; FIRMADO = false;
     ir("slogin");
   });
 }
@@ -1114,7 +1222,7 @@ window.addEventListener("load", function() {
 // ── TABS ADMIN ───────────────────────────────────────────────
 // Soporta tabs 1-12 (coordinator.js extiende los handlers)
 function admTab(n) {
-  var MAX_TABS = 12;
+  var MAX_TABS = 13;
   for (var i = 1; i <= MAX_TABS; i++) {
     var btn = document.getElementById("adm-t"+i);
     var pan = document.getElementById("adm-p"+i);
@@ -1237,6 +1345,7 @@ function cargarHistorialDia() {
 
 function guardarHistorialDia(item) {
   HISTORIAL_DIA.unshift(item);
+  HISTORIAL = HISTORIAL_DIA; // #012 FIX: mantener sincronizados
   localStorage.setItem("pf_hist_data", JSON.stringify(HISTORIAL_DIA));
 }
 
@@ -1529,4 +1638,372 @@ function pfPrompt(msg, defVal, onOk) {
   };
   ov.querySelector('#pfm-no').onclick = function() { document.body.removeChild(ov); };
   inp.addEventListener('keydown', function(e){ if (e.key==='Enter') ov.querySelector('#pfm-ok').click(); });
+}
+
+
+// ════════════════════════════════════════════════════════════
+//  MÓDULO TAREAS INDEPENDIENTES  (#003 FIX)
+//  Solo Alejandro crea tareas — todos pueden completarlas
+// ════════════════════════════════════════════════════════════
+var PF_TAREA_PRIO = "normal";
+
+function pfSetPrioTarea(prio, btn) {
+  PF_TAREA_PRIO = prio;
+  ["urgente","normal","baja"].forEach(function(p) {
+    var b = document.getElementById("pbt-"+p);
+    if (b) b.className = "piz-tab-btn" + (p === prio ? " on" : "");
+  });
+}
+
+function pfGetTareas() {
+  try { return JSON.parse(localStorage.getItem("pf_tareas") || "[]"); } catch(e) { return []; }
+}
+function pfSaveTareas(arr) {
+  try { localStorage.setItem("pf_tareas", JSON.stringify(arr)); } catch(e) {}
+}
+
+function pfCrearTarea() {
+  var desc = (document.getElementById("pf-tar-desc") || {}).value || "";
+  var tec  = (document.getElementById("pf-tar-tec")  || {}).value || "todos";
+  if (!desc.trim()) { pfModal("Escribe la descripción de la tarea."); return; }
+  var tareas = pfGetTareas();
+  var tecNombres = { raul:"Raúl Romero", juan:"Juan Arboleda", fabiola:"Fabiola Mejía", todos:"Todos" };
+  tareas.unshift({
+    id: "tar_" + Date.now(),
+    desc: desc.trim(),
+    tecnico: tec,
+    tecNombre: tecNombres[tec] || tec,
+    prioridad: PF_TAREA_PRIO,
+    fecha: fechaHoy(),
+    hora: new Date().toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"}),
+    completada: false,
+    completadaPor: null,
+    completadaHora: null
+  });
+  pfSaveTareas(tareas);
+  var inp = document.getElementById("pf-tar-desc");
+  if (inp) inp.value = "";
+  pfRenderTareas();
+}
+
+function pfCompletarTarea(id) {
+  var tareas = pfGetTareas();
+  for (var i = 0; i < tareas.length; i++) {
+    if (tareas[i].id === id) {
+      tareas[i].completada    = true;
+      tareas[i].completadaPor = (typeof TECNICO_NOMBRE !== "undefined" && TECNICO_NOMBRE) ? TECNICO_NOMBRE : "Técnico";
+      tareas[i].completadaHora = new Date().toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"});
+      break;
+    }
+  }
+  pfSaveTareas(tareas);
+  pfRenderTareas();
+}
+
+function pfEliminarTarea(id) {
+  pfConfirm("¿Eliminar esta tarea?", function() {
+    var tareas = pfGetTareas().filter(function(t){ return t.id !== id; });
+    pfSaveTareas(tareas);
+    pfRenderTareas();
+  });
+}
+
+function pfRenderTareas() {
+  var el = document.getElementById("pf-tareas-lista");
+  if (!el) return;
+  var tareas = pfGetTareas();
+  if (!tareas.length) {
+    el.innerHTML = '<div style="padding:24px 16px;text-align:center;color:var(--g3);font-size:14px">Sin tareas asignadas.</div>';
+    return;
+  }
+  var prioColor = { urgente:"var(--r)", normal:"var(--a)", baja:"var(--g4)" };
+  var prioIco   = { urgente:"🔴", normal:"🔵", baja:"⬜" };
+  var h = "";
+  var pendientes = tareas.filter(function(t){ return !t.completada; });
+  var completadas = tareas.filter(function(t){ return t.completada; });
+
+  if (pendientes.length) {
+    h += '<div class="slbl">Pendientes ('+pendientes.length+')</div>';
+    pendientes.forEach(function(t) {
+      var col = prioColor[t.prioridad] || "var(--g4)";
+      h += '<div style="margin:0 12px 8px;background:#fff;border-radius:14px;border:1.5px solid '+col+';padding:12px 14px">';
+      h += '<div style="display:flex;align-items:flex-start;gap:8px">';
+      h += '<div style="font-size:18px;flex-shrink:0">'+(prioIco[t.prioridad]||"📋")+'</div>';
+      h += '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--ng)">'+t.desc+'</div>';
+      h += '<div style="font-size:11px;color:var(--g4);margin-top:3px">'+t.tecNombre+' · '+t.fecha+'</div></div></div>';
+      h += '<div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:10px">';
+      h += '<button onclick="pfCompletarTarea(\''+t.id+'\')" style="padding:10px;border-radius:10px;border:none;background:var(--v);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✅ Completar</button>';
+      h += '<button onclick="pfEliminarTarea(\''+t.id+'\')" style="padding:10px 12px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:13px;color:var(--r);cursor:pointer;font-family:inherit">🗑</button>';
+      h += '</div></div>';
+    });
+  }
+
+  if (completadas.length) {
+    h += '<div class="slbl">Completadas ('+completadas.length+')</div>';
+    completadas.slice(0,5).forEach(function(t) {
+      h += '<div style="margin:0 12px 6px;background:var(--vc);border-radius:12px;border:1.5px solid var(--v);padding:10px 14px;opacity:.8">';
+      h += '<div style="font-size:13px;font-weight:700;color:var(--v)">✅ '+t.desc+'</div>';
+      h += '<div style="font-size:11px;color:var(--g4);margin-top:2px">'+t.tecNombre+' · Completó: '+(t.completadaPor||"")+'</div>';
+      h += '</div>';
+    });
+  }
+
+  el.innerHTML = h;
+}
+
+
+
+
+
+// ════════════════════════════════════════════════════════════
+//  DEBOUNCE para botones críticos (evitar doble tap)
+// ════════════════════════════════════════════════════════════
+var _pfLastClick = {};
+function pfDebounce(fn, key, ms) {
+  var now = Date.now();
+  ms = ms || 1200;
+  if (_pfLastClick[key] && (now - _pfLastClick[key]) < ms) return;
+  _pfLastClick[key] = now;
+  fn();
+}
+
+// ════════════════════════════════════════════════════════════
+//  SINCRONIZACIÓN DE FICHAS (#107 FIX)
+//  Sube pf_fichas a Sheets y baja fichas de todos los dispositivos
+// ════════════════════════════════════════════════════════════
+function pfSincronizarFichas(callback) {
+  var fichasLocales = {};
+  try { fichasLocales = JSON.parse(localStorage.getItem("pf_fichas") || "{}"); } catch(e) {}
+
+  var dispositivo = localStorage.getItem("pf_dispositivo") || "dev_" + Date.now();
+  localStorage.setItem("pf_dispositivo", dispositivo);
+
+  // 1. Subir fichas locales
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      accion:      "guardar_fichas",
+      fichas:      fichasLocales,
+      dispositivo: dispositivo
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function() {
+    // 2. Bajar fichas merged de todos los dispositivos
+    return fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({ accion: "get_fichas", dispositivo: dispositivo })
+    });
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    if (data.ok && data.data) {
+      // Merge con locales (locales tienen prioridad para datos de hoy)
+      var remoto = data.data;
+      var hoy    = fechaHoy();
+      for (var local in remoto) {
+        if (!fichasLocales[local]) {
+          fichasLocales[local] = remoto[local];
+        } else {
+          // Agregar visitas remotas que no están en local
+          var localVisitas  = fichasLocales[local].visitas || [];
+          var remotoVisitas = remoto[local].visitas || [];
+          var keys = {};
+          localVisitas.forEach(function(v){ keys[v.fecha+"_"+v.hora+"_"+v.tipo] = true; });
+          remotoVisitas.forEach(function(v) {
+            var k = v.fecha+"_"+v.hora+"_"+v.tipo;
+            if (!keys[k]) { localVisitas.push(v); keys[k] = true; }
+          });
+          localVisitas.sort(function(a,b){
+            return (b.fecha+b.hora).localeCompare(a.fecha+a.hora);
+          });
+          fichasLocales[local].visitas = localVisitas;
+        }
+      }
+      localStorage.setItem("pf_fichas", JSON.stringify(fichasLocales));
+      localStorage.setItem("pf_ultima_sync", new Date().toISOString());
+      if (typeof callback === "function") callback(true, Object.keys(fichasLocales).length);
+    }
+  })
+  .catch(function(err) {
+    console.warn("pfSincronizarFichas error:", err);
+    if (typeof callback === "function") callback(false, 0);
+  });
+}
+
+// Sincronización automática al cargar (si es admin o técnico con datos)
+function pfAutoSync() {
+  var ultimaSync = localStorage.getItem("pf_ultima_sync");
+  if (ultimaSync) {
+    var diff = (new Date() - new Date(ultimaSync)) / 60000; // minutos
+    if (diff < 5) return; // no sincronizar si hace menos de 5 minutos
+  }
+  pfSincronizarFichas(function(ok, n) {
+    if (ok) console.log("Sync OK: " + n + " locales sincronizados");
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+//  CONFIG DE PRECIOS — Tab 13 admin (#019 FIX)
+// ════════════════════════════════════════════════════════════
+function pfRenderConfigPrecios() {
+  var el = document.getElementById("pf-config-precios");
+  if (!el) return;
+  var preciosGuardados = {};
+  try { preciosGuardados = JSON.parse(localStorage.getItem("pf_precios_accs") || "{}"); } catch(e) {}
+
+  // Leer IVA actual
+  var tasaIVA = parseFloat(localStorage.getItem('pf_iva') || '0.15');
+  var h = '<div style="padding:12px 0">';
+  h += '<div class="slbl">Tasa IVA</div>';
+  h += '<div style="margin:0 12px 12px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:12px 14px;display:flex;align-items:center;gap:10px">';
+  h += '<div style="flex:1;font-size:13px;font-weight:600;color:var(--ng)">IVA aplicado</div>';
+  h += '<div style="display:flex;align-items:center;gap:4px">';
+  h += '<input type="number" step="1" min="0" max="100" id="prc-iva" value="'+(tasaIVA*100).toFixed(0)+'" style="width:60px;padding:6px 8px;border:1.5px solid var(--bo);border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;text-align:right">';
+  h += '<span style="font-size:13px;color:var(--g4)">%</span>';
+  h += '</div></div>';
+  h += '<div class="slbl">Precios de accesorios</div>';
+  h += '<div style="margin:0 12px 12px;background:#fff;border-radius:14px;border:1.5px solid var(--bo);overflow:hidden">';
+
+  for (var i = 0; i < ACCESORIOS.length; i++) {
+    var a = ACCESORIOS[i];
+    var precio = preciosGuardados[a.id] !== undefined ? preciosGuardados[a.id] : a.p;
+    h += '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--bo)">';
+    h += '<div style="flex:1;font-size:13px;font-weight:600;color:var(--ng)">'+a.n+'</div>';
+    h += '<div style="display:flex;align-items:center;gap:4px">';
+    h += '<span style="font-size:13px;color:var(--g4)">$</span>';
+    h += '<input type="number" step="0.01" min="0" id="prc-'+a.id+'" value="'+precio.toFixed(2)+'" ';
+    h += 'style="width:70px;padding:6px 8px;border:1.5px solid var(--bo);border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;text-align:right">';
+    h += '</div></div>';
+  }
+  h += '</div>';
+
+  // Botones
+  h += '<div style="padding:0 12px 16px;display:flex;gap:8px">';
+  h += '<button type="button" onclick="pfGuardarPrecios()" style="flex:1;padding:14px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">💾 Guardar precios</button>';
+  h += '<button type="button" onclick="pfResetPrecios()" style="padding:14px 16px;border-radius:12px;border:1.5px solid var(--bo);background:#fff;color:var(--g4);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">↺</button>';
+  h += '</div>';
+  h += '<div style="height:80px"></div></div>';
+
+  el.innerHTML = h;
+}
+
+function pfGuardarPrecios() {
+  var precios = {};
+  for (var i = 0; i < ACCESORIOS.length; i++) {
+    var inp = document.getElementById("prc-"+ACCESORIOS[i].id);
+    if (inp) {
+      var v = parseFloat(inp.value);
+      if (!isNaN(v) && v >= 0) {
+        precios[ACCESORIOS[i].id] = v;
+        ACCESORIOS[i].p = v; // actualizar en memoria también
+      }
+    }
+  }
+  // Guardar IVA
+  var ivaInp = document.getElementById("prc-iva");
+  if (ivaInp) {
+    var tasaIVA = (parseFloat(ivaInp.value) || 15) / 100;
+    localStorage.setItem("pf_iva", tasaIVA.toString());
+  }
+  localStorage.setItem("pf_precios_accs", JSON.stringify(precios));
+  renderAccSel(); // re-render lista de accesorios
+  pfModal("✅ Precios guardados correctamente.");
+}
+
+function pfResetPrecios() {
+  pfConfirm("¿Restaurar precios por defecto?", function() {
+    localStorage.removeItem("pf_precios_accs");
+    // Recargar precios originales (hardcoded)
+    var defaults = [
+      {id:"abrazadera",p:1.50},{id:"manometro",p:2.80},{id:"cabezal_pqs",p:8.80},
+      {id:"manguera_pqs",p:4.80},{id:"corneta_co2_5",p:8.80},{id:"corneta_co2_10",p:0},
+      {id:"manguera_co2_10",p:13.80},{id:"empaque",p:1.50},{id:"soporte",p:5.00},
+      {id:"piton",p:1.50},{id:"tubo_sifon",p:2.00},{id:"boquilla",p:1.00},
+      {id:"valvula_pqs",p:3.00},{id:"pintura",p:2.00},{id:"letrero",p:3.50},{id:"soporte_pared",p:5.00}
+    ];
+    for (var i = 0; i < ACCESORIOS.length; i++) {
+      for (var j = 0; j < defaults.length; j++) {
+        if (defaults[j].id === ACCESORIOS[i].id) { ACCESORIOS[i].p = defaults[j].p; break; }
+      }
+    }
+    renderAccSel();
+    pfRenderConfigPrecios();
+    pfModal("↺ Precios restaurados a valores por defecto.");
+  });
+}
+
+// Registrar tab 12 en coordinator
+window.addEventListener("load", function() {
+  if (window.PF_TAB_HANDLERS) {
+    window.PF_TAB_HANDLERS[12] = function() { pfRenderTareas(); };
+  }
+  // admTab ya soporta hasta 12
+});
+
+// ════════════════════════════════════════════════════════════
+//  FUNCIONES DE NAVEGACIÓN Y FLUJO (#001 #021 #098 #099 #102)
+// ════════════════════════════════════════════════════════════
+
+// #001 #004: back button de sfir va al origen correcto
+function irAtras_sfir() {
+  if (window._DESTINO_FIRMA === "nota") { ir("s2"); }
+  else { ir("sfot"); }
+}
+
+// #098: deshacer completar sin registro
+function deshacerUltimoDone() {
+  if (!PUNTOS || !PUNTO_ACTUAL) return;
+  var pi = PUNTO_ACTUAL._pi !== undefined ? PUNTO_ACTUAL._pi : -1;
+  if (pi < 0) return;
+  var locales = PUNTOS[pi] ? PUNTOS[pi].locales : [];
+  for (var i = locales.length - 1; i >= 0; i--) {
+    if (locales[i].done) {
+      locales[i].done = false;
+      if (locales[i].noDisp) delete locales[i].noDisp;
+      localStorage.setItem("pf_recorrido_data", JSON.stringify(PUNTOS));
+      renderPuntos();
+      pfModal("↩️ «" + locales[i].nombre + "» marcado como pendiente.");
+      return;
+    }
+  }
+  pfModal("No hay locales completados para deshacer.");
+}
+
+// #102: regenerar PDF si hubo error
+function pfRegenerarPDF() {
+  pfConfirm("¿Regenerar el PDF? Se volverá a la pantalla de fotos.", function() {
+    if (window._ULTIMO_LOCAL_CERT && window._ULTIMO_LOCAL_CERT.local) {
+      var loc = window._ULTIMO_LOCAL_CERT.local;
+      if (PUNTOS[loc._pi] && PUNTOS[loc._pi].locales[loc._li]) {
+        PUNTOS[loc._pi].locales[loc._li].done = false;
+        localStorage.setItem("pf_recorrido_data", JSON.stringify(PUNTOS));
+      }
+      FIRMA_GUARDADA_B64 = null; FIRMADO = false;
+      abrirLocal(loc._pi, loc._li);
+    } else { pfModal("No hay referencia al certificado anterior."); }
+  });
+}
+
+// #099: marcar local no disponible (cerrado, sin encargado)
+function pfMarcarNoDisponible() {
+  if (!LOCAL_ACTUAL) return;
+  pfConfirm("¿Marcar «"+LOCAL_ACTUAL.nombre+"» como NO DISPONIBLE?\n(cerrado, sin encargado, etc.)", function() {
+    var duracion = detenerTimer();
+    PUNTOS[LOCAL_ACTUAL._pi].locales[LOCAL_ACTUAL._li].done   = true;
+    PUNTOS[LOCAL_ACTUAL._pi].locales[LOCAL_ACTUAL._li].noDisp = true;
+    localStorage.setItem("pf_recorrido_data", JSON.stringify(PUNTOS));
+    if (typeof pfRegistrarVisitaEnFicha === "function") {
+      pfRegistrarVisitaEnFicha(LOCAL_ACTUAL.nombre, {
+        fecha: fechaHoy(), hora: new Date().toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"}),
+        tipo: "no_disponible", tecnico: TECNICO_NOMBRE || "Técnico",
+        nota: "Local no disponible", punto: PUNTO_ACTUAL ? PUNTO_ACTUAL.nombre : ""
+      });
+    }
+    guardarHistorialDia({ local: LOCAL_ACTUAL, punto: PUNTO_ACTUAL,
+      hora: new Date().toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"}),
+      fotos: 0, accs: 0, url: null, nombre: null,
+      certNum: "ND", duracion: duracion, tipo: "no_disponible" });
+    renderPuntos(); ir("s1");
+  });
 }

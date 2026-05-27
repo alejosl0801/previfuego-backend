@@ -47,6 +47,10 @@ function doPost(e) {
     if (accion === "enviar_certificado")  return responder(enviarCertificado(body));
     if (accion === "guardar_crm")         return responder(guardarCRM(body));
     if (accion === "get_crm")             return responder(getCRM(body));
+    // #107 FIX: sincronización de fichas entre dispositivos
+    if (accion === "guardar_fichas")      return responder(guardarFichas(body));
+    if (accion === "get_fichas")          return responder(getFichas(body));
+    if (accion === "guardar_visita")      return responder(guardarVisita(body));
     return responder({ ok:false, msg:"Acción no reconocida: " + accion });
   } catch(err) {
     return responder({ ok:false, msg:"Error POST ["+accion+"]: " + err.message });
@@ -244,6 +248,129 @@ function getCRM(body) {
   }
 
   return { ok:true, data:results };
+}
+
+
+// ── AUTH BÁSICA (#104 #105 FIX) ───────────────────────────────
+// Token en PropertiesService — NO en código fuente
+// Configurar en Apps Script: Archivo → Propiedades del proyecto → pf_token
+var PF_AUTH_TOKEN = null;
+
+function getToken() {
+  if (!PF_AUTH_TOKEN) {
+    try {
+      PF_AUTH_TOKEN = PropertiesService.getScriptProperties().getProperty("pf_token") || "";
+    } catch(e) { PF_AUTH_TOKEN = ""; }
+  }
+  return PF_AUTH_TOKEN;
+}
+
+function verificarToken(body) {
+  var token = getToken();
+  if (!token) return true; // si no hay token configurado, no bloquear (backward compat)
+  return (body.token && body.token === token);
+}
+
+// ── SINCRONIZAR FICHAS (#107 FIX) ────────────────────────────
+// Permite leer y escribir pf_fichas desde Sheets
+// Esto hace que el semáforo funcione en todos los dispositivos
+
+function guardarFichas(body) {
+  if (!verificarToken(body)) return { ok:false, msg:"No autorizado" };
+  var ss    = SpreadsheetApp.openById(SHEET_ID);
+  var sheet = ss.getSheetByName("FICHAS");
+  if (!sheet) {
+    sheet = ss.insertSheet("FICHAS");
+    sheet.appendRow(["DISPOSITIVO","FECHA_SYNC","DATA_JSON"]);
+  }
+
+  var dispositivo = body.dispositivo || "default";
+  var data        = body.fichas || {};
+  var fecha       = Utilities.formatDate(new Date(), "America/Guayaquil", "dd/MM/yyyy HH:mm");
+  var json        = JSON.stringify(data);
+
+  // Buscar fila existente del dispositivo
+  var rows = sheet.getDataRange().getValues();
+  var fila = -1;
+  for (var i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === dispositivo) { fila = i + 1; break; }
+  }
+
+  if (fila > 0) {
+    sheet.getRange(fila, 1, 1, 3).setValues([[dispositivo, fecha, json]]);
+  } else {
+    sheet.appendRow([dispositivo, fecha, json]);
+  }
+
+  return { ok:true, msg:"Fichas sincronizadas: " + Object.keys(data).length + " locales" };
+}
+
+function getFichas(body) {
+  if (!verificarToken(body)) return { ok:false, msg:"No autorizado" };
+  var ss    = SpreadsheetApp.openById(SHEET_ID);
+  var sheet = ss.getSheetByName("FICHAS");
+  if (!sheet) return { ok:true, data:{}, msg:"Sin datos aún" };
+
+  var dispositivo = body.dispositivo || "default";
+  var rows        = sheet.getDataRange().getValues();
+  var merged      = {};
+
+  // Merge fichas de todos los dispositivos (última sync gana)
+  for (var i = 1; i < rows.length; i++) {
+    var json = String(rows[i][2]);
+    if (!json) continue;
+    try {
+      var fichas = JSON.parse(json);
+      // Merge: para cada local, tomar la visita más reciente
+      for (var local in fichas) {
+        if (!merged[local]) {
+          merged[local] = fichas[local];
+        } else {
+          // Combinar visitas sin duplicados (comparar por fecha+hora+tipo)
+          var existentes = merged[local].visitas || [];
+          var nuevas     = fichas[local].visitas || [];
+          var keys       = {};
+          existentes.forEach(function(v){ keys[v.fecha+"_"+v.hora+"_"+v.tipo] = true; });
+          nuevas.forEach(function(v) {
+            var k = v.fecha+"_"+v.hora+"_"+v.tipo;
+            if (!keys[k]) { existentes.push(v); keys[k] = true; }
+          });
+          // Re-ordenar desc
+          existentes.sort(function(a,b){
+            return (b.fecha+b.hora).localeCompare(a.fecha+a.hora);
+          });
+          merged[local].visitas = existentes;
+        }
+      }
+    } catch(e) {}
+  }
+
+  return { ok:true, data:merged, locales:Object.keys(merged).length };
+}
+
+// ── HISTORIAL FICHAS INDIVIDUAL ───────────────────────────────
+function guardarVisita(body) {
+  if (!verificarToken(body)) return { ok:false, msg:"No autorizado" };
+  var ss    = SpreadsheetApp.openById(SHEET_ID);
+  var sheet = ss.getSheetByName("HISTORIAL_VISITAS");
+  if (!sheet) {
+    sheet = ss.insertSheet("HISTORIAL_VISITAS");
+    sheet.appendRow(["FECHA","HORA","LOCAL","TIPO","TECNICO","NOTA","PUNTO","DISPOSITIVO"]);
+  }
+
+  var visita = body.visita || {};
+  sheet.appendRow([
+    visita.fecha     || "",
+    visita.hora      || "",
+    body.local       || "",
+    visita.tipo      || "",
+    visita.tecnico   || "",
+    visita.nota      || "",
+    visita.punto     || "",
+    body.dispositivo || ""
+  ]);
+
+  return { ok:true, msg:"Visita registrada" };
 }
 
 // ── TEST ──────────────────────────────────────────────────────

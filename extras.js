@@ -13,7 +13,7 @@ function pfAgregarMarcaAgua(canvas, ctx) {
   var ahora   = new Date();
   var fecha   = ahora.toLocaleDateString("es-EC", {day:"2-digit", month:"2-digit", year:"numeric"});
   var hora    = ahora.toLocaleTimeString("es-EC", {hour:"2-digit", minute:"2-digit"});
-  var tecnico = (typeof TECNICO_NOMBRE !== "undefined" && TECNICO_NOMBRE) ? TECNICO_NOMBRE : "Técnico Previfuego";
+  var tecnico = (typeof TECNICO_NOMBRE !== "undefined" && TECNICO_NOMBRE && TECNICO_NOMBRE !== "Raúl Romero") ? TECNICO_NOMBRE : ((typeof USUARIO_ACTUAL !== "undefined" && USUARIO_ACTUAL) ? USUARIO_ACTUAL : "Técnico Previfuego");
   var local   = (typeof LOCAL_ACTUAL !== "undefined" && LOCAL_ACTUAL ? LOCAL_ACTUAL.nombre : "");
   var lineas  = [
     "PREVIFUEGO",
@@ -226,15 +226,12 @@ function pfRestaurarBackup(file) {
     try {
       var backup = JSON.parse(e.target.result);
       if (!backup.datos) { pfModal("Archivo de backup inválido."); return; }
-      // confirm reemplazado por pfConfirm
-  pfConfirm("¿Restaurar backup del " + backup.fecha + "?\nEsto reemplazará los datos actuales.", function() {
-    Object.keys(backup.datos).forEach(function(k) {
-      localStorage.setItem(k, JSON.stringify(backup.datos[k]));
-    });
-    pfModal("✅ Backup restaurado correctamente. Recarga la app.");
-  });
-  return; // pfConfirm es async — el resto del código se movió al callback
-      // código movido al callback de pfConfirm arriba
+      pfConfirm("¿Restaurar backup del " + backup.fecha + "?\nEsto reemplazará los datos actuales.", function() {
+        Object.keys(backup.datos).forEach(function(k) {
+          localStorage.setItem(k, JSON.stringify(backup.datos[k]));
+        });
+        pfModal("✅ Backup restaurado correctamente. Recarga la app.");
+      });
     } catch(e) { pfModal("Error al leer el backup: " + e.message); }
   };
   reader.readAsText(file);

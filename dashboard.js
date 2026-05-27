@@ -10,11 +10,12 @@ function pfMesActual() {
 }
 
 function pfFechaEnMes(fechaStr) {
-  // fechaStr = DD/MM/YYYY
+  // #048 FIX: llamar pfMesActual una sola vez
   if (!fechaStr) return false;
   var p = fechaStr.split("/");
   if (p.length < 3) return false;
-  return p[1]+"/"+p[2] === pfMesActual().split("/")[0]+"/"+pfMesActual().split("/")[1];
+  var ma = pfMesActual().split("/");
+  return p[1] === ma[0] && p[2] === ma[1];
 }
 
 // ── CALCULAR MÉTRICAS ────────────────────────────────────────
@@ -75,8 +76,12 @@ function pfCalcDashboard() {
 
 // ── RENDER DASHBOARD ─────────────────────────────────────────
 function pfRenderDashboard() {
+  // #052 FIX: si el panel no existe aún, reintentar en 200ms
   var el = document.getElementById("pf-dash-contenido");
-  if (!el) return;
+  if (!el) {
+    setTimeout(pfRenderDashboard, 200);
+    return;
+  }
 
   var d   = pfCalcDashboard();
   var mes = pfMesActual();
@@ -161,9 +166,12 @@ function pfRenderDashboard() {
 }
 
 function pfStatCard(val, label, color) {
-  return '<div style="background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:12px 8px;text-align:center">' +
-    '<div style="font-size:26px;font-weight:700;line-height:1;color:'+color+'">'+val+'</div>' +
-    '<div style="font-size:11px;color:var(--g3);font-weight:500;margin-top:3px">'+label+'</div></div>';
+  // #051 FIX: reducir font-size si el número tiene 3+ dígitos
+  var numStr = String(val);
+  var fs = numStr.length >= 4 ? "16px" : numStr.length === 3 ? "20px" : numStr.length === 2 ? "24px" : "28px";
+  return '<div style="background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:12px 6px;text-align:center">' +
+    '<div style="font-size:'+fs+';font-weight:700;line-height:1;color:'+color+'">'+val+'</div>' +
+    '<div style="font-size:10px;color:var(--g3);font-weight:500;margin-top:3px;line-height:1.2">'+label+'</div></div>';
 }
 
 function pfStatCard2(val, label, ico) {

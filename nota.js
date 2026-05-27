@@ -46,10 +46,11 @@ function abrirNotaEntrega(pi, li) {
 
   NOTA_ACTUAL = {
     numero:    null, // se asigna al generar
-    cliente:   loc.emp    || "",
-    direccion: loc.dir    || p.nombre,
-    ruc:       loc.ruc    || "",
-    telefono:  loc.telefono || "",
+    // #033 #034 #035 FIX: usar pfBuscarCliente para obtener razón social, RUC y dirección reales
+    cliente:   (function(){ var _cl = (typeof pfBuscarCliente==="function") ? pfBuscarCliente(loc.nombre) : null; return _cl ? (_cl.razon || loc.nombre) : loc.nombre; })(),
+    direccion: p.nombre || "",
+    ruc:       (function(){ var _cl = (typeof pfBuscarCliente==="function") ? pfBuscarCliente(loc.nombre) : null; return _cl ? (_cl.ruc || "") : ""; })(),
+    telefono:  "",
     fecha:     fecha,
     local:     loc.nombre,
     items:     NOTA_ITEMS
@@ -113,7 +114,7 @@ function renderNotaItems() {
 
   el.innerHTML = h;
 
-  var iva   = subtotal * 0.15;
+  var iva   = subtotal * (parseFloat(localStorage.getItem('pf_iva') || '0.15'));
   var total = subtotal + iva;
 
   var elSub = document.getElementById("nota-subtotal");
@@ -353,7 +354,7 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
 
     // Filas de ítems
     var subtotal = 0;
-    var maxFilas = 12;
+    var maxFilas = items.length; // #038 FIX: todos los ítems
     for (var i=0; i<Math.min(items.length, maxFilas); i++) {
       var item = items[i];
       var tot  = (item.cant||0) * (item.puni||item.p||0);
@@ -393,7 +394,7 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     y += 10;
 
     // ── TOTALES ──────────────────────────────────────────────
-    var iva   = subtotal * 0.15;
+    var iva   = subtotal * (parseFloat(localStorage.getItem('pf_iva') || '0.15'));
     var total = subtotal + iva;
 
     // Columna izquierda: observaciones
@@ -449,9 +450,11 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     doc.text("Firma y Sello", ML+firW/2, y+30, {align:"center"});
 
     // Canvas firma si existe
-    if (FIRMADO && canvas && canvas.width > 50) {
+    // #039 FIX: usar firma guardada si canvas ya fue reiniciado
+    var _firmaB64 = (typeof FIRMA_GUARDADA_B64 !== "undefined" && FIRMA_GUARDADA_B64) ? FIRMA_GUARDADA_B64 : (canvas && FIRMADO ? canvas.toDataURL("image/png") : null);
+    if (_firmaB64) {
       try {
-        var sigData = canvas.toDataURL("image/png");
+        var sigData = _firmaB64;
         doc.addImage(sigData, "PNG", ML+2, y+6, firW-4, 17);
       } catch(e) {}
     }

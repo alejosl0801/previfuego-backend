@@ -125,7 +125,8 @@ function pfAbrirCRM(nombreLocal) {
   if (!modal) {
     modal = document.createElement("div");
     modal.id = "pf-crm-modal";
-    modal.style.cssText = "position:fixed;inset:0;background:var(--g1);z-index:300;overflow-y:auto;display:none;padding-bottom:80px";
+    // #070 FIX: z-index 350 > ficha (300) para no superponerse
+    modal.style.cssText = "position:fixed;inset:0;background:var(--g1);z-index:350;overflow-y:auto;display:none;padding-bottom:80px";
     document.body.appendChild(modal);
   }
   modal.innerHTML = h;
@@ -267,6 +268,60 @@ function pfInyectarProductividad() {
 }
 
 // pfAdmTab7 manejado por coordinator.js — no duplicar
+
+
+// #067 #068 FIX: helpers para refrescar solo secciones del CRM
+function pfEliminarNotaCRM(nombreLocal, idx) {
+  pfConfirm("¿Eliminar esta nota?", function() {
+    var crm = pfGetCRM();
+    if (crm[nombreLocal] && crm[nombreLocal].notas) {
+      crm[nombreLocal].notas.splice(idx, 1);
+      pfSaveCRM(crm);
+      var el = document.getElementById("pf-crm-notas");
+      if (el) pfRenderNotasCRM(nombreLocal, el);
+    }
+  });
+}
+
+function pfRenderNotasCRM(nombreLocal, el) {
+  if (!el) return;
+  var crm = pfGetCRM();
+  var data = crm[nombreLocal] || { notas:[], contactos:[] };
+  var h = "";
+  if (data.notas.length === 0) {
+    h = '<div style="padding:16px;text-align:center;color:var(--g3);font-size:14px">Sin notas aún.</div>';
+  } else {
+    data.notas.slice(0, 20).forEach(function(n) {
+      h += '<div style="background:var(--g1);border-radius:10px;padding:10px 12px;margin-bottom:6px">';
+      h += '<div style="font-size:13px;color:var(--ng);line-height:1.5">'+n.texto+'</div>';
+      var ni = data.notas.indexOf(n);
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">';
+      h += '<div style="font-size:11px;color:var(--g3)">'+n.fecha+' · '+n.autor+'</div>';
+      h += '<button onclick="pfEliminarNotaCRM(\''+nombreLocal.replace(/'/g,"")+'\','+ni+')" style="font-size:10px;color:var(--r);background:none;border:none;cursor:pointer;padding:2px 6px">🗑</button>';
+      h += '</div></div>';
+    });
+  }
+  el.innerHTML = h;
+}
+
+function pfRenderContactosCRM(nombreLocal, el) {
+  if (!el) return;
+  var crm = pfGetCRM();
+  var data = crm[nombreLocal] || { notas:[], contactos:[] };
+  var h = "";
+  if (data.contactos.length === 0) {
+    h = '<div style="font-size:13px;color:var(--g3);margin-bottom:8px">Sin contactos registrados.</div>';
+  } else {
+    data.contactos.forEach(function(c) {
+      h += '<div style="background:var(--g1);border-radius:10px;padding:10px 12px;margin-bottom:6px">';
+      h += '<div style="font-size:14px;font-weight:700;color:var(--ng)">'+c.nombre+'</div>';
+      if (c.telefono) h += '<div style="font-size:12px;color:var(--g4)">'+c.telefono+'</div>';
+      if (c.email)    h += '<div style="font-size:12px;color:var(--g4)">'+c.email+'</div>';
+      h += '</div>';
+    });
+  }
+  el.innerHTML = h;
+}
 
 // ── INIT ──────────────────────────────────────────────────────
 window.addEventListener("load", function() {
