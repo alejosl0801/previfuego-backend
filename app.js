@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════
 //  PREVIFUEGO FIELD — app.js  v3.1
-//  v3.3 — Actualizado con módulos adicionales
+//  Bloque A: PDF fixes + tipo trabajo + fotos libres + roles
 // ═══════════════════════════════════════════════════════════
 
 var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsGUa-Z31KwPkixPxM8tLgEoyj7HsYRmdic8-HCuE9ZLjBfCYSGPJKmNDT9jOITxlO/exec";
@@ -29,8 +29,8 @@ var ACCESORIOS = [
 // ── USUARIOS ─────────────────────────────────────────────────
 var USUARIOS = {
   raul:      { nombre:"Raúl Romero", rol:"Técnico Operativo y Logístico", emoji:"👷" },
-  juan:      { nombre:"Juan",        rol:"Técnico Operativo y Logístico", emoji:"👷" },
-  fabiola:   { nombre:"Fabiola",     rol:"Administración y Taller",       emoji:"💼" },
+  juan:      { nombre:"Juan Arboleda", rol:"Técnico Operativo y Logístico", emoji:"👷" },
+  fabiola:   { nombre:"Fabiola Mejía", rol:"Administración y Taller",     emoji:"💼" },
   alejandro: { nombre:"Alejandro",   rol:"Jefe de Operaciones",           emoji:"👔" }
 };
 
@@ -48,14 +48,20 @@ var TIPOS_TRABAJO = {
 function detectarTipoTrabajo(mision) {
   if (!mision) return TIPOS_TRABAJO.MANTENIMIENTO;
   var m = mision.toLowerCase();
-  // ENTREGA tiene prioridad — "entregar extintores retirados" es ENTREGA no RETIRO
-  if (/entregar|entrega|devolver|devolu/.test(m))                return TIPOS_TRABAJO.ENTREGA;
-  if (/cobro|cheque|pago|retirar cheque|retirar pago/.test(m))   return TIPOS_TRABAJO.COBRO;
-  if (/instalar|instalaci|colocar|etiqueta/.test(m))             return TIPOS_TRABAJO.INSTALACION;
-  // RETIRO solo si NO hay entrega en la misión
+  if (/entregar|entrega|devolver|devolu/.test(m))                       return TIPOS_TRABAJO.ENTREGA;
+  if (/cobro|cheque|pago|retirar cheque|retirar pago/.test(m))          return TIPOS_TRABAJO.COBRO;
+  if (/instalar|instalaci|colocar|etiqueta/.test(m))                    return TIPOS_TRABAJO.INSTALACION;
   if (/retir(ar|o|a|ando)|llevar al taller|llevar a taller/.test(m)) return TIPOS_TRABAJO.RETIRO;
-  if (/mantenimiento|mant|recarga|revisar|inspeccionar/.test(m)) return TIPOS_TRABAJO.MANTENIMIENTO;
+  if (/mantenimiento|mant|recarga|revisar|inspeccionar/.test(m))        return TIPOS_TRABAJO.MANTENIMIENTO;
   return TIPOS_TRABAJO.OTRO;
+}
+
+
+// ── HELPERS DE CLIENTE ───────────────────────────────────────
+function esGrupoKFC(nombreLocal) {
+  if (typeof pfEsGrupoKFC === "function") return pfEsGrupoKFC(nombreLocal);
+  var n = (nombreLocal||"").toUpperCase();
+  return /KFC|GUS|CAJUN|MENESTRA|AMERICAN DELI|BASKIN|CINNABON|JUAN VALDEZ|NOVOCENTRO|INT FOOD|SHEMLON|DELI INT|PROMOTORA|NOVOEVENTOS|SUSHICORP/.test(n);
 }
 
 // ── ESTADO GLOBAL ────────────────────────────────────────────
@@ -370,7 +376,7 @@ function publicarRecorrido() {
   localStorage.setItem("pf_recorrido_jornadas", JSON.stringify(jornadas));
   // Compatibilidad: guardar puntos de primera jornada como data legacy
   localStorage.setItem("pf_recorrido_data", JSON.stringify(jornadas[0].puntos));
-  var payload = { accion:"publicar_recorrido", fecha:fechaHoy(), tecnico:TECNICO_NOMBRE||"Raúl Romero", texto:txt, jornadas:jornadas };
+  var payload = { accion:"publicar_recorrido", fecha:fechaHoy(), tecnico:"Raúl Romero", texto:txt, jornadas:jornadas };
   fetch(SCRIPT_URL, { method:"POST", body:JSON.stringify(payload) })
     .then(function(r){ return r.json(); })
     .catch(function(){})
@@ -502,14 +508,12 @@ function renderPuntos() {
     var col   = jorActual.jornada === "TARDE" ? "var(--a)" : "var(--r)";
     h += '<div style="margin:8px 12px 4px;padding:10px 14px;background:'+col+';border-radius:12px;display:flex;align-items:center;justify-content:space-between">';
     h += '<div style="font-size:14px;font-weight:700;color:#fff">'+emoji+' '+jorActual.label+'</div>';
-    h += '<button type="button" onclick="renderSelectorJornada()" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:20px;cursor:pointer;min-height:44px">Cambiar</button>';
+    h += '<button onclick="renderSelectorJornada()" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;cursor:pointer">Cambiar</button>';
     h += '</div>';
   }
   for (var i = 0; i < PUNTOS.length; i++) {
     var p = PUNTOS[i];
-    // No mostrar el punto como local duplicado
-    var mostrarPunto = !(p.locales.length === 1 && p.locales[0].nombre.toLowerCase() === p.nombre.toLowerCase());
-    if (mostrarPunto) h += '<div class="slbl">📍 Punto '+p.num+' — '+p.nombre+'</div>';
+    h += '<div class="slbl">📍 Punto '+p.num+' — '+p.nombre+'</div>';
     for (var j = 0; j < p.locales.length; j++) {
       var loc  = p.locales[j];
       var tipo = loc.tipo || TIPOS_TRABAJO.OTRO;
@@ -565,11 +569,7 @@ function abrirLocal(pi, li) {
   var accTot = document.getElementById("acc-tot");
   if (btnNov) btnNov.className = "nb";
   if (btnOk)  btnOk.className  = "nb";
-  // Accesorios dañados solo en mantenimiento y entrega
-  var mostrarAcc = (TIPO_TRABAJO === TIPOS_TRABAJO.MANTENIMIENTO || TIPO_TRABAJO === TIPOS_TRABAJO.ENTREGA);
-  if (accSec) accSec.style.display = "none";
-  if (btnNov) btnNov.style.display = mostrarAcc ? "" : "none";
-  if (btnOk)  btnOk.style.display  = mostrarAcc ? "" : "none";
+  if (accSec) accSec.style.display  = "none";
   if (accLis) accLis.innerHTML = "";
   if (accTot) accTot.textContent = "$0.00";
 
@@ -598,26 +598,14 @@ function abrirLocal(pi, li) {
   }
 
   // Botón según tipo de trabajo
-  var btnFot  = document.getElementById("s2-btn-fot");
-  var btnSin  = document.getElementById("s2-btn-sin");
-  var btnNota = document.getElementById("s2-btn-nota");
+  var btnFot = document.getElementById("s2-btn-fot");
+  var btnSin = document.getElementById("s2-btn-sin");
   if (TIPO_TRABAJO === TIPOS_TRABAJO.COBRO) {
-    if (btnFot)  btnFot.style.display  = "none";
-    if (btnNota) btnNota.style.display = "none";
-    if (btnSin)  btnSin.textContent = "✓ Marcar como completado";
-  } else if (TIPO_TRABAJO === TIPOS_TRABAJO.RETIRO) {
-    // Retiro: solo marcar completado + novedad opcional con foto
-    if (btnFot)  { btnFot.style.display = "flex"; btnFot.textContent = "📷 Registrar novedad (opcional)"; }
-    if (btnNota) btnNota.style.display = "none";
-    if (btnSin)  btnSin.textContent = "✓ Marcar retiro como completado";
-  } else if (TIPO_TRABAJO === TIPOS_TRABAJO.INSTALACION) {
-    if (btnFot)  { btnFot.style.display = "flex"; btnFot.textContent = "📷 " + labelBotonFotos(); }
-    if (btnNota) btnNota.style.display = "block";
-    if (btnSin)  btnSin.textContent = "✓ Completar sin registro";
+    if (btnFot) btnFot.style.display = "none";
+    if (btnSin) btnSin.textContent = "✓ Marcar como completado";
   } else {
-    if (btnFot)  { btnFot.style.display = "flex"; btnFot.textContent = "📷 " + labelBotonFotos(); }
-    if (btnNota) btnNota.style.display = "block";
-    if (btnSin)  btnSin.textContent = "✓ Completar sin registro";
+    if (btnFot) { btnFot.style.display = "flex"; btnFot.textContent = "📷 " + labelBotonFotos(); }
+    if (btnSin) btnSin.textContent = "✓ Completar sin registro";
   }
 
   var sfott = document.getElementById("sfott"); if (sfott) sfott.textContent = loc.nombre;
@@ -633,7 +621,7 @@ function abrirLocal(pi, li) {
 
 function labelBotonFotos() {
   switch (TIPO_TRABAJO) {
-    case TIPOS_TRABAJO.RETIRO:      return "📷 Foto de novedad (opcional)";
+    case TIPOS_TRABAJO.RETIRO:      return "Registrar retiro y firma";
     case TIPOS_TRABAJO.ENTREGA:     return "Registrar entrega y firma";
     case TIPOS_TRABAJO.INSTALACION: return "Registrar fotos de instalación";
     case TIPOS_TRABAJO.COBRO:       return "—";
@@ -732,6 +720,22 @@ function toggleExt(pi, li, idx) {
   el.textContent = el.classList.contains("ok") ? "✓" : "";
 }
 
+function guardarFotoRetiro(nombreLocal, fb64) {
+  // Guarda la foto ANTES del retiro vinculada al local
+  try {
+    var retiros = JSON.parse(localStorage.getItem("pf_fotos_retiro") || "{}");
+    retiros[nombreLocal] = { fb64:fb64, fecha:fechaHoy() };
+    localStorage.setItem("pf_fotos_retiro", JSON.stringify(retiros));
+  } catch(e) {}
+}
+
+function getFotoRetiro(nombreLocal) {
+  try {
+    var retiros = JSON.parse(localStorage.getItem("pf_fotos_retiro") || "{}");
+    return retiros[nombreLocal] || null;
+  } catch(e) { return null; }
+}
+
 function confirmarSin() {
   if (!LOCAL_ACTUAL) return;
   var msg = TIPO_TRABAJO === TIPOS_TRABAJO.COBRO
@@ -745,6 +749,11 @@ function confirmarSin() {
     localStorage.setItem("pf_recorrido_data",    JSON.stringify(PUNTOS));
     localStorage.setItem("pf_recorrido_jornadas", JSON.stringify(JORNADAS));
     var hora = new Date().toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"});
+    // Guardar foto de retiro vinculada al local
+    if (TIPO_TRABAJO === TIPOS_TRABAJO.RETIRO && Object.keys(FB64).length > 0) {
+      var primeraFoto = FB64[Object.keys(FB64)[0]];
+      if (primeraFoto) guardarFotoRetiro(LOCAL_ACTUAL.nombre, primeraFoto);
+    }
     var item = { local:LOCAL_ACTUAL, punto:PUNTO_ACTUAL, hora:hora, fotos:0, accs:0, url:null, nombre:null, certNum:null, duracion:duracion, tipo:"sin_cert" };
     HISTORIAL.unshift(item);
     guardarHistorialDia(item);
@@ -827,13 +836,15 @@ function irFirma() {
   var c = 0;
   for (var k in FD) { if (FD[k]) c++; }
   if (c === 0) { alert("Necesitas al menos 1 foto para continuar."); return; }
-  reinitCanvas();
-  // Instalación y retiro no generan certificado — van directo a nota
+  // Solo ir a firma si el tipo requiere certificado
   if (TIPO_TRABAJO === TIPOS_TRABAJO.INSTALACION) {
-    ir("sfir"); // firma simple, sin certificado
-    return;
+    // Instalación: fotos + firma pero sin certificado completo
+    reinitCanvas();
+    ir("sfir");
+  } else {
+    reinitCanvas();
+    ir("sfir");
   }
-  ir("sfir");
 }
 
 // ════════════════════════════════════════════════════════════
@@ -962,6 +973,23 @@ function renderAccList() {
 // PDF — ver pdf.js
 
 // ── SIGUIENTE ────────────────────────────────────────────────
+function actualizarSigLocal() {
+  var sigC = document.getElementById("sig-c");
+  if (!sigC) return;
+  for (var i = 0; i < PUNTOS.length; i++) {
+    for (var j = 0; j < PUNTOS[i].locales.length; j++) {
+      if (!PUNTOS[i].locales[j].done) {
+        var loc = PUNTOS[i].locales[j];
+        var tipo = loc.tipo || detectarTipoTrabajo(loc.mision);
+        var ico = { mantenimiento:"🔧", retiro:"📦", entrega:"🚚", instalacion:"🔩", cobro:"💰", otro:"📋" }[tipo] || "📋";
+        sigC.innerHTML = '<div class="sgn">'+ico+'</div><div><div class="sgnm">'+loc.nombre+'</div><div class="sgm">'+PUNTOS[i].nombre+'</div></div>';
+        return;
+      }
+    }
+  }
+  sigC.innerHTML = '<div style="font-size:14px;color:var(--v);font-weight:700">✅ ¡Recorrido completado!</div>';
+}
+
 function irSig() {
   for (var i = 0; i < PUNTOS.length; i++) {
     for (var j = 0; j < PUNTOS[i].locales.length; j++) {
@@ -1292,137 +1320,156 @@ function renderEstadisticasPerfil() {
 
 
 // ═══════════════════════════════════════════════════════════
-//  TAREAS INDEPENDIENTES — Alejandro asigna por técnico
+//  MÓDULO TALLER — Gestión de extintores en taller
+//  Cualquiera puede registrar, queda registrado con su nombre
 // ═══════════════════════════════════════════════════════════
+var PF_TALLER_KEY = "pf_taller";
 
-var PF_TAREAS_KEY = "pf_tareas";
-
-function pfGetTareas() {
-  try { return JSON.parse(localStorage.getItem(PF_TAREAS_KEY) || "[]"); } catch(e) { return []; }
+function pfGetTaller() {
+  try { return JSON.parse(localStorage.getItem(PF_TALLER_KEY) || "[]"); } catch(e) { return []; }
 }
-function pfSaveTareas(arr) { localStorage.setItem(PF_TAREAS_KEY, JSON.stringify(arr)); }
+function pfSaveTaller(arr) { localStorage.setItem(PF_TALLER_KEY, JSON.stringify(arr)); }
 
-function pfCrearTarea(tecnico, descripcion, prioridad) {
-  var tareas = pfGetTareas();
-  tareas.unshift({
-    id:          "t_" + Date.now(),
-    tecnico:     tecnico,
-    descripcion: descripcion,
-    prioridad:   prioridad || "normal",
-    estado:      "pendiente",
-    fecha:       fechaHoy(),
-    fechaOk:     null,
-    creadoPor:   TECNICO_NOMBRE || "Alejandro"
+// Agregar extintor al taller (desde retiro)
+function pfIngresarAlTaller(local, descripcion, cantidad) {
+  var taller = pfGetTaller();
+  taller.unshift({
+    id:          "tal_" + Date.now(),
+    local:       local,
+    descripcion: descripcion || "Extintor",
+    cantidad:    cantidad || 1,
+    estado:      "pendiente", // pendiente | en_proceso | listo
+    accesorios:  [],          // accesorios cambiados
+    fechaIngreso: fechaHoy(),
+    fechaListo:   null,
+    registradoPor: TECNICO_NOMBRE || "Técnico"
   });
-  pfSaveTareas(tareas);
-  return tareas[0];
+  pfSaveTaller(taller);
 }
 
-function pfCompletarTarea(id) {
-  var tareas = pfGetTareas();
-  for (var i = 0; i < tareas.length; i++) {
-    if (tareas[i].id === id) {
-      tareas[i].estado   = "completada";
-      tareas[i].fechaOk  = fechaHoy();
+function pfAgregarAccesorioTaller(id, accNombre, cant) {
+  var taller = pfGetTaller();
+  for (var i = 0; i < taller.length; i++) {
+    if (taller[i].id === id) {
+      taller[i].accesorios.push({
+        nombre:    accNombre,
+        cant:      cant || 1,
+        fecha:     fechaHoy(),
+        hora:      new Date().toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"}),
+        usuario:   TECNICO_NOMBRE || "Técnico"
+      });
+      if (taller[i].estado === "pendiente") taller[i].estado = "en_proceso";
       break;
     }
   }
-  pfSaveTareas(tareas);
+  pfSaveTaller(taller);
+  pfRenderTaller();
 }
 
-function pfEliminarTarea(id) {
-  var tareas = pfGetTareas().filter(function(t){ return t.id !== id; });
-  pfSaveTareas(tareas);
+function pfMarcarListoTaller(id) {
+  var taller = pfGetTaller();
+  for (var i = 0; i < taller.length; i++) {
+    if (taller[i].id === id) {
+      taller[i].estado     = "listo";
+      taller[i].fechaListo = fechaHoy();
+      break;
+    }
+  }
+  pfSaveTaller(taller);
+  pfRenderTaller();
 }
 
-function pfRenderTareasPanel() {
-  var el = document.getElementById("pf-tareas-contenido");
+function pfRenderTaller() {
+  var el = document.getElementById("pf-taller-lista");
   if (!el) return;
-  var tareas = pfGetTareas();
-  var tecnicos = ["Raúl Romero", "Juan", "Fabiola"];
+  var taller = pfGetTaller();
+
+  if (!taller.length) {
+    el.innerHTML = '<div style="padding:24px 16px;text-align:center;color:var(--g3);font-size:14px">No hay extintores en el taller.</div>';
+    return;
+  }
+
+  var pendientes  = taller.filter(function(t){ return t.estado !== "listo"; });
+  var listos      = taller.filter(function(t){ return t.estado === "listo"; });
   var h = "";
 
-  // Formulario nueva tarea
-  h += '<div style="margin:0 12px 12px;background:#fff;border-radius:14px;border:1.5px solid var(--bo);padding:12px 14px">';
-  h += '<div class="slbl" style="margin-bottom:8px">Nueva tarea</div>';
-  h += '<select id="tarea-tecnico" style="width:100%;margin-bottom:8px;padding:8px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:13px">';
-  tecnicos.forEach(function(t){ h += '<option>'+t+'</option>'; });
-  h += '</select>';
-  h += '<textarea id="tarea-desc" placeholder="Descripción de la tarea..." style="width:100%;height:70px;padding:8px 10px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:13px;resize:none;margin-bottom:8px"></textarea>';
-  h += '<div style="display:flex;gap:8px;margin-bottom:8px">';
-  h += '<select id="tarea-prio" style="flex:1;padding:8px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:13px">';
-  h += '<option value="normal">🔵 Normal</option>';
-  h += '<option value="urgente">🔴 Urgente</option>';
-  h += '<option value="baja">⬜ Baja prioridad</option>';
-  h += '</select>';
-  h += '<button type="button" onclick="pfGuardarTarea()" style="padding:8px 16px;border-radius:10px;border:none;background:var(--r);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ Asignar</button>';
+  // Resumen
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 12px 12px">';
+  h += '<div style="background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--n)">'+taller.filter(function(t){return t.estado==="pendiente";}).length+'</div><div style="font-size:11px;color:var(--g3)">Pendientes</div></div>';
+  h += '<div style="background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--a)">'+taller.filter(function(t){return t.estado==="en_proceso";}).length+'</div><div style="font-size:11px;color:var(--g3)">En proceso</div></div>';
+  h += '<div style="background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--v)">'+listos.length+'</div><div style="font-size:11px;color:var(--g3)">Listos</div></div>';
+  h += '</div>';
+
+  // Formulario agregar extintor manual
+  h += '<div style="margin:0 12px 10px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:12px">';
+  h += '<div class="slbl" style="margin-bottom:8px">Ingresar extintor al taller</div>';
+  h += '<input id="tal-local" placeholder="Cliente / local" style="width:100%;margin-bottom:6px;padding:8px 10px;border:1.5px solid var(--bo);border-radius:8px;font-family:inherit;font-size:13px">';
+  h += '<input id="tal-desc" placeholder="Descripción (ej: 10 LBS PQS)" style="width:100%;margin-bottom:6px;padding:8px 10px;border:1.5px solid var(--bo);border-radius:8px;font-family:inherit;font-size:13px">';
+  h += '<div style="display:flex;gap:6px">';
+  h += '<input id="tal-cant" type="number" min="1" value="1" style="width:60px;padding:8px;border:1.5px solid var(--bo);border-radius:8px;font-family:inherit;font-size:13px">';
+  h += '<button type="button" onclick="pfIngresarManualTaller()" style="flex:1;padding:8px;border-radius:8px;border:none;background:var(--r);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ Ingresar</button>';
   h += '</div></div>';
 
-  // Tareas por técnico
-  tecnicos.forEach(function(tec) {
-    var tarTec = tareas.filter(function(t){ return t.tecnico === tec; });
-    var pend   = tarTec.filter(function(t){ return t.estado === "pendiente"; });
-    var done   = tarTec.filter(function(t){ return t.estado === "completada"; });
-
-    h += '<div class="slbl">'+tec+' — '+pend.length+' pendiente(s)</div>';
-
-    if (!tarTec.length) {
-      h += '<div style="margin:0 12px 8px;padding:10px 14px;background:var(--g1);border-radius:10px;font-size:13px;color:var(--g3)">Sin tareas asignadas.</div>';
-    }
-
-    pend.forEach(function(t) {
-      var colPrio = t.prioridad === "urgente" ? "var(--r)" : t.prioridad === "baja" ? "var(--g3)" : "var(--a)";
-      var icoPrio = t.prioridad === "urgente" ? "🔴" : t.prioridad === "baja" ? "⬜" : "🔵";
-      h += '<div style="margin:0 12px 6px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:10px 14px">';
-      h += '<div style="display:flex;align-items:flex-start;gap:8px">';
-      h += '<div style="font-size:16px">'+icoPrio+'</div>';
-      h += '<div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--ng)">'+t.descripcion+'</div>';
-      h += '<div style="font-size:11px;color:var(--g3);margin-top:2px">'+t.fecha+' · '+t.creadoPor+'</div></div>';
-      h += '<button type="button" onclick="pfCompletarTarea(\"'+t.id+'\");pfRenderTareasPanel()" style="background:var(--v);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">✓</button>';
-      h += '<button type="button" onclick="pfEliminarTarea(\"'+t.id+'\");pfRenderTareasPanel()" style="background:var(--rc);color:var(--r);border:none;border-radius:8px;padding:5px 8px;font-size:11px;cursor:pointer;flex-shrink:0">✕</button>';
+  // Lista pendientes y en proceso
+  if (pendientes.length) {
+    h += '<div class="slbl">En taller</div>';
+    pendientes.forEach(function(t) {
+      var colEst = t.estado === "en_proceso" ? "var(--a)" : "var(--n)";
+      var lblEst = t.estado === "en_proceso" ? "🔵 En proceso" : "⏳ Pendiente";
+      h += '<div style="margin:0 12px 8px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);overflow:hidden">';
+      h += '<div style="padding:10px 14px;display:flex;align-items:flex-start;gap:8px">';
+      h += '<div style="flex:1"><div style="font-size:14px;font-weight:700">'+t.local+'</div>';
+      h += '<div style="font-size:12px;color:var(--g4);margin-top:2px">'+t.cantidad+'x '+t.descripcion+'</div>';
+      h += '<div style="font-size:11px;color:var(--g3);margin-top:2px">Ingresó: '+t.fechaIngreso+' · '+t.registradoPor+'</div>';
+      // Accesorios registrados
+      if (t.accesorios.length > 0) {
+        h += '<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--bo)">';
+        h += '<div style="font-size:11px;font-weight:700;color:var(--g3);margin-bottom:3px">Accesorios cambiados:</div>';
+        t.accesorios.forEach(function(a) {
+          h += '<div style="font-size:12px;color:var(--ng)">• '+a.cant+'x '+a.nombre+' <span style="color:var(--g3)">('+a.usuario+' · '+a.fecha+')</span></div>';
+        });
+        h += '</div>';
+      }
+      h += '</div>';
+      h += '<div style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--g1);color:'+colEst+';flex-shrink:0">'+lblEst+'</div></div>';
+      // Acciones
+      h += '<div style="padding:0 12px 10px;display:flex;gap:6px;flex-wrap:wrap">';
+      h += '<button type="button" onclick="pfAbrirAgregarAcc(\"'+t.id+'\")" style="padding:6px 10px;border-radius:8px;border:1.5px solid var(--bo);background:var(--g1);color:var(--ng);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ Accesorio</button>';
+      h += '<button type="button" onclick="pfMarcarListoTaller(\"'+t.id+'\")" style="padding:6px 10px;border-radius:8px;border:none;background:var(--v);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✓ Marcar listo</button>';
       h += '</div></div>';
     });
+  }
 
-    if (done.length > 0) {
-      h += '<div style="margin:0 12px 4px;font-size:11px;color:var(--g3)">'+done.length+' completada(s)</div>';
-      done.slice(0,3).forEach(function(t) {
-        h += '<div style="margin:0 12px 4px;background:var(--vc);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--v)">✓ '+t.descripcion+' · '+t.fechaOk+'</div>';
-      });
-    }
-  });
+  // Lista listos (últimos 5)
+  if (listos.length) {
+    h += '<div class="slbl">Listos para entrega ('+listos.length+')</div>';
+    listos.slice(0,5).forEach(function(t) {
+      h += '<div style="margin:0 12px 6px;background:var(--vc);border-radius:12px;border:1.5px solid var(--v);padding:10px 14px;display:flex;align-items:center;gap:8px">';
+      h += '<div style="font-size:18px">✅</div>';
+      h += '<div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--v)">'+t.local+'</div>';
+      h += '<div style="font-size:11px;color:var(--g4)">'+t.cantidad+'x '+t.descripcion+' · Listo: '+t.fechaListo+'</div>';
+      if (t.accesorios.length > 0) h += '<div style="font-size:11px;color:var(--g4)">'+t.accesorios.length+' accesorio(s) cambiado(s)</div>';
+      h += '</div></div>';
+    });
+  }
 
   h += '<div style="height:80px"></div>';
   el.innerHTML = h;
 }
 
-function pfGuardarTarea() {
-  var tec  = document.getElementById("tarea-tecnico");
-  var desc = document.getElementById("tarea-desc");
-  var prio = document.getElementById("tarea-prio");
-  if (!desc || !desc.value.trim()) { alert("Escribe la descripción de la tarea."); return; }
-  pfCrearTarea(tec ? tec.value : "Raúl Romero", desc.value.trim(), prio ? prio.value : "normal");
-  desc.value = "";
-  pfRenderTareasPanel();
+function pfIngresarManualTaller() {
+  var loc  = document.getElementById("tal-local");
+  var desc = document.getElementById("tal-desc");
+  var cant = document.getElementById("tal-cant");
+  if (!loc || !loc.value.trim()) { alert("Ingresa el nombre del cliente."); return; }
+  pfIngresarAlTaller(loc.value.trim(), desc ? desc.value.trim() : "", cant ? parseInt(cant.value)||1 : 1);
+  if (loc) loc.value = ""; if (desc) desc.value = ""; if (cant) cant.value = "1";
+  pfRenderTaller();
 }
 
-// Mostrar tareas propias para Raúl/Juan/Fabiola
-function pfRenderMisTareas() {
-  var el = document.getElementById("pf-mis-tareas");
-  if (!el) return;
-  var tareas = pfGetTareas().filter(function(t){
-    return t.tecnico === TECNICO_NOMBRE && t.estado === "pendiente";
-  });
-  if (!tareas.length) { el.innerHTML = ""; return; }
-  var h = '<div style="margin:8px 12px 0">';
-  h += '<div class="slbl">Mis tareas ('+tareas.length+')</div>';
-  tareas.forEach(function(t) {
-    var icoPrio = t.prioridad === "urgente" ? "🔴" : t.prioridad === "baja" ? "⬜" : "🔵";
-    h += '<div style="background:#fff;border-radius:10px;border:1.5px solid var(--bo);padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:8px">';
-    h += '<span style="font-size:14px">'+icoPrio+'</span>';
-    h += '<span style="flex:1;font-size:13px;font-weight:500">'+t.descripcion+'</span>';
-    h += '<button type="button" onclick="pfCompletarTarea(\"'+t.id+'\");pfRenderMisTareas()" style="background:var(--v);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer">✓</button>';
-    h += '</div>';
-  });
-  h += '</div>';
-  el.innerHTML = h;
+function pfAbrirAgregarAcc(talId) {
+  var nombre = prompt("Accesorio cambiado (ej: Manómetro, Manguera PQS):");
+  if (!nombre || !nombre.trim()) return;
+  var cant = parseInt(prompt("Cantidad:", "1")) || 1;
+  pfAgregarAccesorioTaller(talId, nombre.trim(), cant);
 }

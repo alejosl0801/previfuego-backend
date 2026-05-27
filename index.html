@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#9E1212">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
 <meta name="description" content="Previfuego Field — App de técnicos de campo">
-<link rel="stylesheet" href="style.css?v=3.3">
 <title>Previfuego Field v3.3</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -176,10 +176,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
   <div class="login-wrap">
     <div class="login-logo"><img class="logo-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Previfuego"></div>
     <div class="login-title">Previfuego Field</div>
-    <div class="login-sub">Selecciona tu perfil</div>
+    <div class="login-sub">¿Quién eres?</div>
     <button class="usr-btn" onclick="seleccionarUsuario('raul')"><div class="usr-ico">👷</div><div class="usr-inf"><div class="usr-nom">Raúl Romero</div><div class="usr-rol">Técnico Operativo y Logístico</div></div><div class="usr-arr">›</div></button>
-    <button class="usr-btn" onclick="seleccionarUsuario('juan')"><div class="usr-ico">👷</div><div class="usr-inf"><div class="usr-nom">Juan</div><div class="usr-rol">Técnico Operativo y Logístico</div></div><div class="usr-arr">›</div></button>
-    <button class="usr-btn" onclick="seleccionarUsuario('fabiola')"><div class="usr-ico">💼</div><div class="usr-inf"><div class="usr-nom">Fabiola</div><div class="usr-rol">Administración y Taller</div></div><div class="usr-arr">›</div></button>
+    <button class="usr-btn" onclick="seleccionarUsuario('juan')"><div class="usr-ico">🚗</div><div class="usr-inf"><div class="usr-nom">Juan</div><div class="usr-rol">Técnico Operativo y Logístico</div></div><div class="usr-arr">›</div></button>
+    <button class="usr-btn" onclick="seleccionarUsuario('fabiola')"><div class="usr-ico">💼</div><div class="usr-inf"><div class="usr-nom">Fabiola</div><div class="usr-rol">Administración</div></div><div class="usr-arr">›</div></button>
     <button class="usr-btn" onclick="seleccionarUsuario('alejandro')" style="border-color:var(--r)"><div class="usr-ico">👔</div><div class="usr-inf"><div class="usr-nom">Alejandro</div><div class="usr-rol">Jefe de Operaciones</div></div><div class="usr-arr" style="color:var(--r)">›</div></button>
   </div>
 </div>
@@ -213,7 +213,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
     <div class="cd"><div style="padding:14px;font-size:15px;color:var(--ng);line-height:1.6;white-space:pre-wrap" id="s2m"></div></div>
     <div id="s2es" style="display:none"><div class="slbl">Extintores</div><div class="cd"><div id="s2el"></div></div></div>
     <div class="bw"><button type="button" class="btn btn-r" id="s2-btn-fot" onclick="ir('sfot')">📷 Registrar fotos y firma</button></div>
-    <div class="bw" style="padding-top:0" id="s2-btn-nota"><button type="button" class="btn btn-v" onclick="abrirNotaEntrega(LOCAL_ACTUAL._pi, LOCAL_ACTUAL._li)" style="background:#1A5FAA">📄 Generar nota de entrega</button></div>
+    <div class="bw" style="padding-top:0"><button type="button" class="btn btn-v" onclick="abrirNotaEntrega(LOCAL_ACTUAL._pi, LOCAL_ACTUAL._li)" style="background:#1A5FAA">📄 Generar nota de entrega</button></div>
     <div class="bw" style="padding-top:0"><button type="button" class="btn btn-g" id="s2-btn-sin" onclick="confirmarSin()">✓ Completar sin registro</button></div>
     <div style="height:80px"></div>
   </div>
@@ -283,8 +283,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
 
 <!-- ═══ HISTORIAL ═══ -->
 <div class="screen" id="shist">
-  <div class="tb"><div class="logo"><img class="logo-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Previfuego"></div><div class="ti" style="margin-left:4px"><div class="tt">Historial</div><div class="ts">Certificados del día</div></div></div>
-  <div class="sc" id="hist-l"><div class="empty">Aún no hay certificados hoy</div></div>
+  <div class="tb"><div class="logo"><img class="logo-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Previfuego"></div><div class="ti" style="margin-left:4px"><div class="tt">Historial</div><div class="ts">Registros del día</div></div></div>
+  <div class="sc" id="hist-l"><div class="empty">Aún no hay registros hoy</div></div>
   <div class="nav">
     <div class="ni" onclick="ir('s1')"><div class="nii">&#128506;</div><div class="nil">Recorrido</div></div>
     <div class="ni on" onclick="ir('shist');renderHistorial()"><div class="nii">&#128203;</div><div class="nil">Historial</div></div>
@@ -328,7 +328,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
     <div style="margin:0 12px 10px">
       <textarea class="admin-txt" id="admin-txt" placeholder="Pega aquí el recorrido del día...&#10;&#10;RECORRIDO – JORNADA MAÑANA&#10;Punto 1 – Mall del Sol&#10;American Deli&#10;Misión: Realizar mantenimiento...&#10;&#10;RECORRIDO – JORNADA TARDE&#10;Punto 1 – Terminal Terrestre&#10;KFC Terminal&#10;Misión: Entregar extintor..." oninput="previsualizarRecorrido()"></textarea>
     </div>
-    <div class="pub-ok" id="admin-pub-ok">✅ Recorrido publicado — Raúl ya puede verlo</div>
+    <div class="pub-ok" id="admin-pub-ok">✅ Recorrido publicado — el técnico ya puede verlo</div>
     <div class="bw" style="padding-top:0;display:flex;gap:8px">
       <button type="button" class="btn btn-r" style="flex:3" onclick="publicarRecorrido()">&#128228; Publicar recorrido</button>
       <button type="button" class="btn btn-g" style="flex:1;font-size:13px" onclick="limpiarRecorrido()">&#128465;</button>
@@ -381,7 +381,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
 
 <!-- ═══ NOTA DE ENTREGA ═══ -->
 <div class="screen" id="snota">
-  <div class="tb"><div class="bk" onclick="ir('s2')">&#8249;</div><div class="ti" style="margin-left:4px"><div class="tt">Nota de Entrega</div><div class="ts" id="snota-subtitulo">Nota de entrega</div></div><div class="bdg br">Digital</div></div>
+  <div class="tb"><div class="bk" onclick="ir('s2')">&#8249;</div><div class="ti" style="margin-left:4px"><div class="tt">Nota de Entrega</div><div class="ts">Completa los datos</div></div><div class="bdg br" id="nota-badge">Nota</div></div>
   <div class="sc">
     <div class="slbl">Datos del cliente</div>
     <div style="margin:0 12px 10px">
@@ -430,7 +430,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
     </div>
 
     <div class="bw"><button type="button" class="btn btn-r" onclick="generarNotaPDF('entrega')">&#128196; Generar Nota de Entrega PDF</button></div>
-    <div style="height:20px"></div>
+    <div style="height:80px"></div>
+  </div>
+  <div class="nav">
+    <div class="ni" onclick="ir('s1')"><div class="nii">&#128506;</div><div class="nil">Recorrido</div></div>
+    <div class="ni" onclick="ir('shist');renderHistorial()"><div class="nii">&#128203;</div><div class="nil">Historial</div></div>
+    <div class="ni" onclick="ir('sperf');renderPerfil()"><div class="nii">&#128100;</div><div class="nil">Perfil</div></div>
   </div>
 </div>
 
@@ -453,9 +458,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
 <script src="logo.js"></script>
 <script src="clientes.js?v=1.0"></script>
 <script src="app.js?v=3.3"></script>
-<script src="pdf.js?v=3.3"></script>
-<script src="nota.js?v=3.3"></script>
-<script src="retiros.js?v=1.1"></script>
+<script src="retiros.js?v=1.0"></script>
 <script src="dashboard.js?v=1.0"></script>
 <script src="extras.js?v=1.0"></script>
 <script src="mejoras2.js?v=1.0"></script>

@@ -42,7 +42,7 @@ function abrirNotaEntrega(pi, li) {
 
   // Llenar datos del cliente
   var now    = new Date();
-  var fecha  = "Guayaquil, " + String(now.getDate()).padStart(2,"0") + " de " + mesEnLetras(now.getMonth()).charAt(0) + mesEnLetras(now.getMonth()).slice(1).toLowerCase() + " de " + now.getFullYear();
+  var fecha  = String(now.getDate()).padStart(2,"0") + " DE " + mesEnLetras(now.getMonth()) + " DEL " + now.getFullYear();
 
   NOTA_ACTUAL = {
     numero:    null, // se asigna al generar
@@ -84,7 +84,7 @@ function generarDescExt(e) {
   var tipo = (e.t || e.tipo || "").toUpperCase();
   var trabajo = (e.trabajo || "M").toUpperCase();
   var accion  = trabajo === "R" ? "RECARGA" : "MANTENIMIENTO";
-  return "EXTINTOR " + cap + " · " + tipo + " · " + accion;
+  return "EXTINTOR " + cap + " - " + tipo + " · " + accion;
 }
 
 // ── TABLA DE ÍTEMS ───────────────────────────────────────────
@@ -100,9 +100,9 @@ function renderNotaItems() {
     item.total = (item.cant || 0) * (item.puni || 0);
     subtotal  += item.total;
     h += '<div class="nota-row" id="nota-row-'+i+'">';
-    h += '<input type="number" class="nota-inp nota-cant" value="'+(item.cant||1)+'" min="1" oninput="notaItemChange('+i+',\'cant\',this.value)">';
-    h += '<input type="text"   class="nota-inp nota-desc" value="'+(item.desc||"")+'" placeholder="Descripción" oninput="notaItemChange('+i+',\'desc\',this.value)">';
-    h += '<input type="number" class="nota-inp nota-puni" value="'+(item.puni||0)+'" step="0.01" min="0" oninput="notaItemChange('+i+',\'puni\',this.value)">';
+    h += '<input type="number" class="nota-inp nota-cant" value="'+(item.cant||1)+'" min="1" onchange="notaItemChange('+i+',\'cant\',this.value)">';
+    h += '<input type="text"   class="nota-inp nota-desc" value="'+(item.desc||"")+'" placeholder="Descripción" onchange="notaItemChange('+i+',\'desc\',this.value)">';
+    h += '<input type="number" class="nota-inp nota-puni" value="'+(item.puni||0)+'" step="0.01" onchange="notaItemChange('+i+',\'puni\',this.value)">';
     h += '<div class="nota-tot">$'+(item.total).toFixed(2)+'</div>';
     h += '<button class="nota-del" onclick="notaEliminar('+i+')">✕</button>';
     h += '</div>';
@@ -166,8 +166,7 @@ function enteroALetras(n) {
   var centenas  = ["","CIENTO","DOSCIENTOS","TRESCIENTOS","CUATROCIENTOS","QUINIENTOS","SEISCIENTOS","SETECIENTOS","OCHOCIENTOS","NOVECIENTOS"];
 
   if (n <= 20)  return unidades[n];
-  var veintiMap = {1:"VEINTIÚN",2:"VEINTIDÓS",3:"VEINTITRÉS",4:"VEINTICUATRO",5:"VEINTICINCO",6:"VEINTISÉIS",7:"VEINTISIETE",8:"VEINTIOCHO",9:"VEINTINUEVE"};
-  if (n < 30)   return veintiMap[n-20] || ("VEINTI" + unidades[n-20].toLowerCase());
+  if (n < 30)   return "VEINTI" + unidades[n-20].toLowerCase();
   if (n < 100)  return decenas[Math.floor(n/10)] + (n%10 > 0 ? " Y " + unidades[n%10] : "");
   if (n === 100) return "CIEN";
   if (n < 1000) return centenas[Math.floor(n/100)] + (n%100 > 0 ? " " + enteroALetras(n%100) : "");
@@ -186,7 +185,7 @@ function generarNotaPDF(tipo) {
 
   NOTA_CONTADOR++;
   localStorage.setItem("pf_notaCount", NOTA_CONTADOR);
-  var numNota = String(NOTA_CONTADOR);
+  var numNota = String(NOTA_CONTADOR).padStart(7, "0");
 
   // Leer campos del formulario
   var cliente  = (document.getElementById("nota-cliente") || {}).value || NOTA_ACTUAL.cliente;
@@ -239,20 +238,21 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     if (b64) { try { doc.addImage("data:image/png;base64,"+b64,"PNG",ML,8,28,28); } catch(e){} }
 
     // Nombre empresa
-    doc.setFont("helvetica","bold"); doc.setFontSize(22); tR();
+    doc.setFont("helvetica","bolditalic"); doc.setFontSize(22); tR();
     doc.text("PREVIFUEGO", ML+32, 16);
     doc.setFont("helvetica","bold"); doc.setFontSize(8.5); tN();
     doc.text("SEGURIDAD INDUSTRIAL Y CONTRA INCENDIOS", ML+32, 21);
     doc.setFont("helvetica","normal"); doc.setFontSize(7); tG();
     var infoLines = [
-      "ASESORAMIENTO · RECARGA · MANTENIMIENTO · VENTAS",
-      "PQS (ABC) · GAS CARBÓNICO · HALOTRON",
-      "ESTUDIO, DISEÑO E INSTALACIÓN DE RED HIDRÁULICA CONTRA INCENDIOS",
-      "SISTEMAS DE CO2 PARA COCINAS, GENERADORES, TRANSFORMADORES, ETC.",
-      "INSTALACIÓN DE LÁMPARAS DE EMERGENCIA, DETECTORES DE HUMO, ETC."
+      "RUC.: 0952773976001",
+      "ASESORAMIENTO · RECARGA · MANTENIMIENTOS · VENTAS",
+      "PQS (ABC) GAS CARBONICO – HALOTRON",
+      "ESTUDIO, DISEÑO E INSTALACION DE RED HIDRAULICA CONTRA INCENDIOS",
+      "SISTEMAS DE CO2 PARA COCINAS, GENERADORES, TRANSFORMADORES, ETC",
+      "INSTALACION DE LAMPARAS DE EMERGENCIA, DETECTORES DE HUMO, ETC."
     ];
     for (var i=0; i<infoLines.length; i++) {
-      doc.text(infoLines[i], ML+32, 23+i*3.4);
+      doc.text(infoLines[i], ML+32, 26+i*3.2);
     }
 
     // Separador rojo
@@ -285,7 +285,7 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     // Col izquierda
     doc.text("CLIENTE",   ML+2, y+4.5);
     doc.text("DIRECCIÓN", ML+2, y+11.5);
-    doc.text("PROFORMA",  ML+2, y+18.5);
+    doc.text("CONTACTO",  ML+2, y+18.5);
     doc.text("TELÉFONO",  ML+2, y+25.5);
     // Col derecha
     var rx = ML+CW*0.6+2;
@@ -312,7 +312,7 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     y += 32;
 
     // ── TABLA DE ÍTEMS ───────────────────────────────────────
-    var colW = [16, 114, 28, 28];  // CANT, DESCRIPCIÓN, P.UNI, TOTAL — suma 186=CW
+    var colW = [18, 108, 28, 28];  // CANT, DESCRIPCIÓN, P.UNI, TOTAL
     var colX = [ML];
     for (var i=1; i<colW.length; i++) colX.push(colX[i-1]+colW[i-1]);
     var rowH = 8;
@@ -322,7 +322,7 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     dN(); doc.setLineWidth(0.2);
     for (var i=1; i<colX.length; i++) doc.line(colX[i], y, colX[i], y+rowH+1);
     doc.setFont("helvetica","bold"); doc.setFontSize(8); tW();
-    doc.text("CANT.",       colX[0]+colW[0]/2, y+5.5, {align:"center"});
+    doc.text("CANTIDAD",    colX[0]+colW[0]/2, y+5.5, {align:"center"});
     doc.text("DETALLE",     colX[1]+colW[1]/2, y+5.5, {align:"center"});
     doc.text("P.UNI",       colX[2]+colW[2]/2, y+5.5, {align:"center"});
     doc.text("TOTAL",       colX[3]+colW[3]/2, y+5.5, {align:"center"});
@@ -372,11 +372,10 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     dN(); doc.setLineWidth(0.5);
     doc.rect(ML, y-rowH*(items.length+filasRestantes+(tipo==="entrega"?1:0)+1), CW, rowH*(items.length+filasRestantes+(tipo==="entrega"?1:0)+1), "S");
 
-    // Nota local con separador
-    dL(); doc.setLineWidth(0.2); doc.line(ML, y, ML+CW, y);
+    // Nota local
     doc.setFont("helvetica","bolditalic"); doc.setFontSize(8.5); tN();
-    doc.text("LOCAL: " + local.toUpperCase(), colX[1]+2, y+6);
-    y += 12;
+    doc.text("LOCAL: " + local.toUpperCase(), colX[1]+2, y+5);
+    y += 10;
 
     // ── TOTALES ──────────────────────────────────────────────
     var iva   = subtotal * 0.15;
@@ -389,7 +388,7 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     doc.setFont("helvetica","bold"); doc.setFontSize(7); tG();
     doc.text("OBSERVACIÓN:", ML+2, obsY+5);
     doc.setFont("helvetica","normal"); doc.setFontSize(7.5); tN();
-    var obs = "";  // Observación removida
+    var obs = "NO NOS RESPONSABILIZAMOS POR TRABAJOS ABANDONADOS DESPUÉS DE 30 DÍAS.";
     var obsL = doc.splitTextToSize(obs, obsW-4);
     for (var i=0; i<obsL.length; i++) doc.text(obsL[i], ML+2, obsY+10+i*4);
 
@@ -417,9 +416,9 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
 
     // SON
     doc.setFont("helvetica","bold"); doc.setFontSize(8); tN();
-    doc.text("SON:", ML+2, y+5);
+    doc.text("SON: ", ML+2, y+4);
     doc.setFont("helvetica","normal");
-    doc.text(numeroALetras(total), ML+14, y+5, {maxWidth: CW-16});
+    doc.text(numeroALetras(total), ML+12, y+4, {maxWidth: CW-14});
     dL(); doc.setLineWidth(0.3); doc.rect(ML, y, CW, 9, "S");
     y += 13;
 
@@ -429,7 +428,7 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     // Firma encargado (izquierda)
     dL(); doc.setLineWidth(0.3); doc.rect(ML, y, firW, 32, "S");
     doc.setFont("helvetica","bold"); doc.setFontSize(7); tG();
-    doc.text("Firma del encargado", ML+2, y+5, {maxWidth:firW-4});
+    doc.text("LOCAL: "+local.toUpperCase(), ML+2, y+5, {maxWidth:firW-4});
     dL(); doc.line(ML+2, y+25, ML+firW-2, y+25);
     doc.setFont("helvetica","normal"); doc.setFontSize(7.5); tG();
     doc.text("Firma y Sello", ML+firW/2, y+30, {align:"center"});
@@ -442,9 +441,6 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
       } catch(e) {}
     }
 
-    // Separador entre firmas
-    doc.setFont("helvetica","bold"); doc.setFontSize(6); tG();
-    doc.text("AUTORIZA", ML+firW+4, y+16, {align:"center", maxWidth:8});
     // Firma Alejandro (derecha)
     var rx3 = ML + firW + 8;
     dL(); doc.rect(rx3, y, firW, 32, "S");
@@ -461,7 +457,7 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     // ── PIE ──────────────────────────────────────────────────
     fR(); doc.rect(0, PH-10, PW, 10, "F");
     doc.setFont("helvetica","bold"); doc.setFontSize(6.8); tW();
-    doc.text("DIR: PORTETE #3007 Y GALLEGOS LARA  |  TEL: 04-2374822 · 0978997247 · 09835883325  |  ventas_previfuego@hotmail.com", PW/2, PH-3.8, {align:"center"});
+    doc.text("DIR: PORTETE #3007 Y GALLEGOS LARA  |  TELEF.:04-2192274 · 0986772944 · 0978997247 · 0983583325", PW/2, PH-3.8, {align:"center"});
 
     // ── GUARDAR ──────────────────────────────────────────────
     var safeName = (LOCAL_ACTUAL ? LOCAL_ACTUAL.nombre : "LOCAL").replace(/[^a-zA-Z0-9]/g,"").substring(0,15);

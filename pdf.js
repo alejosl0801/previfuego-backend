@@ -5,6 +5,14 @@
 //  GENERADOR PDF
 // ════════════════════════════════════════════════════════════
 function generarPDF() {
+  // Si es ENTREGA, cargar foto ANTES del retiro del mismo local
+  if (typeof TIPO_TRABAJO !== "undefined" && TIPO_TRABAJO === "entrega" && LOCAL_ACTUAL) {
+    var fotoAntes = (typeof getFotoRetiro === "function") ? getFotoRetiro(LOCAL_ACTUAL.nombre) : null;
+    if (fotoAntes && fotoAntes.fb64 && !FB64["antes"]) {
+      FB64["antes"] = fotoAntes.fb64;
+      FD["antes"]   = fotoAntes.fb64;
+    }
+  }
   if (NOV === null) { alert("Indica si hay novedades antes de continuar."); return; }
   if (NOV === "si" && ACCS.length === 0) { alert("Seleccionaste accesorios dañados pero no agregaste ninguno."); return; }
   var fc = 0;
@@ -57,8 +65,10 @@ function hacerPDF(fc) {
 
     CERT_CONTADOR++;
     localStorage.setItem("pf_certCount", CERT_CONTADOR);
-    var nomBase  = LOCAL_ACTUAL.nombre.substring(0,8).toUpperCase().replace(/[^A-Z0-9]/g,"");
-    var CERT_NUM = "CERT-"+nomBase+"-"+ANO+"-"+String(CERT_CONTADOR).padStart(3,"0");
+    // Buscar código real del cliente en base de datos
+    var _cliDB = (typeof pfBuscarCliente === "function") ? pfBuscarCliente(LOCAL_ACTUAL.nombre) : null;
+    var _codLocal = (_cliDB && _cliDB.codigo) ? _cliDB.codigo : (LOCAL_ACTUAL.nombre.substring(0,8).toUpperCase().replace(/[^A-Z0-9]/g,""));
+    var CERT_NUM = _codLocal + "-MANT EXTINTORES-" + ANO;
 
     function fondoBase() {
       doc.setFillColor(255,255,255); doc.rect(0,0,PW,PH,"F");
@@ -81,7 +91,7 @@ function hacerPDF(fc) {
       doc.setFont("helvetica","bold"); doc.setFontSize(7.5); tR();
       doc.text("AUTORIZADO POR:", ML+5, yy+7);
       doc.setFont("helvetica","bold"); doc.setFontSize(12); tN();
-      doc.text("Alejandro López", ML+5, yy+15);
+      doc.text("Alejandro Lopez", ML+5, yy+15);
       doc.setFont("helvetica","normal"); doc.setFontSize(9); tG();
       doc.text("Jefe de Operaciones  —  Previfuego / Pyroshield", ML+5, yy+22);
       doc.text("RUC: 0952773976001", ML+5, yy+28);
@@ -101,7 +111,12 @@ function hacerPDF(fc) {
     doc.setFont("helvetica","bold"); doc.setFontSize(7); tR();
     doc.text(CERT_NUM, PW-5, 12, {align:"right"});
 
-    // Header empresa
+    // Datos reales del cliente
+    var _empDB = (typeof pfBuscarCliente === "function") ? pfBuscarCliente(LOCAL_ACTUAL.nombre) : null;
+    var _empresa = (_empDB && _empDB.razon) ? _empDB.razon : (LOCAL_ACTUAL.empresa || LOCAL_ACTUAL.nombre || "");
+    var _ruc     = (_empDB && _empDB.ruc)   ? _empDB.ruc   : (LOCAL_ACTUAL.ruc || "—");
+    var _marca   = (_empDB && _empDB.marca)  ? _empDB.marca  : "";
+        // Header empresa
     var HX=ML+28, HW=PW-5-HX;
     doc.setFont("helvetica","bold"); doc.setFontSize(22); tR();
     var pW = doc.getTextWidth("PREVIFUEGO");
@@ -113,8 +128,8 @@ function hacerPDF(fc) {
     doc.text("SEGURIDAD INDUSTRIAL Y CONTRA INCENDIOS", HX+(HW-sW)/2, y+16);
     doc.setFont("helvetica","normal"); doc.setFontSize(6.2); tG();
     var iL = [
-      "RUC: 0952773976001  |  ASESORAMIENTO · RECARGA · MANTENIMIENTO · VENTAS",
-      "PQS (ABC) · GAS CARBÓNICO · HALOTRON",
+      "RUC.: 0952773976001  |  ASESORAMIENTO · RECARGA · MANTENIMIENTO · VENTAS",
+      "PQS (ABC) · GAS CARBONICO · HALOTRON",
       "DISEÑO E INSTALACIÓN DE RED HIDRÁULICA CONTRA INCENDIOS",
       "SISTEMAS DE CO2 PARA COCINAS, GENERADORES, TRANSFORMADORES, ETC",
       "INSTALACIÓN DE LÁMPARAS DE EMERGENCIA Y DETECTORES DE HUMO"
@@ -152,7 +167,7 @@ function hacerPDF(fc) {
     // Párrafo principal
     var localNom = LOCAL_ACTUAL.nombre.toUpperCase();
     var puntNom  = PUNTO_ACTUAL ? PUNTO_ACTUAL.nombre.toUpperCase() : localNom;
-    var ptxt = "INSPECCIÓN Y MANTENIMIENTO DE EXTINTORES PORTÁTILES UBICADOS EN LOS DISTINTOS PUNTOS ESTRATÉGICOS DEL LOCAL «"+localNom+"» UBICADO EN "+puntNom+", SIGUIENDO LA NORMA NFPA 10.";
+    var ptxt = "INSPECCIÓN Y MANTENIMIENTO DE EXTINTORES PORTÁTILES UBICADOS EN LOS DISTINTOS PUNTOS ESTRATÉGICOS DEL LOCAL «"+localNom+"» UBICADO EN "+puntNom+", SIGUIENDO LAS NORMAS NFPA10.";
     doc.setFont("helvetica","normal"); doc.setFontSize(9); tN();
     var ptxtL = doc.splitTextToSize(ptxt, CW);
     for (var i = 0; i < ptxtL.length; i++) { doc.text(ptxtL[i], ML, y); y += 4.8; }
@@ -165,7 +180,7 @@ function hacerPDF(fc) {
     y += 7;
 
     doc.setFont("helvetica","normal"); doc.setFontSize(9); tN();
-    var items = ["REVISIÓN INTEGRAL DE LOS CILINDROS","INSPECCIÓN DE CABEZALES","INSPECCIÓN DE CORNETAS / MANGUERAS","PESAJE Y VERIFICACIÓN DE PESO","MANTENIMIENTO PREVENTIVO-CORRECTIVO","RECARGA DEL AGENTE"];
+    var items = ["REVISION INTEGRAL DE LOS CILINDROS","INSPECCIÓN DE CABEZALES","INSPECCIÓN DE CORNETAS / MANGUERAS","PESAJE / TARA","MANTENIMIENTO PREVENTIVO-CORRECTIVO","RECARGA DEL AGENTE"];
     for (var i = 0; i < items.length; i++) {
       fR(); doc.rect(ML+3, y-2.2, 2.2, 2.2, "F");
       tN(); doc.text(items[i], ML+8, y);
@@ -412,24 +427,3 @@ function hacerPDF(fc) {
   }
 }
 
-
-// ── GENERADOR DE CÓDIGO DE CERTIFICADO ──────────────────────
-function generarCodigo(nombreLocal, contador) {
-  if (!nombreLocal) return "X" + String(contador).padStart(3,"0");
-  // Buscar en base de datos de clientes
-  if (typeof pfBuscarCliente === "function") {
-    var cliente = pfBuscarCliente(nombreLocal);
-    if (cliente && cliente.codigo) return cliente.codigo;
-  }
-  // Fallback por nombre
-  var n = nombreLocal.toUpperCase();
-  if (/^K\d+/.test(n) || /KFC/.test(n))    return "K" + String(contador).padStart(3,"0");
-  if (/^J\d+/.test(n) || /CAJUN/.test(n))  return "J" + String(contador).padStart(3,"0");
-  if (/^A\d+/.test(n) || /AMERICAN|DELI|BASKIN|CINNABON/.test(n)) return "A" + String(contador).padStart(3,"0");
-  if (/^G\d+/.test(n) || /GUS/.test(n))    return "G" + String(contador).padStart(3,"0");
-  if (/^R\d+/.test(n) || /CASA RES/.test(n)) return "R" + String(contador).padStart(3,"0");
-  if (/PAPA JOHN/.test(n))  return "PJ" + String(contador).padStart(3,"0");
-  if (/KOBE|NOE/.test(n))   return "SU" + String(contador).padStart(3,"0");
-  if (/JUAN VALDEZ/.test(n)) return "JV" + String(contador).padStart(3,"0");
-  return nombreLocal.charAt(0).toUpperCase() + String(contador).padStart(3,"0");
-}
