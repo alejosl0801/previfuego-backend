@@ -162,17 +162,65 @@ function pfRenderCalendario() {
   var cal = pfCalendarioMes(PF_CAL_OFFSET);
   var h   = "";
 
-  // Navegación de meses
+  // Calcular locales desde base de datos para el mes actual
+  var localesMes = [];
+  var mesesNombres = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+  var mesActual = mesesNombres[new Date().getMonth() + (PF_CAL_OFFSET || 0)];
+  if (typeof PF_CLIENTES !== "undefined") {
+    PF_CLIENTES.forEach(function(cli) {
+      if (cli.mes && cli.mes.toUpperCase().indexOf(mesActual.substring(0,3)) !== -1) {
+        localesMes.push(cli);
+      }
+    });
+  }
+  // Incluir clientes de junio (código J) para junio
+  if (mesActual === "JUNIO" && typeof PF_CLIENTES_JUNIO !== "undefined") {
+    PF_CLIENTES_JUNIO.forEach(function(cli) {
+      if (!localesMes.find(function(x){ return x.codigo === cli.codigo && cli.codigo; })) {
+        localesMes.push(cli);
+      }
+    });
+  }
+
   h += '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 12px 12px">';
-  h += '<button onclick="PF_CAL_OFFSET--;pfRenderCalendario()" style="padding:8px 16px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:16px;cursor:pointer">‹</button>';
+  h += '<button type="button" onclick="PF_CAL_OFFSET--;pfRenderCalendario()" style="padding:8px 16px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:16px;cursor:pointer">‹</button>';
   h += '<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--ng)">'+cal.nombreMes+' '+cal.año+'</div>';
-  h += '<div style="font-size:12px;color:var(--g3)">'+cal.tocan.length+' local(es) por atender</div></div>';
-  h += '<button onclick="PF_CAL_OFFSET++;pfRenderCalendario()" style="padding:8px 16px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:16px;cursor:pointer">›</button>';
+  h += '<div style="font-size:12px;color:var(--g3)">'+localesMes.length+' local(es) programados</div></div>';
+  h += '<button type="button" onclick="PF_CAL_OFFSET++;pfRenderCalendario()" style="padding:8px 16px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:16px;cursor:pointer">›</button>';
   h += '</div>';
 
-  if (!cal.tocan.length) {
-    h += '<div style="padding:24px 16px;text-align:center;color:var(--g3);font-size:14px">No hay locales programados para '+cal.nombreMes+'.<br>Los locales aparecen según su frecuencia de mantenimiento.</div>';
+  if (!localesMes.length) {
+    h += '<div style="padding:24px 16px;text-align:center;color:var(--g3);font-size:14px">No hay locales programados para '+cal.nombreMes+'.</div>';
   } else {
+    // Agrupar por marca
+    var porMarca = {};
+    localesMes.forEach(function(cli) {
+      var m = cli.marca || "Otros";
+      if (!porMarca[m]) porMarca[m] = [];
+      porMarca[m].push(cli);
+    });
+    Object.keys(porMarca).sort().forEach(function(marca) {
+      h += '<div class="slbl">' + marca + ' (' + porMarca[marca].length + ')</div>';
+      porMarca[marca].forEach(function(cli) {
+        h += '<div style="margin:0 12px 6px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:10px 14px">';
+        h += '<div style="font-size:13px;font-weight:700">' + cli.nombre + '</div>';
+        h += '<div style="font-size:11px;color:var(--g4);margin-top:2px">' + cli.razon + ' · ' + (cli.responsable||"") + '</div>';
+        h += '<div style="font-size:11px;color:var(--r);margin-top:2px">Mant: ' + cli.freqMant + ' · Recarga: ' + cli.freqRec + '</div>';
+        h += '</div>';
+      });
+    });
+    h += '<div style="height:80px"></div>';
+    el.innerHTML = h;
+    return;
+  }
+
+  if (!cal.tocan.length && !localesMes.length) {
+    el.innerHTML = h;
+    return;
+  }
+
+  // fallback original
+  if (true) {
     cal.tocan.forEach(function(item) {
       var dias    = item.dias;
       var urgente = dias < 0;

@@ -389,7 +389,7 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     doc.setFont("helvetica","bold"); doc.setFontSize(7); tG();
     doc.text("OBSERVACIÓN:", ML+2, obsY+5);
     doc.setFont("helvetica","normal"); doc.setFontSize(7.5); tN();
-    var obs = "NO NOS HACEMOS RESPONSABLES DE EQUIPOS NO RETIRADOS DESPUÉS DE 30 DÍAS.";
+    var obs = "";  // Observación removida
     var obsL = doc.splitTextToSize(obs, obsW-4);
     for (var i=0; i<obsL.length; i++) doc.text(obsL[i], ML+2, obsY+10+i*4);
 

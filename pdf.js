@@ -412,3 +412,24 @@ function hacerPDF(fc) {
   }
 }
 
+
+// ── GENERADOR DE CÓDIGO DE CERTIFICADO ──────────────────────
+function generarCodigo(nombreLocal, contador) {
+  if (!nombreLocal) return "X" + String(contador).padStart(3,"0");
+  // Buscar en base de datos de clientes
+  if (typeof pfBuscarCliente === "function") {
+    var cliente = pfBuscarCliente(nombreLocal);
+    if (cliente && cliente.codigo) return cliente.codigo;
+  }
+  // Fallback por nombre
+  var n = nombreLocal.toUpperCase();
+  if (/^K\d+/.test(n) || /KFC/.test(n))    return "K" + String(contador).padStart(3,"0");
+  if (/^J\d+/.test(n) || /CAJUN/.test(n))  return "J" + String(contador).padStart(3,"0");
+  if (/^A\d+/.test(n) || /AMERICAN|DELI|BASKIN|CINNABON/.test(n)) return "A" + String(contador).padStart(3,"0");
+  if (/^G\d+/.test(n) || /GUS/.test(n))    return "G" + String(contador).padStart(3,"0");
+  if (/^R\d+/.test(n) || /CASA RES/.test(n)) return "R" + String(contador).padStart(3,"0");
+  if (/PAPA JOHN/.test(n))  return "PJ" + String(contador).padStart(3,"0");
+  if (/KOBE|NOE/.test(n))   return "SU" + String(contador).padStart(3,"0");
+  if (/JUAN VALDEZ/.test(n)) return "JV" + String(contador).padStart(3,"0");
+  return nombreLocal.charAt(0).toUpperCase() + String(contador).padStart(3,"0");
+}

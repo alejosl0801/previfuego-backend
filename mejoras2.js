@@ -147,10 +147,7 @@ function pfAdmTab6(n) {
   if (n === 6) pfRenderSemaforo();
 }
 
-// ════════════════════════════════════════════════════════════
-//  39 — APROBACIÓN DE RECORRIDO
-//  Fabiola puede ver el recorrido y aprobarlo antes que Raúl
-// ════════════════════════════════════════════════════════════
+// 39 — Aprobación removida, Alejandro publica directamente
 
 function pfRenderAprobacion() {
   var el = document.getElementById("pf-aprob-contenido");
@@ -193,19 +190,7 @@ function pfRenderAprobacion() {
   el.innerHTML = h;
 }
 
-function pfAprobarRecorrido() {
-  var nombre = "Fabiola";
-  var hora   = new Date().toLocaleTimeString("es-EC", {hour:"2-digit", minute:"2-digit"});
-  localStorage.setItem("pf_recorrido_aprobado",      "si");
-  localStorage.setItem("pf_recorrido_aprobado_por",  nombre);
-  localStorage.setItem("pf_recorrido_aprobado_hora", hora);
-  pfRenderAprobacion();
-  // Notificar via Apps Script si hay conexión
-  var txt = localStorage.getItem("pf_recorrido_texto") || "";
-  if (typeof SCRIPT_URL !== "undefined") {
-    fetch(SCRIPT_URL, { method:"POST", body: JSON.stringify({ accion:"aprobar_recorrido", aprobadoPor:nombre, hora:hora }) }).catch(function(){});
-  }
-}
+function pfAprobarRecorrido() {} // removido
 
 // Inyectar en pantalla de Fabiola — se agrega como tab en su nav
 function pfInyectarAprobacion() {
@@ -216,16 +201,12 @@ function pfInyectarAprobacion() {
 }
 
 function pfMostrarBannerAprobacion() {
+  // Aprobación removida — Alejandro publica directamente
+  return;
   var lista = document.getElementById("s1list");
   if (!lista) return;
-  var aprobado = localStorage.getItem("pf_recorrido_aprobado") === "si";
-  var txt      = localStorage.getItem("pf_recorrido_texto") || "";
-  if (!txt) {
-    var banner = document.getElementById("pf-aprobacion-banner");
-    if (!banner) { banner = document.createElement("div"); banner.id = "pf-aprobacion-banner"; lista.parentNode.insertBefore(banner, lista); }
-    banner.innerHTML = '<div style="margin:10px 12px;padding:12px 14px;background:var(--nc);border-radius:12px;border:1.5px solid var(--n);font-size:13px;color:var(--n)">⏳ Alejandro no ha publicado el recorrido de hoy aún.</div>';
-    return;
-  }
+  var txt = localStorage.getItem("pf_recorrido_texto") || "";
+  if (!txt) return;
 
   var banner = document.getElementById("pf-aprobacion-banner");
   if (!banner) {

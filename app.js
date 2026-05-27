@@ -48,10 +48,12 @@ var TIPOS_TRABAJO = {
 function detectarTipoTrabajo(mision) {
   if (!mision) return TIPOS_TRABAJO.MANTENIMIENTO;
   var m = mision.toLowerCase();
-  if (/retir|llevar al taller|llevar a taller/.test(m))          return TIPOS_TRABAJO.RETIRO;
+  // ENTREGA tiene prioridad — "entregar extintores retirados" es ENTREGA no RETIRO
   if (/entregar|entrega|devolver|devolu/.test(m))                return TIPOS_TRABAJO.ENTREGA;
-  if (/instalar|instalaci|colocar|etiqueta/.test(m))             return TIPOS_TRABAJO.INSTALACION;
   if (/cobro|cheque|pago|retirar cheque|retirar pago/.test(m))   return TIPOS_TRABAJO.COBRO;
+  if (/instalar|instalaci|colocar|etiqueta/.test(m))             return TIPOS_TRABAJO.INSTALACION;
+  // RETIRO solo si NO hay entrega en la misión
+  if (/retir(ar|o|a|ando)|llevar al taller|llevar a taller/.test(m)) return TIPOS_TRABAJO.RETIRO;
   if (/mantenimiento|mant|recarga|revisar|inspeccionar/.test(m)) return TIPOS_TRABAJO.MANTENIMIENTO;
   return TIPOS_TRABAJO.OTRO;
 }
@@ -505,7 +507,9 @@ function renderPuntos() {
   }
   for (var i = 0; i < PUNTOS.length; i++) {
     var p = PUNTOS[i];
-    h += '<div class="slbl">📍 Punto '+p.num+' — '+p.nombre+'</div>';
+    // No mostrar el punto como local duplicado
+    var mostrarPunto = !(p.locales.length === 1 && p.locales[0].nombre.toLowerCase() === p.nombre.toLowerCase());
+    if (mostrarPunto) h += '<div class="slbl">📍 Punto '+p.num+' — '+p.nombre+'</div>';
     for (var j = 0; j < p.locales.length; j++) {
       var loc  = p.locales[j];
       var tipo = loc.tipo || TIPOS_TRABAJO.OTRO;
@@ -561,7 +565,11 @@ function abrirLocal(pi, li) {
   var accTot = document.getElementById("acc-tot");
   if (btnNov) btnNov.className = "nb";
   if (btnOk)  btnOk.className  = "nb";
-  if (accSec) accSec.style.display  = "none";
+  // Accesorios dañados solo en mantenimiento y entrega
+  var mostrarAcc = (TIPO_TRABAJO === TIPOS_TRABAJO.MANTENIMIENTO || TIPO_TRABAJO === TIPOS_TRABAJO.ENTREGA);
+  if (accSec) accSec.style.display = "none";
+  if (btnNov) btnNov.style.display = mostrarAcc ? "" : "none";
+  if (btnOk)  btnOk.style.display  = mostrarAcc ? "" : "none";
   if (accLis) accLis.innerHTML = "";
   if (accTot) accTot.textContent = "$0.00";
 
@@ -598,8 +606,13 @@ function abrirLocal(pi, li) {
     if (btnNota) btnNota.style.display = "none";
     if (btnSin)  btnSin.textContent = "✓ Marcar como completado";
   } else if (TIPO_TRABAJO === TIPOS_TRABAJO.RETIRO) {
-    if (btnFot)  { btnFot.style.display = "flex"; btnFot.textContent = "📷 " + labelBotonFotos(); }
+    // Retiro: solo marcar completado + novedad opcional con foto
+    if (btnFot)  { btnFot.style.display = "flex"; btnFot.textContent = "📷 Registrar novedad (opcional)"; }
     if (btnNota) btnNota.style.display = "none";
+    if (btnSin)  btnSin.textContent = "✓ Marcar retiro como completado";
+  } else if (TIPO_TRABAJO === TIPOS_TRABAJO.INSTALACION) {
+    if (btnFot)  { btnFot.style.display = "flex"; btnFot.textContent = "📷 " + labelBotonFotos(); }
+    if (btnNota) btnNota.style.display = "block";
     if (btnSin)  btnSin.textContent = "✓ Completar sin registro";
   } else {
     if (btnFot)  { btnFot.style.display = "flex"; btnFot.textContent = "📷 " + labelBotonFotos(); }
@@ -620,7 +633,7 @@ function abrirLocal(pi, li) {
 
 function labelBotonFotos() {
   switch (TIPO_TRABAJO) {
-    case TIPOS_TRABAJO.RETIRO:      return "Registrar retiro y firma";
+    case TIPOS_TRABAJO.RETIRO:      return "📷 Foto de novedad (opcional)";
     case TIPOS_TRABAJO.ENTREGA:     return "Registrar entrega y firma";
     case TIPOS_TRABAJO.INSTALACION: return "Registrar fotos de instalación";
     case TIPOS_TRABAJO.COBRO:       return "—";
@@ -814,8 +827,12 @@ function irFirma() {
   var c = 0;
   for (var k in FD) { if (FD[k]) c++; }
   if (c === 0) { alert("Necesitas al menos 1 foto para continuar."); return; }
-  // Solo ir a firma si el tipo requiere certificado
   reinitCanvas();
+  // Instalación y retiro no generan certificado — van directo a nota
+  if (TIPO_TRABAJO === TIPOS_TRABAJO.INSTALACION) {
+    ir("sfir"); // firma simple, sin certificado
+    return;
+  }
   ir("sfir");
 }
 
@@ -1271,4 +1288,141 @@ function renderEstadisticasPerfil() {
     '<div class="si"><div class="sv" style="color:var(--r)">'+s.pendientes+'</div><div class="sl">Pendientes</div></div>' +
     '<div class="si"><div class="sv" style="color:var(--a)">'+s.pct+'%</div><div class="sl">Avance</div></div>' +
     '</div>';
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  TAREAS INDEPENDIENTES — Alejandro asigna por técnico
+// ═══════════════════════════════════════════════════════════
+
+var PF_TAREAS_KEY = "pf_tareas";
+
+function pfGetTareas() {
+  try { return JSON.parse(localStorage.getItem(PF_TAREAS_KEY) || "[]"); } catch(e) { return []; }
+}
+function pfSaveTareas(arr) { localStorage.setItem(PF_TAREAS_KEY, JSON.stringify(arr)); }
+
+function pfCrearTarea(tecnico, descripcion, prioridad) {
+  var tareas = pfGetTareas();
+  tareas.unshift({
+    id:          "t_" + Date.now(),
+    tecnico:     tecnico,
+    descripcion: descripcion,
+    prioridad:   prioridad || "normal",
+    estado:      "pendiente",
+    fecha:       fechaHoy(),
+    fechaOk:     null,
+    creadoPor:   TECNICO_NOMBRE || "Alejandro"
+  });
+  pfSaveTareas(tareas);
+  return tareas[0];
+}
+
+function pfCompletarTarea(id) {
+  var tareas = pfGetTareas();
+  for (var i = 0; i < tareas.length; i++) {
+    if (tareas[i].id === id) {
+      tareas[i].estado   = "completada";
+      tareas[i].fechaOk  = fechaHoy();
+      break;
+    }
+  }
+  pfSaveTareas(tareas);
+}
+
+function pfEliminarTarea(id) {
+  var tareas = pfGetTareas().filter(function(t){ return t.id !== id; });
+  pfSaveTareas(tareas);
+}
+
+function pfRenderTareasPanel() {
+  var el = document.getElementById("pf-tareas-contenido");
+  if (!el) return;
+  var tareas = pfGetTareas();
+  var tecnicos = ["Raúl Romero", "Juan", "Fabiola"];
+  var h = "";
+
+  // Formulario nueva tarea
+  h += '<div style="margin:0 12px 12px;background:#fff;border-radius:14px;border:1.5px solid var(--bo);padding:12px 14px">';
+  h += '<div class="slbl" style="margin-bottom:8px">Nueva tarea</div>';
+  h += '<select id="tarea-tecnico" style="width:100%;margin-bottom:8px;padding:8px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:13px">';
+  tecnicos.forEach(function(t){ h += '<option>'+t+'</option>'; });
+  h += '</select>';
+  h += '<textarea id="tarea-desc" placeholder="Descripción de la tarea..." style="width:100%;height:70px;padding:8px 10px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:13px;resize:none;margin-bottom:8px"></textarea>';
+  h += '<div style="display:flex;gap:8px;margin-bottom:8px">';
+  h += '<select id="tarea-prio" style="flex:1;padding:8px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:13px">';
+  h += '<option value="normal">🔵 Normal</option>';
+  h += '<option value="urgente">🔴 Urgente</option>';
+  h += '<option value="baja">⬜ Baja prioridad</option>';
+  h += '</select>';
+  h += '<button type="button" onclick="pfGuardarTarea()" style="padding:8px 16px;border-radius:10px;border:none;background:var(--r);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ Asignar</button>';
+  h += '</div></div>';
+
+  // Tareas por técnico
+  tecnicos.forEach(function(tec) {
+    var tarTec = tareas.filter(function(t){ return t.tecnico === tec; });
+    var pend   = tarTec.filter(function(t){ return t.estado === "pendiente"; });
+    var done   = tarTec.filter(function(t){ return t.estado === "completada"; });
+
+    h += '<div class="slbl">'+tec+' — '+pend.length+' pendiente(s)</div>';
+
+    if (!tarTec.length) {
+      h += '<div style="margin:0 12px 8px;padding:10px 14px;background:var(--g1);border-radius:10px;font-size:13px;color:var(--g3)">Sin tareas asignadas.</div>';
+    }
+
+    pend.forEach(function(t) {
+      var colPrio = t.prioridad === "urgente" ? "var(--r)" : t.prioridad === "baja" ? "var(--g3)" : "var(--a)";
+      var icoPrio = t.prioridad === "urgente" ? "🔴" : t.prioridad === "baja" ? "⬜" : "🔵";
+      h += '<div style="margin:0 12px 6px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:10px 14px">';
+      h += '<div style="display:flex;align-items:flex-start;gap:8px">';
+      h += '<div style="font-size:16px">'+icoPrio+'</div>';
+      h += '<div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--ng)">'+t.descripcion+'</div>';
+      h += '<div style="font-size:11px;color:var(--g3);margin-top:2px">'+t.fecha+' · '+t.creadoPor+'</div></div>';
+      h += '<button type="button" onclick="pfCompletarTarea(\"'+t.id+'\");pfRenderTareasPanel()" style="background:var(--v);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">✓</button>';
+      h += '<button type="button" onclick="pfEliminarTarea(\"'+t.id+'\");pfRenderTareasPanel()" style="background:var(--rc);color:var(--r);border:none;border-radius:8px;padding:5px 8px;font-size:11px;cursor:pointer;flex-shrink:0">✕</button>';
+      h += '</div></div>';
+    });
+
+    if (done.length > 0) {
+      h += '<div style="margin:0 12px 4px;font-size:11px;color:var(--g3)">'+done.length+' completada(s)</div>';
+      done.slice(0,3).forEach(function(t) {
+        h += '<div style="margin:0 12px 4px;background:var(--vc);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--v)">✓ '+t.descripcion+' · '+t.fechaOk+'</div>';
+      });
+    }
+  });
+
+  h += '<div style="height:80px"></div>';
+  el.innerHTML = h;
+}
+
+function pfGuardarTarea() {
+  var tec  = document.getElementById("tarea-tecnico");
+  var desc = document.getElementById("tarea-desc");
+  var prio = document.getElementById("tarea-prio");
+  if (!desc || !desc.value.trim()) { alert("Escribe la descripción de la tarea."); return; }
+  pfCrearTarea(tec ? tec.value : "Raúl Romero", desc.value.trim(), prio ? prio.value : "normal");
+  desc.value = "";
+  pfRenderTareasPanel();
+}
+
+// Mostrar tareas propias para Raúl/Juan/Fabiola
+function pfRenderMisTareas() {
+  var el = document.getElementById("pf-mis-tareas");
+  if (!el) return;
+  var tareas = pfGetTareas().filter(function(t){
+    return t.tecnico === TECNICO_NOMBRE && t.estado === "pendiente";
+  });
+  if (!tareas.length) { el.innerHTML = ""; return; }
+  var h = '<div style="margin:8px 12px 0">';
+  h += '<div class="slbl">Mis tareas ('+tareas.length+')</div>';
+  tareas.forEach(function(t) {
+    var icoPrio = t.prioridad === "urgente" ? "🔴" : t.prioridad === "baja" ? "⬜" : "🔵";
+    h += '<div style="background:#fff;border-radius:10px;border:1.5px solid var(--bo);padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:8px">';
+    h += '<span style="font-size:14px">'+icoPrio+'</span>';
+    h += '<span style="flex:1;font-size:13px;font-weight:500">'+t.descripcion+'</span>';
+    h += '<button type="button" onclick="pfCompletarTarea(\"'+t.id+'\");pfRenderMisTareas()" style="background:var(--v);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer">✓</button>';
+    h += '</div>';
+  });
+  h += '</div>';
+  el.innerHTML = h;
 }
