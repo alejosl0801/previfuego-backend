@@ -200,6 +200,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
     <div class="ni on" onclick="ir('s1')"><div class="nii">&#128506;</div><div class="nil">Recorrido</div></div>
     <div class="ni" onclick="ir('shist');renderHistorial()"><div class="nii">&#128203;</div><div class="nil">Historial</div></div>
     <div class="ni" onclick="ir('sperf');renderPerfil()"><div class="nii">&#128100;</div><div class="nil">Perfil</div></div>
+    <div class="ni" onclick="ir('staller');pfRenderTallerTec()"><div class="nii">&#128295;</div><div class="nil">Taller</div></div>
   </div>
 </div>
 
@@ -213,7 +214,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
     <div class="cd"><div style="padding:14px;font-size:15px;color:var(--ng);line-height:1.6;white-space:pre-wrap" id="s2m"></div></div>
     <div id="s2es" style="display:none"><div class="slbl">Extintores</div><div class="cd"><div id="s2el"></div></div></div>
     <div class="bw"><button type="button" class="btn btn-r" id="s2-btn-fot" onclick="ir('sfot')">📷 Registrar fotos y firma</button></div>
-    <div class="bw" style="padding-top:0"><button type="button" class="btn btn-v" onclick="abrirNotaEntrega(LOCAL_ACTUAL._pi, LOCAL_ACTUAL._li)" style="background:#1A5FAA">📄 Generar nota de entrega</button></div>
+    <div class="bw" style="padding-top:0"><button type="button" class="btn btn-v" onclick="irFirmaParaNota()" style="background:#1A5FAA">📄 Generar nota de entrega</button></div>
     <div class="bw" style="padding-top:0"><button type="button" class="btn btn-g" id="s2-btn-sin" onclick="confirmarSin()">✓ Completar sin registro</button></div>
     <div style="height:80px"></div>
   </div>
@@ -221,6 +222,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
     <div class="ni" onclick="ir('s1')"><div class="nii">&#128506;</div><div class="nil">Recorrido</div></div>
     <div class="ni" onclick="ir('shist');renderHistorial()"><div class="nii">&#128203;</div><div class="nil">Historial</div></div>
     <div class="ni" onclick="ir('sperf');renderPerfil()"><div class="nii">&#128100;</div><div class="nil">Perfil</div></div>
+    <div class="ni" onclick="ir('staller');pfRenderTallerTec()"><div class="nii">&#128295;</div><div class="nil">Taller</div></div>
   </div>
 </div>
 
@@ -238,6 +240,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
     <div class="ni" onclick="ir('s1')"><div class="nii">&#128506;</div><div class="nil">Recorrido</div></div>
     <div class="ni" onclick="ir('shist');renderHistorial()"><div class="nii">&#128203;</div><div class="nil">Historial</div></div>
     <div class="ni" onclick="ir('sperf');renderPerfil()"><div class="nii">&#128100;</div><div class="nil">Perfil</div></div>
+    <div class="ni" onclick="ir('staller');pfRenderTallerTec()"><div class="nii">&#128295;</div><div class="nil">Taller</div></div>
   </div>
 </div>
 
@@ -250,13 +253,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
     <div class="slbl">Firma del encargado</div>
     <div class="fc"><div class="flbl">El encargado firma aquí con el dedo</div><div class="fpw" id="fpw"><canvas id="cnv"></canvas></div><div class="fsub" id="fsub">Dibuja la firma con el dedo</div><div class="bw" style="padding:8px 0 0"><button type="button" class="btn btn-g" style="font-size:14px;padding:9px" onclick="borrarFirma()">Borrar firma</button></div></div>
     <div class="ib ib-v">El PDF se descarga en tu celular.</div>
-    <div class="bw"><button type="button" class="btn btn-r" onclick="generarPDF()">&#128196; Generar certificado PDF</button></div>
+    <div class="bw"><button type="button" class="btn btn-r" onclick="accionDespuesFirma()">&#128196; <span id="sfir-btn-txt">Generar certificado PDF</span></button></div>
     <div style="height:80px"></div>
   </div>
   <div class="nav">
     <div class="ni" onclick="ir('s1')"><div class="nii">&#128506;</div><div class="nil">Recorrido</div></div>
     <div class="ni" onclick="ir('shist');renderHistorial()"><div class="nii">&#128203;</div><div class="nil">Historial</div></div>
     <div class="ni" onclick="ir('sperf');renderPerfil()"><div class="nii">&#128100;</div><div class="nil">Perfil</div></div>
+    <div class="ni" onclick="ir('staller');pfRenderTallerTec()"><div class="nii">&#128295;</div><div class="nil">Taller</div></div>
   </div>
 </div>
 
@@ -278,6 +282,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
     <div class="ni" onclick="ir('s1')"><div class="nii">&#128506;</div><div class="nil">Recorrido</div></div>
     <div class="ni" onclick="ir('shist');renderHistorial()"><div class="nii">&#128203;</div><div class="nil">Historial</div></div>
     <div class="ni" onclick="ir('sperf');renderPerfil()"><div class="nii">&#128100;</div><div class="nil">Perfil</div></div>
+    <div class="ni" onclick="ir('staller');pfRenderTallerTec()"><div class="nii">&#128295;</div><div class="nil">Taller</div></div>
   </div>
 </div>
 
@@ -289,6 +294,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
     <div class="ni" onclick="ir('s1')"><div class="nii">&#128506;</div><div class="nil">Recorrido</div></div>
     <div class="ni on" onclick="ir('shist');renderHistorial()"><div class="nii">&#128203;</div><div class="nil">Historial</div></div>
     <div class="ni" onclick="ir('sperf');renderPerfil()"><div class="nii">&#128100;</div><div class="nil">Perfil</div></div>
+    <div class="ni" onclick="ir('staller');pfRenderTallerTec()"><div class="nii">&#128295;</div><div class="nil">Taller</div></div>
   </div>
 </div>
 
@@ -320,6 +326,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
     <button class="adm-tab-btn on" id="adm-t1" onclick="admTab(1)">📋 Recorrido</button>
     <button class="adm-tab-btn"    id="adm-t2" onclick="admTab(2)">🗂️ Pizarra</button>
     <button class="adm-tab-btn"    id="adm-t3" onclick="admTab(3)">📊 Avance</button>
+    <button class="adm-tab-btn"    id="adm-t11" onclick="admTab(11)">🔧 Taller</button>
   </div>
 
   <!-- TAB 1: Recorrido -->
@@ -377,9 +384,34 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
     </div>
     <div style="height:80px"></div>
   </div>
+  <!-- TAB 11: Taller -->
+  <div class="adm-panel" id="adm-p11">
+    <div style="padding:12px 0">
+      <div class="slbl">Gestión de taller</div>
+      <div id="pf-taller-lista"></div>
+      <div style="height:80px"></div>
+    </div>
+  </div>
+
+</div><!-- fin sadmin -->
+
+<!-- ═══ TALLER (técnicos) ═══ -->
+<div class="screen" id="staller">
+  <div class="tb">
+    <div class="bk" onclick="ir('s1')">&#8249;</div>
+    <div class="ti" style="margin-left:4px"><div class="tt">Taller</div><div class="ts ts-nombre">Raúl Romero</div></div>
+  </div>
+  <div class="sc">
+    <div id="pf-taller-lista-tec"></div>
+    <div style="height:80px"></div>
+  </div>
+  <div class="nav">
+    <div class="ni" onclick="ir('s1')"><div class="nii">&#128506;</div><div class="nil">Recorrido</div></div>
+    <div class="ni" onclick="ir('shist');renderHistorial()"><div class="nii">&#128203;</div><div class="nil">Historial</div></div>
+    <div class="ni on" onclick="ir('staller');pfRenderTallerTec()"><div class="nii">&#128295;</div><div class="nil">Taller</div></div>
+  </div>
 </div>
 
-<!-- ═══ NOTA DE ENTREGA ═══ -->
 <div class="screen" id="snota">
   <div class="tb"><div class="bk" onclick="ir('s2')">&#8249;</div><div class="ti" style="margin-left:4px"><div class="tt">Nota de Entrega</div><div class="ts">Completa los datos</div></div><div class="bdg br" id="nota-badge">Accesorios</div></div>
   <div class="sc">
@@ -446,6 +478,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
     <div class="ni" onclick="ir('s1')"><div class="nii">&#128506;</div><div class="nil">Recorrido</div></div>
     <div class="ni" onclick="ir('shist');renderHistorial()"><div class="nii">&#128203;</div><div class="nil">Historial</div></div>
     <div class="ni" onclick="ir('sperf');renderPerfil()"><div class="nii">&#128100;</div><div class="nil">Perfil</div></div>
+    <div class="ni" onclick="ir('staller');pfRenderTallerTec()"><div class="nii">&#128295;</div><div class="nil">Taller</div></div>
   </div>
 </div>
 
