@@ -32,9 +32,8 @@ function pfProximoMantenimiento(nombreLocal, ultimaVisita) {
   try {
     var p    = ultimaVisita.split("/");
     var d    = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
-    // SIEMPRE mantenimiento = 1 año para todos los clientes
-  // La recarga (3 años KFC) se controla por separado en el semáforo
-  var freq = PF_FREQ.independiente;
+    // Mantenimiento = 1 año para TODOS los clientes
+    var freq = PF_FREQ.independiente;
     d.setDate(d.getDate() + freq);
     return d;
   } catch(e) { return null; }
@@ -106,7 +105,8 @@ function pfRenderSemaforo() {
     h += '<div style="font-size:20px;flex-shrink:0">'+sem.ico+'</div>';
     h += '<div style="flex:1;min-width:0">';
     h += '<div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+item.nombre+'</div>';
-    h += '<div style="font-size:11px;color:var(--g4);margin-top:1px">'+(esKFC?"Grupo KFC · cada 3 años":"Independiente · cada 1 año")+(item.ultVisita?" · último: "+item.ultVisita:" · sin visitas")+'</div>';
+    var freqLabel = esKFC ? "KFC · mant. anual · recarga 3 años" : "Independiente · mant. anual";
+    h += '<div style="font-size:11px;color:var(--g4);margin-top:1px">'+freqLabel+(item.ultVisita?" · último: "+item.ultVisita:" · sin visitas")+'</div>';
     h += '</div>';
     h += '<div style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:'+sem.bg+';color:'+sem.tx+';flex-shrink:0">'+sem.label+'</div>';
     h += '</div>';
@@ -138,15 +138,7 @@ function pfInyectarSemaforo() {
   admScr.appendChild(panel);
 }
 
-function pfAdmTab6(n) {
-  for (var i = 1; i <= 6; i++) {
-    var b = document.getElementById("adm-t"+i);
-    var p = document.getElementById("adm-p"+i);
-    if (b) b.className = "adm-tab-btn" + (i===n?" on":"");
-    if (p) p.className = "adm-panel"   + (i===n?" on":"");
-  }
-  if (n === 6) pfRenderSemaforo();
-}
+// pfAdmTab6 manejado por coordinator.js — no duplicar
 
 // 39 — Aprobación removida, Alejandro publica directamente
 
@@ -279,14 +271,8 @@ window.addEventListener("load", function() {
 
   // irFirma coordinado por coordinator.js
 
-  // Detectar Fabiola desde ir() — sin parchear seleccionarUsuario
-  var _irOrig2 = window.ir;
-  window.ir = function(id) {
-    if (_irOrig2) _irOrig2(id);
-    if (id === "s1" && typeof USUARIO_ACTUAL !== "undefined" && USUARIO_ACTUAL === "fabiola") {
-      setTimeout(pfMostrarBannerAprobacion, 400);
-    }
-  };
+  // Detección de Fabiola: mejoras2 ya no necesita parchear ir() —
+  // el banner de aprobación fue removido en v1.0 (Alejandro publica directamente)
 
   // pfOnLocalCompletado coordinado por coordinator.js
 

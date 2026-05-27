@@ -46,7 +46,7 @@ function pfClasificarClientes() {
     // Último contacto
     var ultFecha = visitas.length > 0 ? visitas[0].fecha : null;
 
-    return { nombre, score, frecuencia, clase, color, ico, tipos, esKFC, ultFecha };
+    return { nombre:nombre, score:score, frecuencia:frecuencia, clase:clase, color:color, ico:ico, tipos:tipos, esKFC:esKFC, ultFecha:ultFecha };
   });
 
   // Ordenar por score desc
@@ -165,7 +165,10 @@ function pfRenderCalendario() {
   // Calcular locales desde base de datos para el mes actual
   var localesMes = [];
   var mesesNombres = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
-  var mesActual = mesesNombres[new Date().getMonth() + (PF_CAL_OFFSET || 0)];
+  var _mesIdx = (new Date().getMonth() + (PF_CAL_OFFSET || 0));
+  while (_mesIdx > 11) _mesIdx -= 12;
+  while (_mesIdx < 0)  _mesIdx += 12;
+  var mesActual = mesesNombres[_mesIdx];
   if (typeof PF_CLIENTES !== "undefined") {
     PF_CLIENTES.forEach(function(cli) {
       if (cli.mes && cli.mes.toUpperCase().indexOf(mesActual.substring(0,3)) !== -1) {
@@ -219,9 +222,8 @@ function pfRenderCalendario() {
     return;
   }
 
-  // fallback original
-  if (true) {
-    cal.tocan.forEach(function(item) {
+  // Clientes de fichas con próxima fecha en el mes (fallback sin BD)
+  cal.tocan.forEach(function(item) {
       var dias    = item.dias;
       var urgente = dias < 0;
       var pronto  = dias >= 0 && dias <= 14;
@@ -241,7 +243,6 @@ function pfRenderCalendario() {
       h += '<div style="font-size:11px;color:var(--g3)">'+(urgente?"Vencido "+Math.abs(dias)+"d":dias===0?"Hoy":dias+"d")+'</div>';
       h += '</div></div>';
     });
-  }
   h += '<div style="height:80px"></div>';
   el.innerHTML = h;
 }
@@ -337,25 +338,14 @@ function pfInyectarInteligencia() {
     btn.onclick = (function(n){ return function(){ admTab(n); }; })(t.n);
     tabBar.appendChild(btn);
 
-    var sc = admScr.querySelector(".sc");
     var panel = document.createElement("div");
     panel.id = t.pid; panel.className = "adm-panel";
     panel.innerHTML = t.html;
-    if (sc) sc.appendChild(panel); else admScr.appendChild(panel);
+    admScr.appendChild(panel);
   });
 }
 
-function pfAdmTabN(n) {
-  for (var i = 1; i <= 10; i++) {
-    var b = document.getElementById("adm-t"+i);
-    var p = document.getElementById("adm-p"+i);
-    if (b) b.className = "adm-tab-btn" + (i===n?" on":"");
-    if (p) p.className = "adm-panel"   + (i===n?" on":"");
-  }
-  if (n === 8)  pfRenderRentabilidad();
-  if (n === 9)  { PF_CAL_OFFSET = 0; pfRenderCalendario(); }
-  if (n === 10) {} // solo muestra el botón
-}
+// pfAdmTabN manejado por coordinator.js — no duplicar
 
 // ── INIT ─────────────────────────────────────────────────────
 window.addEventListener("load", function() {

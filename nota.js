@@ -194,7 +194,7 @@ function notaTienePrecios() {
 function generarNotaPDF(tipo) {
   // tipo: "entrega" o "accesorios"
   var items = tipo === "accesorios" ? ACCS.map(function(a){ return {cant:1, desc:a.n, puni:a.p, total:a.p}; }) : NOTA_ITEMS;
-  if (!items || items.length === 0) { alert("Agrega al menos un ítem a la nota."); return; }
+  if (!items || items.length === 0) { pfModal("Agrega al menos un ítem a la nota."); return; }
 
   mostrarCargando(true, "Generando nota de entrega...", "Por favor espera");
 
@@ -215,7 +215,7 @@ function generarNotaPDF(tipo) {
       var s = document.createElement("script");
       s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
       s.onload  = function(){ hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, items, tipo); };
-      s.onerror = function(){ mostrarCargando(false); alert("Error cargando PDF. Verifica conexión."); };
+      s.onerror = function(){ mostrarCargando(false); pfModal("Error cargando PDF. Verifica conexión."); };
       document.head.appendChild(s);
     } else {
       hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, items, tipo);
@@ -496,9 +496,27 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
 
     ir("snota-gen");
 
+    // Registrar nota en historial del día
+    if (typeof guardarHistorialDia === "function") {
+      var horaNotaPDF = new Date().toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"});
+      guardarHistorialDia({
+        local: LOCAL_ACTUAL || {nombre: cliente},
+        punto: PUNTO_ACTUAL || null,
+        hora: horaNotaPDF,
+        fotos: 0,
+        accs: items.length,
+        url: blobUrl,
+        nombre: nom,
+        certNum: "NE-" + numNota,
+        duracion: 0,
+        tipo: "nota"
+      });
+      if (typeof renderHistorial === "function") renderHistorial();
+    }
+
   } catch(err) {
     mostrarCargando(false);
     console.error(err);
-    alert("Error generando nota: " + err.message);
+    pfModal("Error generando nota: " + err.message);
   }
 }

@@ -199,15 +199,7 @@ function pfInyectarDashboard() {
   if (window.PF_TAB_HANDLERS) window.PF_TAB_HANDLERS[5] = function(){ pfRenderDashboard(); };
 }
 
-function pfAdmTab(n) {
-  for (var i = 1; i <= 5; i++) {
-    var b = document.getElementById("adm-t"+i);
-    var p = document.getElementById("adm-p"+i);
-    if (b) b.className = "adm-tab-btn" + (i===n?" on":"");
-    if (p) p.className = "adm-panel"   + (i===n?" on":"");
-  }
-  if (n === 5) pfRenderDashboard();
-}
+// pfAdmTab manejado por coordinator.js — no duplicar
 
 // ── INIT ──────────────────────────────────────────────────────
 window.addEventListener("load", function() {

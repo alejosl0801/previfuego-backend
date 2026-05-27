@@ -13,11 +13,11 @@ function generarPDF() {
       FD["antes"]   = fotoAntes.fb64;
     }
   }
-  if (NOV === null) { alert("Indica si hay novedades antes de continuar."); return; }
-  if (NOV === "si" && ACCS.length === 0) { alert("Seleccionaste accesorios dañados pero no agregaste ninguno."); return; }
+  if (NOV === null) { pfModal("Indica si hay novedades antes de continuar."); return; }
+  if (NOV === "si" && ACCS.length === 0) { pfModal("Seleccionaste \"Accesorios dañados\" pero no agregaste ninguno."); return; }
   var fc = 0;
   for (var k in FB64) { if (FB64[k]) fc++; }
-  if (fc === 0) { alert("Necesitas al menos 1 foto para generar el certificado."); return; }
+  if (fc === 0) { pfModal("Necesitas al menos 1 foto para generar el certificado."); return; }
 
   mostrarCargando(true, "Generando certificado...", "Por favor espera");
 
@@ -37,7 +37,7 @@ function cargarJsPDF(fc) {
   var s   = document.createElement("script");
   s.src   = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
   s.onload  = function(){ hacerPDF(fc); };
-  s.onerror = function(){ mostrarCargando(false); alert("Error cargando el generador de PDF. Verifica tu conexión a internet."); };
+  s.onerror = function(){ mostrarCargando(false); pfModal("Error cargando el generador de PDF. Verifica tu conexión a internet."); };
   document.head.appendChild(s);
 }
 
@@ -345,8 +345,8 @@ function hacerPDF(fc) {
     piePagina();
 
     // ── GUARDAR ────────────────────────────────────────────
-    var safeName = LOCAL_ACTUAL.nombre.replace(/[^a-zA-Z0-9\s\-áéíóúÁÉÍÓÚñÑ]/g,"").trim().substring(0,20);
-    var nom      = safeName+"-CERT-"+ANO+".pdf";
+    // Nombre archivo = mismo que CERT_NUM pero seguro para sistema de archivos
+    var nom = CERT_NUM.replace(/[^a-zA-Z0-9\-]/g,"-") + ".pdf";
     var blob     = doc.output("blob");
     var blobUrl  = URL.createObjectURL(blob);
     URLS_GENERADAS.push(blobUrl);
@@ -354,8 +354,12 @@ function hacerPDF(fc) {
 
     mostrarCargando(false);
 
-    // Marcar local done
+    // Marcar local done + guardar en jornadas también
     PUNTOS[LOCAL_ACTUAL._pi].locales[LOCAL_ACTUAL._li].done = true;
+    if (typeof JORNADAS !== "undefined" && JORNADAS[JORNADA_ACTIVA]) {
+      JORNADAS[JORNADA_ACTIVA].puntos = PUNTOS;
+      localStorage.setItem("pf_recorrido_jornadas", JSON.stringify(JORNADAS));
+    }
     localStorage.setItem("pf_recorrido_data", JSON.stringify(PUNTOS));
     renderPuntos();
 
@@ -420,10 +424,15 @@ function hacerPDF(fc) {
 
     ir("senv");
 
+    // Registrar visita en fichas (para semáforo y dashboard)
+    if (typeof pfOnLocalCompletado === "function") {
+      pfOnLocalCompletado(LOCAL_ACTUAL, PUNTO_ACTUAL, TIPO_TRABAJO, TECNICO_NOMBRE, "");
+    }
+
   } catch(err) {
     mostrarCargando(false);
     console.error(err);
-    alert("Error generando el PDF: "+err.message);
+    pfModal("Error generando el PDF: "+err.message);
   }
 }
 

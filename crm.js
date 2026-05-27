@@ -136,7 +136,7 @@ function pfAbrirCRM(nombreLocal) {
 function pfEnviarNota(nombreLocal) {
   var txt  = document.getElementById("crm-nota-txt");
   var tipo = document.getElementById("crm-tipo");
-  if (!txt || !txt.value.trim()) { alert("Escribe una nota primero."); return; }
+  if (!txt || !txt.value.trim()) { pfModal("Escribe una nota primero."); return; }
   pfGuardarNota(nombreLocal, txt.value.trim(), tipo ? tipo.value : "nota");
   txt.value = "";
   pfAbrirCRM(nombreLocal); // refrescar
@@ -147,7 +147,7 @@ function pfGuardarContactoUI(nombreLocal) {
   var cargo = document.getElementById("crm-cont-cargo");
   var tel   = document.getElementById("crm-cont-tel");
   var email = document.getElementById("crm-cont-email");
-  if (!nom || !nom.value.trim()) { alert("Ingresa el nombre del contacto."); return; }
+  if (!nom || !nom.value.trim()) { pfModal("Ingresa el nombre del contacto."); return; }
   pfGuardarContacto(nombreLocal, {
     nombre:   nom.value.trim(),
     cargo:    cargo ? cargo.value.trim() : "",
@@ -162,26 +162,7 @@ function pfCerrarCRM() {
   if (modal) modal.style.display = "none";
 }
 
-// Agregar botón CRM a la ficha del local
-var _pfAbrirFichaOrig = window.pfAbrirFicha;
-window.addEventListener("load", function() {
-  if (window.pfAbrirFicha) {
-    var orig = window.pfAbrirFicha;
-    window.pfAbrirFicha = function(nombreLocal) {
-      orig(nombreLocal);
-      // Agregar botón CRM al modal de ficha
-      setTimeout(function() {
-        var modal = document.getElementById("pf-ficha-modal");
-        if (!modal || document.getElementById("pf-ficha-crm-btn")) return;
-        var btn = document.createElement("div");
-        btn.id = "pf-ficha-crm-btn";
-        btn.style.cssText = "padding:0 12px 12px";
-        btn.innerHTML = '<button onclick="pfCerrarFicha();pfAbrirCRM(\''+nombreLocal.replace(/'/g,"")+'\')" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--a);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">📋 Abrir CRM de este local</button>';
-        modal.querySelector("div").appendChild(btn);
-      }, 100);
-    };
-  }
-});
+// pfAbrirFicha se parchea en coordinator.js para agregar el botón CRM — no duplicar aquí
 
 // ════════════════════════════════════════════════════════════
 //  52 — REPORTE DE PRODUCTIVIDAD POR TÉCNICO
@@ -279,22 +260,13 @@ function pfInyectarProductividad() {
   btn.onclick = function(){ admTab(7); };
   tabBar.appendChild(btn);
 
-  var sc = admScr.querySelector(".sc");
   var panel = document.createElement("div");
   panel.id = "adm-p7"; panel.className = "adm-panel";
   panel.innerHTML = '<div style="padding:12px 0"><div class="slbl">Productividad por técnico</div><div id="pf-prod-contenido"></div><div style="height:80px"></div></div>';
-  if (sc) sc.appendChild(panel); else admScr.appendChild(panel);
+  admScr.appendChild(panel);
 }
 
-function pfAdmTab7(n) {
-  for (var i = 1; i <= 7; i++) {
-    var b = document.getElementById("adm-t"+i);
-    var p = document.getElementById("adm-p"+i);
-    if (b) b.className = "adm-tab-btn" + (i===n?" on":"");
-    if (p) p.className = "adm-panel"   + (i===n?" on":"");
-  }
-  if (n === 7) pfRenderProductividad();
-}
+// pfAdmTab7 manejado por coordinator.js — no duplicar
 
 // ── INIT ──────────────────────────────────────────────────────
 window.addEventListener("load", function() {

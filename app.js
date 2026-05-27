@@ -1,10 +1,10 @@
 // ═══════════════════════════════════════════════════════════
-//  PREVIFUEGO FIELD — app.js  v3.1
+//  PREVIFUEGO FIELD — app.js  v3.4
 //  Bloque A: PDF fixes + tipo trabajo + fotos libres + roles
 // ═══════════════════════════════════════════════════════════
 
 var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsGUa-Z31KwPkixPxM8tLgEoyj7HsYRmdic8-HCuE9ZLjBfCYSGPJKmNDT9jOITxlO/exec";
-var VERSION    = "3.3";
+var VERSION    = "3.4";
 
 // ── ACCESORIOS ───────────────────────────────────────────────
 var ACCESORIOS = [
@@ -369,9 +369,9 @@ function previsualizarRecorrido() {
 
 function publicarRecorrido() {
   var txt = document.getElementById("admin-txt").value.trim();
-  if (!txt) { alert("Escribe o pega el recorrido primero."); return; }
+  if (!txt) { pfModal("Escribe o pega el recorrido primero."); return; }
   var jornadas = parsearJornadas(txt);
-  if (jornadas.length === 0) { alert("No se detectaron puntos. Verifica el formato."); return; }
+  if (jornadas.length === 0) { pfModal("No se detectaron puntos. Verifica el formato."); return; }
   mostrarCargando(true, "Publicando recorrido...", "Guardando en el servidor");
   localStorage.setItem("pf_recorrido_texto",   txt);
   localStorage.setItem("pf_recorrido_fecha",   fechaHoy());
@@ -391,11 +391,12 @@ function publicarRecorrido() {
 }
 
 function limpiarRecorrido() {
-  if (!confirm("¿Borrar el recorrido actual?")) return;
-  document.getElementById("admin-txt").value = "";
-  document.getElementById("admin-prev").innerHTML = '<div class="empty">Pega el recorrido arriba para previsualizarlo</div>';
-  localStorage.removeItem("pf_recorrido_texto");
-  localStorage.removeItem("pf_recorrido_data");
+  pfConfirm("¿Borrar el recorrido actual?", function() {
+    document.getElementById("admin-txt").value = "";
+    document.getElementById("admin-prev").innerHTML = '<div class="empty">Pega el recorrido arriba para previsualizarlo</div>';
+    localStorage.removeItem("pf_recorrido_texto");
+    localStorage.removeItem("pf_recorrido_data");
+  });
 }
 
 // ════════════════════════════════════════════════════════════
@@ -747,10 +748,10 @@ function getFotoRetiro(nombreLocal) {
 
 function confirmarSin() {
   if (!LOCAL_ACTUAL) return;
-  var msg = TIPO_TRABAJO === TIPOS_TRABAJO.COBRO
+  var _msg_cs = TIPO_TRABAJO === TIPOS_TRABAJO.COBRO
     ? "¿Marcar «"+LOCAL_ACTUAL.nombre+"» como completado?"
     : "¿Marcar «"+LOCAL_ACTUAL.nombre+"» como completado sin registro?";
-  if (confirm(msg)) {
+  pfConfirm(_msg_cs, function() {
     var duracion = detenerTimer();
     PUNTOS[LOCAL_ACTUAL._pi].locales[LOCAL_ACTUAL._li].done = true;
     // Guardar en jornada activa también
@@ -769,7 +770,7 @@ function confirmarSin() {
     renderHistorial();
     renderPuntos();
     ir("s1");
-  }
+  }); // pfConfirm
 }
 
 // ════════════════════════════════════════════════════════════
@@ -844,7 +845,7 @@ function actualizarContadorFotos() {
 function irFirma() {
   var c = 0;
   for (var k in FD) { if (FD[k]) c++; }
-  if (c === 0) { alert("Necesitas al menos 1 foto para continuar."); return; }
+  if (c === 0) { pfModal("Necesitas al menos 1 foto para continuar."); return; }
   window._DESTINO_FIRMA = null; // viene de fotos → siempre certificado
   reinitCanvas();
   ir("sfir");
@@ -1090,10 +1091,11 @@ function renderPerfil() {
 }
 
 function cerrarSesion() {
-  if (!confirm("¿Cambiar de usuario?")) return;
+  pfConfirm("¿Cambiar de usuario?", function() {
   localStorage.removeItem("pf_usuario");
-  USUARIO_ACTUAL = null; PUNTOS = []; HISTORIAL = [];
-  ir("slogin");
+    USUARIO_ACTUAL = null; PUNTOS = []; HISTORIAL = [];
+    ir("slogin");
+  });
 }
 
 // ── INIT ─────────────────────────────────────────────────────
@@ -1254,66 +1256,6 @@ function semaforoVencimiento(proxMant) {
     if (dias < 60)  return '<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;background:var(--nc);color:var(--n)">🟡 '+dias+'d</span>';
     return '<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;background:var(--vc);color:var(--v)">🟢 '+dias+'d</span>';
   } catch(e) { return ""; }
-}
-
-// ════════════════════════════════════════════════════════════
-//  OPTIMIZADOR DE RUTAS BÁSICO
-//  Agrupa los puntos del día por zona detectada en el nombre
-// ════════════════════════════════════════════════════════════
-var ZONAS_GYE = {
-  "norte":    ["alban borja","norte","batan","kennedy","urdesa","miraflores","ceibos","villa españa","sauces","la aurora"],
-  "centro":   ["centro","bahia","9 de octubre","guayaquil","malecón","chile","olmedo","sucre","boyaca"],
-  "sur":      ["sur","portete","garzota","14","quil","riocentro sur","socio viejo"],
-  "norte2":   ["samborondon","via samborondon","km","daule","duran","pascuales"],
-  "malls":    ["mall del sol","san marino","riocentro","alhambra","buena vista","village","plaza","terminal"]
-};
-
-function detectarZona(nombre) {
-  var n = (nombre || "").toLowerCase();
-  for (var zona in ZONAS_GYE) {
-    var keywords = ZONAS_GYE[zona];
-    for (var i = 0; i < keywords.length; i++) {
-      if (n.indexOf(keywords[i]) !== -1) return zona;
-    }
-  }
-  return "otro";
-}
-
-function sugerirOrdenRuta() {
-  if (!PUNTOS || PUNTOS.length < 2) return;
-  // Agrupar puntos por zona
-  var grupos = {};
-  for (var i = 0; i < PUNTOS.length; i++) {
-    var zona = detectarZona(PUNTOS[i].nombre);
-    if (!grupos[zona]) grupos[zona] = [];
-    grupos[zona].push(PUNTOS[i]);
-  }
-  // Mostrar sugerencia
-  var zonaNames = { norte:"Norte", centro:"Centro", sur:"Sur", norte2:"Vía Samborondón/Daule", malls:"Centros Comerciales", otro:"Otros" };
-  var h = '<div class="slbl">Sugerencia de ruta</div>';
-  var orden = 1;
-  for (var zona in grupos) {
-    var pts = grupos[zona];
-    h += '<div style="margin:0 12px 8px;padding:10px 14px;background:#fff;border-radius:12px;border:1.5px solid var(--bo)">';
-    h += '<div style="font-size:12px;font-weight:700;color:var(--g4);letter-spacing:1px;margin-bottom:8px">📍 '+(zonaNames[zona]||zona).toUpperCase()+'</div>';
-    for (var i = 0; i < pts.length; i++) {
-      h += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--bo)">';
-      h += '<div style="font-size:13px;font-weight:700;color:var(--r);width:20px">'+(orden++)+'</div>';
-      h += '<div style="font-size:14px;font-weight:600">'+pts[i].nombre+'</div>';
-      h += '<button onclick="abrirMaps(\''+pts[i].nombre.replace(/'/g,"")+'\',\'\')" style="margin-left:auto;background:var(--ac);color:var(--a);border:none;padding:4px 8px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">Maps</button>';
-      h += '</div>';
-    }
-    h += '</div>';
-  }
-  var modal = document.getElementById("ruta-modal");
-  if (!modal) {
-    modal = document.createElement("div");
-    modal.id = "ruta-modal";
-    modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;overflow-y:auto;padding:20px 0";
-    modal.innerHTML = '<div style="background:var(--g1);min-height:100%;padding-bottom:80px"><div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#fff;border-bottom:1.5px solid var(--bo)"><div style="font-size:17px;font-weight:700">Optimizador de ruta</div><button onclick="document.getElementById(\'ruta-modal\').remove()" style="background:var(--g1);border:1.5px solid var(--bo);border-radius:10px;padding:6px 12px;font-weight:700;cursor:pointer">✕</button></div><div id="ruta-contenido"></div></div>';
-    document.body.appendChild(modal);
-  }
-  document.getElementById("ruta-contenido").innerHTML = h;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1499,17 +1441,20 @@ function pfIngresarManualTaller() {
   var loc  = document.getElementById("tal-local");
   var desc = document.getElementById("tal-desc");
   var cant = document.getElementById("tal-cant");
-  if (!loc || !loc.value.trim()) { alert("Ingresa el nombre del cliente."); return; }
+  if (!loc || !loc.value.trim()) { pfModal("Ingresa el nombre del cliente."); return; }
   pfIngresarAlTaller(loc.value.trim(), desc ? desc.value.trim() : "", cant ? parseInt(cant.value)||1 : 1);
   if (loc) loc.value = ""; if (desc) desc.value = ""; if (cant) cant.value = "1";
   pfRenderTaller();
 }
 
 function pfAbrirAgregarAcc(talId) {
-  var nombre = prompt("Accesorio cambiado (ej: Manómetro, Manguera PQS):");
-  if (!nombre || !nombre.trim()) return;
-  var cant = parseInt(prompt("Cantidad:", "1")) || 1;
-  pfAgregarAccesorioTaller(talId, nombre.trim(), cant);
+  pfPrompt("Accesorio cambiado (ej: Manómetro, Manguera PQS):", "", function(nombre) {
+    if (!nombre || !nombre.trim()) return;
+    pfPrompt("Cantidad:", "1", function(cantStr) {
+      var cant = parseInt(cantStr) || 1;
+      pfAgregarAccesorioTaller(talId, nombre.trim(), cant);
+    });
+  });
 }
 
 // Vista para técnicos — misma lógica pero en div distinto
@@ -1526,4 +1471,62 @@ function pfRenderTallerTec() {
   pfRenderTaller();
   tec.id = "pf-taller-lista-tec";
   if (orig) orig.id = "pf-taller-lista";
+}
+
+// ════════════════════════════════════════════════════════════
+//  MODAL CUSTOM — reemplaza alert() y confirm()
+//  pfModal(msg)         → alerta simple
+//  pfConfirm(msg, fn)   → confirmación con callback
+//  pfPrompt(msg, def, fn) → prompt con callback
+// ════════════════════════════════════════════════════════════
+function pfModal(msg, onOk) {
+  var ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px";
+  ov.innerHTML =
+    '<div style="background:#fff;border-radius:20px;padding:24px 20px;max-width:320px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18)">' +
+    '<div style="font-size:15px;font-weight:600;color:var(--ng);line-height:1.5;margin-bottom:20px">'+msg+'</div>' +
+    '<button style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit" id="pfm-ok">Aceptar</button>' +
+    '</div>';
+  document.body.appendChild(ov);
+  ov.querySelector('#pfm-ok').onclick = function() {
+    document.body.removeChild(ov);
+    if (typeof onOk === "function") onOk();
+  };
+}
+
+function pfConfirm(msg, onSi, onNo) {
+  var ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px";
+  ov.innerHTML =
+    '<div style="background:#fff;border-radius:20px;padding:24px 20px;max-width:320px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18)">' +
+    '<div style="font-size:15px;font-weight:600;color:var(--ng);line-height:1.5;margin-bottom:20px">'+msg+'</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+    '<button style="padding:14px;border-radius:12px;border:1.5px solid var(--bo);background:var(--g1);color:var(--g4);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit" id="pfm-no">Cancelar</button>' +
+    '<button style="padding:14px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit" id="pfm-si">Confirmar</button>' +
+    '</div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector('#pfm-si').onclick = function() { document.body.removeChild(ov); if (typeof onSi === "function") onSi(); };
+  ov.querySelector('#pfm-no').onclick = function() { document.body.removeChild(ov); if (typeof onNo === "function") onNo(); };
+}
+
+function pfPrompt(msg, defVal, onOk) {
+  var ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px";
+  ov.innerHTML =
+    '<div style="background:#fff;border-radius:20px;padding:24px 20px;max-width:320px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18)">' +
+    '<div style="font-size:15px;font-weight:600;color:var(--ng);line-height:1.5;margin-bottom:12px">'+msg+'</div>' +
+    '<input id="pfm-inp" value="'+(defVal||"")+'" style="width:100%;padding:12px 14px;border:1.5px solid var(--bo);border-radius:12px;font-family:inherit;font-size:15px;margin-bottom:16px">' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+    '<button style="padding:14px;border-radius:12px;border:1.5px solid var(--bo);background:var(--g1);color:var(--g4);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit" id="pfm-no">Cancelar</button>' +
+    '<button style="padding:14px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit" id="pfm-ok">OK</button>' +
+    '</div></div>';
+  document.body.appendChild(ov);
+  var inp = ov.querySelector('#pfm-inp');
+  setTimeout(function(){ inp.focus(); inp.select(); }, 100);
+  ov.querySelector('#pfm-ok').onclick = function() {
+    var v = inp.value; document.body.removeChild(ov);
+    if (typeof onOk === "function") onOk(v);
+  };
+  ov.querySelector('#pfm-no').onclick = function() { document.body.removeChild(ov); };
+  inp.addEventListener('keydown', function(e){ if (e.key==='Enter') ov.querySelector('#pfm-ok').click(); });
 }

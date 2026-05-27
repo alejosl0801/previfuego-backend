@@ -216,7 +216,7 @@ function pfHacerBackup() {
   URL.revokeObjectURL(url);
 
   localStorage.setItem("pf_ultimo_backup", new Date().toISOString());
-  alert("✅ Backup descargado: PREVIFUEGO_BACKUP_" + fecha + ".json\nGuárdalo en Google Drive.");
+  pfModal("✅ Backup descargado: PREVIFUEGO_BACKUP_" + fecha + ".json — Guárdalo en Google Drive.");
 }
 
 function pfRestaurarBackup(file) {
@@ -225,13 +225,17 @@ function pfRestaurarBackup(file) {
   reader.onload = function(e) {
     try {
       var backup = JSON.parse(e.target.result);
-      if (!backup.datos) { alert("Archivo de backup inválido."); return; }
-      if (!confirm("¿Restaurar backup del " + backup.fecha + "?\nEsto reemplazará los datos actuales.")) return;
-      Object.keys(backup.datos).forEach(function(k) {
-        localStorage.setItem(k, JSON.stringify(backup.datos[k]));
-      });
-      alert("✅ Backup restaurado correctamente. Recarga la app.");
-    } catch(e) { alert("Error al leer el backup: " + e.message); }
+      if (!backup.datos) { pfModal("Archivo de backup inválido."); return; }
+      // confirm reemplazado por pfConfirm
+  pfConfirm("¿Restaurar backup del " + backup.fecha + "?\nEsto reemplazará los datos actuales.", function() {
+    Object.keys(backup.datos).forEach(function(k) {
+      localStorage.setItem(k, JSON.stringify(backup.datos[k]));
+    });
+    pfModal("✅ Backup restaurado correctamente. Recarga la app.");
+  });
+  return; // pfConfirm es async — el resto del código se movió al callback
+      // código movido al callback de pfConfirm arriba
+    } catch(e) { pfModal("Error al leer el backup: " + e.message); }
   };
   reader.readAsText(file);
 }

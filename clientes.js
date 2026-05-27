@@ -4144,3 +4144,51 @@ PF_CLIENTES.forEach(function(c) {
 });
 
 console.log("PF_CLIENTES cargados:", PF_CLIENTES.length, "| Junio:", PF_CLIENTES_JUNIO.length);
+
+// ── BÚSQUEDA DE CLIENTE ────────────────────────────────────
+// Busca cliente por nombre del local (búsqueda flexible)
+// Retorna: { codigo, razon, ruc, marca, grupo, freqMant, freqRec, mes }
+function pfBuscarCliente(nombreLocal) {
+  if (!nombreLocal || !PF_CLIENTES) return null;
+  var n = nombreLocal.toUpperCase().trim();
+
+  // 1. Búsqueda exacta por nombre
+  for (var i = 0; i < PF_CLIENTES.length; i++) {
+    if (PF_CLIENTES[i].nombre.toUpperCase() === n) return PF_CLIENTES[i];
+  }
+
+  // 2. Búsqueda por código al inicio del nombre (ej: "K079 - MALL DEL SOL" → código K079)
+  var mCod = n.match(/^([A-Z][0-9]{2,3})\s*[-–]\s*/);
+  if (mCod) {
+    var cod = mCod[1];
+    for (var i = 0; i < PF_CLIENTES.length; i++) {
+      if (PF_CLIENTES[i].codigo === cod) return PF_CLIENTES[i];
+    }
+  }
+
+  // 3. Búsqueda parcial: el nombre del local contiene el nombre de la BD o viceversa
+  var bestMatch = null, bestScore = 0;
+  for (var i = 0; i < PF_CLIENTES.length; i++) {
+    var cn = PF_CLIENTES[i].nombre.toUpperCase();
+    // Quitar código del nombre de la BD para comparar
+    var cnSinCod = cn.replace(/^[A-Z][0-9]{2,3}\s*[-–]\s*/, '').trim();
+    if (n.indexOf(cnSinCod) !== -1 || cnSinCod.indexOf(n) !== -1) {
+      var score = cnSinCod.length;
+      if (score > bestScore) { bestScore = score; bestMatch = PF_CLIENTES[i]; }
+    }
+  }
+  if (bestMatch) return bestMatch;
+
+  // 4. Búsqueda por palabras clave (últimas 2 palabras significativas)
+  var palabras = n.split(/\s+/).filter(function(p){ return p.length > 3; });
+  if (palabras.length > 0) {
+    var keyword = palabras[palabras.length - 1]; // última palabra larga
+    for (var i = 0; i < PF_CLIENTES.length; i++) {
+      if (PF_CLIENTES[i].nombre.toUpperCase().indexOf(keyword) !== -1) {
+        return PF_CLIENTES[i];
+      }
+    }
+  }
+
+  return null;
+}

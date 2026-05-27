@@ -34,6 +34,10 @@ function pfRegistrarRetiro(local, punto, tecnico, desc) {
     fecha: r.fecha, hora: r.hora, tipo: "retiro",
     tecnico: r.tecnico, nota: r.descripcion, retiroId: id
   });
+  // Ingresar automáticamente al taller
+  if (typeof pfIngresarAlTaller === "function") {
+    pfIngresarAlTaller(local.nombre, r.descripcion || "Extintor", 1);
+  }
   return r;
 }
 
@@ -46,11 +50,26 @@ function pfMarcarEntregado(retiroId) {
       break;
     }
   }
+  // Registrar entrega en ficha del local
+  var retiroEntregado = null;
+  var allRetiros = pfGetRetiros();
+  for (var i = 0; i < allRetiros.length; i++) {
+    if (allRetiros[i].id === retiroId) { retiroEntregado = allRetiros[i]; break; }
+  }
+  if (retiroEntregado) {
+    pfRegistrarVisitaEnFicha(retiroEntregado.local, {
+      fecha: fechaHoy(),
+      hora: new Date().toLocaleTimeString("es-EC", {hour:"2-digit", minute:"2-digit"}),
+      tipo: "entrega",
+      tecnico: typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "Técnico",
+      nota: "Extintor entregado (retiro del " + retiroEntregado.fecha + ")"
+    });
+  }
   pfSaveRetiros(retiros);
   pfRenderRetiros();
 }
 
-// ── FICHA DEL LOCAL ──────────────────────────────────────────
+// ── FICHA DEL LOCAL ────────────────────────────────────────── ──────────────────────────────────────────
 function pfRegistrarVisitaEnFicha(nombreLocal, visita) {
   var fichas = pfGetFichas();
   if (!fichas[nombreLocal]) fichas[nombreLocal] = { nombre: nombreLocal, visitas: [] };
