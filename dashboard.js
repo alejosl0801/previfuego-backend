@@ -212,9 +212,8 @@ function pfInyectarDashboard() {
     admScr.appendChild(panel);
   }
 
-  // Parchear admTab para incluir tab 5
-  // Tab 5 manejado por coordinator.js
-  if (window.PF_TAB_HANDLERS) window.PF_TAB_HANDLERS[5] = function(){ pfRenderDashboard(); };
+  // #ALTO FIX: NO registrar PF_TAB_HANDLERS[5] aquí — lo hace coordinator.js
+  // Evitar doble registro y condición de carrera
 }
 
 // pfAdmTab manejado por coordinator.js — no duplicar

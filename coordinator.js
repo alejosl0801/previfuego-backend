@@ -241,6 +241,9 @@ window.addEventListener("load", function() {
   window.PF_TAB_HANDLERS[15] = function() {
     if (typeof pfRenderTabProformas === "function") pfRenderTabProformas();
   };
+
+  // #MEJORA: flechas de scroll para la barra de tabs admin
+  pfInyectarFlechasTabs();
   })();
 
   // Función guardar api_key Azur (llama a Code.gs)
@@ -334,5 +337,52 @@ window.addEventListener("load", function() {
   };
 
 
+  // #MEJORA: actualizar flechas al agregar nuevos tabs
+  if (typeof window._pfUpdateTabArrows === "function") window._pfUpdateTabArrows();
+
   }); // end load
 })();
+
+// #MEJORA: flechas de scroll para la barra de tabs admin en móvil
+function pfInyectarFlechasTabs() {
+  var tabBar = document.querySelector(".adm-tab");
+  if (!tabBar || document.getElementById("pf-tab-nav-wrap")) return;
+
+  var wrap = document.createElement("div");
+  wrap.id = "pf-tab-nav-wrap";
+  wrap.style.cssText = "position:relative;display:flex;align-items:center;background:#fff;border-bottom:2px solid var(--bo)";
+
+  var btnL = document.createElement("button");
+  btnL.id = "pf-tab-arrow-l";
+  btnL.innerHTML = "&#8249;";
+  btnL.style.cssText = "flex-shrink:0;width:28px;height:44px;border:none;background:linear-gradient(to right,#fff 60%,transparent);color:var(--g4);font-size:22px;font-weight:700;cursor:pointer;padding:0;display:none;font-family:inherit";
+
+  var btnR = document.createElement("button");
+  btnR.id = "pf-tab-arrow-r";
+  btnR.innerHTML = "&#8250;";
+  btnR.style.cssText = "flex-shrink:0;width:28px;height:44px;border:none;background:linear-gradient(to left,#fff 60%,transparent);color:var(--g4);font-size:22px;font-weight:700;cursor:pointer;padding:0;display:none;font-family:inherit";
+
+  var origStyle = tabBar.getAttribute("style") || "";
+  tabBar.style.cssText = origStyle + ";overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;flex:1;border-bottom:none";
+
+  tabBar.parentNode.insertBefore(wrap, tabBar);
+  wrap.appendChild(btnL);
+  wrap.appendChild(tabBar);
+  wrap.appendChild(btnR);
+
+  var SCROLL_STEP = 120;
+  btnL.onclick = function() { tabBar.scrollBy({ left: -SCROLL_STEP, behavior: "smooth" }); };
+  btnR.onclick = function() { tabBar.scrollBy({ left:  SCROLL_STEP, behavior: "smooth" }); };
+
+  function _updateArrows() {
+    var sl = Math.round(tabBar.scrollLeft);
+    var max = tabBar.scrollWidth - tabBar.clientWidth;
+    btnL.style.display = sl > 4 ? "block" : "none";
+    btnR.style.display = sl < max - 4 ? "block" : "none";
+  }
+
+  tabBar.addEventListener("scroll", _updateArrows, { passive: true });
+  window.addEventListener("resize", _updateArrows);
+  window._pfUpdateTabArrows = _updateArrows;
+  setTimeout(_updateArrows, 400);
+}

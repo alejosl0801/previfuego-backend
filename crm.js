@@ -168,7 +168,10 @@ function pfGuardarContactoUI(nombreLocal) {
 
 function pfCerrarCRM() {
   var modal = document.getElementById("pf-crm-modal");
-  if (modal) modal.style.display = "none";
+  if (!modal) return;
+  // #ALTO FIX: limpiar innerHTML para liberar event listeners y evitar memory leak
+  modal.innerHTML = "";
+  modal.style.display = "none";
 }
 
 // pfAbrirFicha se parchea en coordinator.js para agregar el botón CRM — no duplicar aquí

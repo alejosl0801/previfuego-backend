@@ -159,7 +159,7 @@ function pfAbrirFicha(nombreLocal) {
       var dias = pfDiasTranscurridos(retPend[i].fecha);
       h += '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-top:1px solid rgba(158,18,18,.15);margin-top:4px">';
       h += '<div style="font-size:12px;color:var(--ng)">Retirado el '+retPend[i].fecha+' ('+dias+' día'+(dias!==1?'s':'')+')</div>';
-      h += '<button data-rid="'+retPend[i].id+'" data-loc="'+nombreLocal.replace(/"/g,'&quot;')+'" onclick="pfMarcarEntregado(this.getAttribute(\'data-rid\')); pfAbrirFicha(this.getAttribute(\'data-loc\'))" style="background:var(--v);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">✓ Entregado</button>'; // #089 FIX
+      h += '<button data-rid="'+retPend[i].id+'" data-loc="'+nombreLocal.replace(/"/g,'&quot;')+'" onclick="pfMarcarEntregado(this.dataset.rid); pfAbrirFicha(this.dataset.loc)" style="background:var(--v);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">✓ Entregado</button>'; // #089+dataset FIX
       // Asignar nombre via dataset después (evita problemas con apóstrofes en onclick)
       h += '</div>';
     }
@@ -177,13 +177,15 @@ function pfAbrirFicha(nombreLocal) {
   h += '<div class="si"><div class="sv" style="color:var(--v)">'+totalEntregados+'</div><div class="sl">Entregados</div></div>';
   h += '</div>';
 
-  // Historial de visitas
+  // Historial de visitas — #ALTO FIX: paginar, máx 30 por render
+  var PF_FICHA_PAGE = 30;
+  var visitasRender = ficha.visitas.slice(0, PF_FICHA_PAGE);
   h += '<div class="slbl">Historial de visitas</div>';
   if (ficha.visitas.length === 0) {
     h += '<div style="padding:24px 16px;text-align:center;color:var(--g3);font-size:14px">Sin historial aún.<br>Las visitas se registran automáticamente.</div>';
   } else {
-    for (var i = 0; i < ficha.visitas.length; i++) {
-      var v   = ficha.visitas[i];
+    for (var i = 0; i < visitasRender.length; i++) {
+      var v   = visitasRender[i];
       var col = tipoColor[v.tipo] || "var(--g4)";
       var lbl = tipoLabel[v.tipo] || v.tipo;
       h += '<div style="margin:0 12px 8px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:11px 14px">';
@@ -193,6 +195,9 @@ function pfAbrirFicha(nombreLocal) {
       h += '<div style="font-size:12px;color:var(--g4)">'+v.tecnico+(v.punto?' · '+v.punto:'')+'</div>';
       if (v.nota) h += '<div style="font-size:12px;color:var(--g4);margin-top:4px;line-height:1.5;border-top:1px solid var(--bo);padding-top:4px">'+v.nota+'</div>';
       h += '</div>';
+    }
+    if (ficha.visitas.length > PF_FICHA_PAGE) {
+      h += '<div style="margin:0 12px 8px;padding:12px 14px;text-align:center;color:var(--g3);font-size:12px">Mostrando '+PF_FICHA_PAGE+' de '+ficha.visitas.length+' visitas (las más recientes)</div>';
     }
   }
   h += '<div style="height:80px"></div>';

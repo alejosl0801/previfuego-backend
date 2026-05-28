@@ -3,7 +3,7 @@
 //  Bloque A: PDF fixes + tipo trabajo + fotos libres + roles
 // ═══════════════════════════════════════════════════════════
 
-var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyLW3EksB1zZDfOalqSpTPwgko8Fu2dxJfxgoSZaWAJzHQ95CJDpK-BPL0v2MnDMmRS/exec";
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzyzNasRCuTQ1QSGVJZOgzngIgekCtPGeL8xRG6VDo01zo6Mz22IG7K5IKRRZtr0qg/exec";
 var VERSION    = "3.6";
 
 // ── ACCESORIOS ───────────────────────────────────────────────
@@ -542,6 +542,22 @@ function renderSelectorJornada() {
 // ── RENDER PUNTOS ────────────────────────────────────────────
 
 // #005 FIX: actualizar solo el div de un local sin regenerar toda la lista
+// #CRÍTICO FIX: caché de progreso para evitar O(n²) en actualizarItemLista
+var _PF_PROGRESS = { total: 0, comp: 0 };
+function _pfRecalcProgress() {
+  var t = 0, c = 0;
+  for (var i = 0; i < PUNTOS.length; i++)
+    for (var j = 0; j < PUNTOS[i].locales.length; j++) { t++; if (PUNTOS[i].locales[j].done) c++; }
+  _PF_PROGRESS.total = t; _PF_PROGRESS.comp = c;
+}
+function _pfUpdateProgressUI() {
+  var s1p  = document.getElementById("s1p");
+  var s1pf = document.getElementById("s1pf");
+  var t = _PF_PROGRESS.total, c = _PF_PROGRESS.comp;
+  if (s1p)  s1p.textContent  = c + "/" + t + " misiones";
+  if (s1pf) s1pf.style.width = t > 0 ? (c/t*100) + "%" : "0%";
+}
+
 function actualizarItemLista(pi, li) {
   var loc  = PUNTOS[pi] ? PUNTOS[pi].locales[li] : null;
   if (!loc) { renderPuntos(); return; }
@@ -559,14 +575,9 @@ function actualizarItemLista(pi, li) {
   el.querySelector(".pnm").textContent = loc.nombre;
   el.querySelector(".psb").textContent = loc.done ? "Completado ✓" : PUNTOS[pi].nombre;
   el.querySelector(".pch").textContent = loc.done ? "✓" : "›";
-  // Actualizar barra de progreso
-  var total = 0, comp = 0;
-  for (var i = 0; i < PUNTOS.length; i++)
-    for (var j = 0; j < PUNTOS[i].locales.length; j++) { total++; if (PUNTOS[i].locales[j].done) comp++; }
-  var s1p  = document.getElementById("s1p");
-  var s1pf = document.getElementById("s1pf");
-  if (s1p)  s1p.textContent  = comp + "/" + total + " misiones";
-  if (s1pf) s1pf.style.width = total > 0 ? (comp/total*100) + "%" : "0%";
+  // #CRÍTICO FIX O(1): actualizar solo el contador, no recorrer todo
+  if (loc.done) _PF_PROGRESS.comp = Math.min(_PF_PROGRESS.comp + 1, _PF_PROGRESS.total);
+  _pfUpdateProgressUI();
 }
 
 var TIPO_ICON = { mantenimiento:"🔧", retiro:"📦", entrega:"🚚", instalacion:"🔩", cobro:"💰", otro:"📋" };
@@ -584,6 +595,7 @@ function renderPuntos() {
   if (s1p)  s1p.textContent  = comp+"/"+total+" misiones";
   if (s1pf) s1pf.style.width = total > 0 ? (comp/total*100)+"%" : "0%";
   if (PUNTOS.length === 0) { mostrarSinRecorrido(); return; }
+  _pfRecalcProgress(); // #CRÍTICO FIX: recalcular caché de progreso al renderizar
   // Header de jornada activa
   var jorActual = JORNADAS[JORNADA_ACTIVA];
   var h = "";
@@ -617,7 +629,8 @@ function renderPuntos() {
       h += '</div>';
     }
   }
-  lista.innerHTML = h;
+  // #CRÍTICO FIX: evitar flash — solo actualizar DOM si contenido cambió
+  if (lista._pfLastHash !== h) { lista._pfLastHash = h; lista.innerHTML = h; }
 }
 
 function mostrarSinRecorrido() {

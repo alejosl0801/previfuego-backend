@@ -120,7 +120,7 @@ function hacerPDF(fc) {
         doc.addPage();
         fondoBase();
         piePagina();
-        yy = PH - 20;
+        yy = 25; // #ALTO FIX: empezar desde el top de la nueva página, no desde el fondo
       }
       dR(); doc.setLineWidth(0.5); doc.line(ML,yy,ML+CW,yy); yy += 5;
       doc.setFillColor(253,251,251);

@@ -10,6 +10,8 @@
 //  Se inyecta sobre fotoOk() de app.js
 // ════════════════════════════════════════════════════════════
 function pfAgregarMarcaAgua(canvas, ctx) {
+  // #ALTO FIX: guard contra canvas 0x0 que lanza error en fillRect
+  if (!canvas || canvas.width === 0 || canvas.height === 0) return;
   var _ahoraRaw = new Date();
   var ahora = new Date(_ahoraRaw.toLocaleString("en-US", {timeZone:"America/Guayaquil"}));
   var fecha = ahora.toLocaleDateString("es-EC", {day:"2-digit", month:"2-digit", year:"numeric"});

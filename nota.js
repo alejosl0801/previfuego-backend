@@ -730,13 +730,13 @@ function pfConfirmarEmisionFactura(cliente, ruc, dir, correo) {
   msg += "Esta acción emite el comprobante en el SRI y no se puede cancelar fácilmente.";
 
   pfConfirm(msg, function() {
-    pfEnviarFacturaAzur(cliente, ruc, dir, correo);
+    pfEnviarFacturaAzur(cliente, ruc, dir, correo, subtotal, total); // #ALTO FIX: pasar totales calculados
   });
 }
 
 // ── Enviar factura vía Apps Script → Azur ───────────────────
 var _pfAzurEnviando = false;
-function pfEnviarFacturaAzur(cliente, ruc, dir, correo) {
+function pfEnviarFacturaAzur(cliente, ruc, dir, correo, _subtotalPre, _totalPre) {
   // CRÍTICO FIX: guard contra doble envío
   if (_pfAzurEnviando) { pfModal("⚠️ Ya hay una factura en proceso. Espera."); return; }
   _pfAzurEnviando = true;
@@ -744,6 +744,18 @@ function pfEnviarFacturaAzur(cliente, ruc, dir, correo) {
     _pfAzurEnviando = false;
     pfModal("⚠️ Sin datos de nota para facturar.");
     return;
+  }
+  // #ALTO FIX: usar totales pre-calculados si fueron pasados, para evitar desincronización
+  var _tasaIVA = parseFloat(localStorage.getItem("pf_iva") || "0.15");
+  if (typeof _subtotalPre === "number" && _subtotalPre > 0) {
+    // Verificar que NOTA_ITEMS no cambió desde que se calculó
+    var _checkSub = 0;
+    NOTA_ITEMS.forEach(function(i){ _checkSub += parseFloat(i.puni||0)*parseFloat(i.cant||1); });
+    if (Math.abs(_checkSub - _subtotalPre) > 0.01) {
+      _pfAzurEnviando = false;
+      pfModal("⚠️ Los ítems de la nota cambiaron durante la confirmación. Reintenta.");
+      return;
+    }
   }
 
   mostrarCargando(true, "Emitiendo factura...", "Conectando con Azur SRI");
