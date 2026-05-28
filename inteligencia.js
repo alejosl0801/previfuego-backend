@@ -230,14 +230,17 @@ function pfRenderCalendario() {
         var _bg  = _visitado ? "var(--vc)" : "#fff";
         var _bor = _visitado ? "var(--v)"  : "var(--bo)";
         var _ico = _visitado ? "✅" : "⏳";
-        h += '<div style="margin:0 12px 6px;background:'+_bg+';border-radius:12px;border:1.5px solid '+_bor+';padding:10px 14px">';
+        var _nomEsc = (cli.nombre||"").replace(/'/g,"\\'");
+        h += '<div style="margin:0 12px 6px;background:'+_bg+';border-radius:12px;border:1.5px solid '+_bor+';padding:10px 14px;cursor:pointer" onclick="pfCalPopupLocal(\''+_nomEsc+'\','+_visitado+')">';
         h += '<div style="display:flex;align-items:center;gap:8px">';
         h += '<div style="font-size:16px">' + _ico + '</div>';
         h += '<div style="flex:1">';
         h += '<div style="font-size:13px;font-weight:700;color:' + (_visitado ? 'var(--v)' : 'var(--ng)') + '">' + cli.nombre + '</div>';
         h += '<div style="font-size:11px;color:var(--g4);margin-top:2px">' + cli.razon + ' · ' + (cli.responsable||"") + '</div>';
         h += '<div style="font-size:11px;color:var(--r);margin-top:2px">Mant: ' + cli.freqMant + ' · Recarga: ' + cli.freqRec + '</div>';
-        h += '</div></div></div>';
+        h += '</div>';
+        h += '<div style="font-size:11px;color:var(--g3)">'+(_visitado?'Ver':'Marcar')+'›</div>';
+        h += '</div></div>';
       });
     });
     h += '<div style="height:80px"></div>';
@@ -379,6 +382,63 @@ function pfInyectarInteligencia() {
 }
 
 // pfAdmTabN manejado por coordinator.js — no duplicar
+
+// ════════════════════════════════════════════════════════════
+//  POPUP DE LOCAL EN CALENDARIO — marcar como visitado
+// ════════════════════════════════════════════════════════════
+function pfCalPopupLocal(nombreLocal, yaVisitado) {
+  var hoy = (typeof fechaHoy === "function") ? fechaHoy() : new Date().toLocaleDateString("es-EC");
+  var ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:600;display:flex;align-items:flex-end;justify-content:center";
+  var estado = yaVisitado
+    ? '<div style="background:var(--vc);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px"><div style="font-size:20px">✅</div><div style="font-size:13px;font-weight:700;color:var(--v)">Ya registrado como visitado este mes</div></div>'
+    : '';
+  ov.innerHTML =
+    '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:0;overflow:hidden">' +
+    '<div style="background:var(--r);padding:14px 16px;display:flex;align-items:center;justify-content:space-between">' +
+    '<div style="font-size:16px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80%">'+nombreLocal+'</div>' +
+    '<button id="calpop-close" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:20px;width:34px;height:34px;border-radius:8px;cursor:pointer;flex-shrink:0">✕</button>' +
+    '</div>' +
+    '<div style="padding:14px">' +
+    estado +
+    '<div style="font-size:11px;font-weight:700;color:var(--g3);margin-bottom:4px">TÉCNICO</div>' +
+    '<select id="calpop-tec" style="width:100%;padding:9px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:10px">' +
+    '<option value="Raúl Romero">Raúl Romero</option>' +
+    '<option value="Juan Arboleda">Juan Arboleda</option>' +
+    '<option value="Alejandro">Alejandro</option>' +
+    '</select>' +
+    '<div style="font-size:11px;font-weight:700;color:var(--g3);margin-bottom:4px">FECHA <span style="font-weight:400;color:var(--g4)">(opcional — por defecto hoy)</span></div>' +
+    '<input id="calpop-fecha" value="'+hoy+'" placeholder="DD/MM/AAAA" style="width:100%;padding:9px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:10px">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--g3);margin-bottom:4px">NOTA <span style="font-weight:400;color:var(--g4)">(opcional)</span></div>' +
+    '<input id="calpop-nota" placeholder="Ej: Mantenimiento completo, sin novedades" style="width:100%;padding:9px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:14px">' +
+    '<button id="calpop-ok" style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">✅ ' + (yaVisitado ? 'Actualizar visita' : 'Marcar como visitado') + '</button>' +
+    '<div style="height:8px"></div>' +
+    '</div></div>';
+  document.body.appendChild(ov);
+  document.body.style.overflow = "hidden";
+  var _cerrar = function(){ document.body.style.overflow=""; document.body.removeChild(ov); };
+  ov.querySelector("#calpop-close").onclick = _cerrar;
+  ov.querySelector("#calpop-ok").onclick = function() {
+    var tec   = ov.querySelector("#calpop-tec").value;
+    var fecha = (ov.querySelector("#calpop-fecha").value || hoy).trim();
+    var nota  = (ov.querySelector("#calpop-nota").value || "").trim();
+    // Validar fecha
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) { fecha = hoy; }
+    if (typeof pfRegistrarVisitaEnFicha === "function") {
+      pfRegistrarVisitaEnFicha(nombreLocal, {
+        fecha:   fecha,
+        hora:    new Date().toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"}),
+        tipo:    "mantenimiento",
+        tecnico: tec,
+        nota:    nota || "Registrado desde calendario",
+        punto:   "Calendario"
+      });
+    }
+    _cerrar();
+    // Refrescar calendario
+    setTimeout(pfRenderCalendario, 150);
+  };
+}
 
 // ── INIT ─────────────────────────────────────────────────────
 window.addEventListener("load", function() {
