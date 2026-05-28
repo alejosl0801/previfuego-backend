@@ -3,7 +3,7 @@
 //  Bloque A: PDF fixes + tipo trabajo + fotos libres + roles
 // ═══════════════════════════════════════════════════════════
 
-var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxr8EXO3AUvlt7iCTjtuScI49dOkRKMbsG9Cmg206IMhUQlSi2szTbCmWny1Tf1pr34/exec";
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyLW3EksB1zZDfOalqSpTPwgko8Fu2dxJfxgoSZaWAJzHQ95CJDpK-BPL0v2MnDMmRS/exec";
 var VERSION    = "3.4";
 
 // ── ACCESORIOS ───────────────────────────────────────────────
@@ -1268,6 +1268,8 @@ window.addEventListener("load", function() {
   initLogos();
   initFecha();
   renderAccSel();
+  // #LOGIN-FIX: conectar la función real con el proxy del index.html y drenar cola
+  window._seleccionarUsuarioReal = seleccionarUsuario;
   // #66 FIX: precargar jsPDF en background para que primera generación sea instantánea
   setTimeout(function() {
     if (!window.jspdf) {
@@ -1280,6 +1282,13 @@ window.addEventListener("load", function() {
   cargarHistorialDia();
   canvas = document.getElementById("cnv");
   if (canvas) setupCanvasEvents();
+  // Si el usuario clickeó antes de que los scripts cargaran, drenar la cola
+  if (window._pfLoginQueue && window._pfLoginQueue.length > 0) {
+    var key = window._pfLoginQueue[window._pfLoginQueue.length - 1];
+    window._pfLoginQueue = [];
+    seleccionarUsuario(key);
+    return; // ya hay usuario seleccionado, no aplicar auto-login
+  }
   var saved = localStorage.getItem("pf_usuario");
   if (saved && USUARIOS[saved]) seleccionarUsuario(saved);
   else ir("slogin");
@@ -1940,7 +1949,8 @@ function pfSincronizarFichas(callback) {
     body: JSON.stringify({
       accion:      "guardar_fichas",
       fichas:      fichasLocales,
-      dispositivo: dispositivo
+      dispositivo: dispositivo,
+      token:       localStorage.getItem("pf_token") || ""
     })
   })
   .then(function(r){ return r.json(); })

@@ -19,7 +19,7 @@ const ASSETS = [
   '/previfuego-backend/logo.js',
   '/previfuego-backend/style.css',
   '/previfuego-backend/inteligencia.js',
-  '/previfuego-backend/logo.js',
+  '/previfuego-backend/proforma.js',
   '/previfuego-backend/manifest.json'
   // Nota: icon-192.png e icon-512.png deben existir para incluirlos aquí
   // Nota: script.google.com NUNCA debe cachearse (es la API de Apps Script)

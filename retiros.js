@@ -159,7 +159,7 @@ function pfAbrirFicha(nombreLocal) {
       var dias = pfDiasTranscurridos(retPend[i].fecha);
       h += '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-top:1px solid rgba(158,18,18,.15);margin-top:4px">';
       h += '<div style="font-size:12px;color:var(--ng)">Retirado el '+retPend[i].fecha+' ('+dias+' día'+(dias!==1?'s':'')+')</div>';
-      h += '<button data-rid="'+retPend[i].id+'" data-loc="" onclick="pfMarcarEntregado(this.getAttribute(\'data-rid\')); pfAbrirFicha(this.getAttribute(\'data-loc\'))" style="background:var(--v);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">✓ Entregado</button>'; // #089 FIX
+      h += '<button data-rid="'+retPend[i].id+'" data-loc="'+nombreLocal.replace(/"/g,'&quot;')+'" onclick="pfMarcarEntregado(this.getAttribute(\'data-rid\')); pfAbrirFicha(this.getAttribute(\'data-loc\'))" style="background:var(--v);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">✓ Entregado</button>'; // #089 FIX
       // Asignar nombre via dataset después (evita problemas con apóstrofes en onclick)
       h += '</div>';
     }

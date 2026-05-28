@@ -178,7 +178,7 @@ function enteroALetras(n) {
   var centenas  = ["","CIENTO","DOSCIENTOS","TRESCIENTOS","CUATROCIENTOS","QUINIENTOS","SEISCIENTOS","SETECIENTOS","OCHOCIENTOS","NOVECIENTOS"];
 
   if (n <= 20)  return unidades[n];
-  if (n < 30)   return (n === 21 ? "VEINTIUN" : n === 22 ? "VEINTIDÓS" : // #110 FIX: tilde n === 23 ? "VEINTITRÉS" : // #110 FIX: tilde "VEINTI" + unidades[n-20].toLowerCase()); // #76 FIX
+  if (n < 30)   return (n === 21 ? "VEINTIÚN" : n === 22 ? "VEINTIDÓS" : n === 23 ? "VEINTITRÉS" : n === 26 ? "VEINTISÉIS" : "VEINTI" + unidades[n-20]); // #110 FIX: tildes correctas
   if (n < 100)  return decenas[Math.floor(n/10)] + (n%10 > 0 ? " Y " + unidades[n%10] : "");
   if (n === 100) return "CIEN";
   if (n < 1000) return centenas[Math.floor(n/100)] + (n%100 > 0 ? " " + enteroALetras(n%100) : "");

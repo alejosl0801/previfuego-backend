@@ -112,7 +112,7 @@ function hacerPDF(fc) {
     function piePagina() {
       fN(); doc.rect(0,PH-10,PW,10,"F");
       doc.setFont("helvetica","bold"); doc.setFontSize(6.8); tW();
-      doc.text("DIR: PORTETE #3007 Y GALLEGOS LARA  |  TEL: 04-2374822 · 0978997247 · 0983588325  |  EMAIL: ventas_previfuego@hotmail.com" // #121 FIX: número correcto 10 dígitos, PW/2, PH-3.8, {align:"center"});
+      doc.text("DIR: PORTETE #3007 Y GALLEGOS LARA  |  TEL: 04-2374822 · 0978997247 · 0983588325  |  EMAIL: ventas_previfuego@hotmail.com", PW/2, PH-3.8, {align:"center"}); // #121 FIX: número correcto 10 dígitos
     }
 
     function bloqueAutorizacion(yy) {
@@ -412,6 +412,11 @@ function hacerPDF(fc) {
     var blobUrl = URL.createObjectURL(blob);
     window._ULTIMO_BLOB_URL = blobUrl;
     URLS_GENERADAS.push(blobUrl);
+    // #114 FIX: incrementar CERT_CONTADOR solo después de output() exitoso
+    CERT_CONTADOR++;
+    localStorage.setItem("pf_certCount", CERT_CONTADOR);
+    // #006 FIX: guardar referencia al último certificado para regeneración
+    window._ULTIMO_LOCAL_CERT = { local: LOCAL_ACTUAL, punto: PUNTO_ACTUAL, certNum: CERT_NUM };
 
     mostrarCargando(false);
 
