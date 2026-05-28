@@ -229,8 +229,7 @@ body, .cd, .sc, .tb {
 }
 /* #157 FIX: canvas firma con altura mínima */
 #cnv { min-height: 130px; display: block; width: 100%; }
-/* #159 FIX: adm-tab-btn sin flex:1 cuando hay muchos tabs */
-.adm-tab-btn { flex: 0 0 auto; min-width: 80px; }
+/* #159 FIX: ya aplicado en regla principal arriba */
 /* #160 FIX: botones disabled */
 button:disabled, .btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 /* #161 FIX: item completado más claro */

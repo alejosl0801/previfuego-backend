@@ -291,6 +291,39 @@ function pfEliminarNotaCRM(nombreLocal, idx) {
   });
 }
 
+function pfIniciarEdicionNota(nombreLocal, idx) {
+  var crm = pfGetCRM();
+  if (crm[nombreLocal] && crm[nombreLocal].notas[idx]) {
+    crm[nombreLocal].notas[idx]._editando = true;
+    pfSaveCRM(crm);
+    var el = document.getElementById("pf-crm-notas");
+    if (el) pfRenderNotasCRM(nombreLocal, el);
+  }
+}
+
+function pfCancelarEdicionNota(nombreLocal, idx) {
+  var crm = pfGetCRM();
+  if (crm[nombreLocal] && crm[nombreLocal].notas[idx]) {
+    delete crm[nombreLocal].notas[idx]._editando;
+    pfSaveCRM(crm);
+    var el = document.getElementById("pf-crm-notas");
+    if (el) pfRenderNotasCRM(nombreLocal, el);
+  }
+}
+
+function pfGuardarEdicionNota(nombreLocal, idx) {
+  var inp = document.getElementById("crm-edit-" + idx);
+  if (!inp || !inp.value.trim() || inp.value.trim().length < 3) { pfModal("La nota debe tener al menos 3 caracteres."); return; }
+  var crm = pfGetCRM();
+  if (crm[nombreLocal] && crm[nombreLocal].notas[idx]) {
+    crm[nombreLocal].notas[idx].texto = inp.value.trim();
+    delete crm[nombreLocal].notas[idx]._editando;
+    pfSaveCRM(crm);
+    var el = document.getElementById("pf-crm-notas");
+    if (el) pfRenderNotasCRM(nombreLocal, el);
+  }
+}
+
 function pfRenderNotasCRM(nombreLocal, el) {
   if (!el) return;
   var crm = pfGetCRM();
@@ -301,12 +334,23 @@ function pfRenderNotasCRM(nombreLocal, el) {
   } else {
     data.notas.slice(0, 20).forEach(function(n, idx_nota) {
       h += '<div style="background:var(--g1);border-radius:10px;padding:10px 12px;margin-bottom:6px">';
-      h += '<div style="font-size:13px;color:var(--ng);line-height:1.5">'+n.texto+'</div>';
-      // #064 FIX: usar idx_nota (parámetro del forEach) en lugar de indexOf
-      h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">';
-      h += '<div style="font-size:11px;color:var(--g3)">'+n.fecha+' · '+n.usuario+'</div>';
-      h += '<button data-idx="'+idx_nota+'" data-local="' + (nombreLocal||"").replace(/"/g,"&quot;") + '" onclick="pfEliminarNotaCRM(this.getAttribute('+"'data-local'"+"'"+"),parseInt(this.getAttribute('+"'data-idx'"+"'"+")))" style="font-size:10px;color:var(--r);background:none;border:none;cursor:pointer;padding:2px 6px">🗑</button>';
-      h += '</div></div>';
+      if (n._editando) {
+        h += '<textarea id="crm-edit-'+idx_nota+'" style="width:100%;height:60px;padding:6px 8px;border:1.5px solid var(--a);border-radius:8px;font-family:inherit;font-size:13px;resize:none;margin-bottom:6px">'+n.texto+'</textarea>';
+        h += '<div style="display:flex;gap:6px">';
+        h += '<button data-idx="'+idx_nota+'" data-local="'+(nombreLocal||"").replace(/"/g,"&quot;")+'" onclick="pfGuardarEdicionNota(this.getAttribute('data-local'),parseInt(this.getAttribute('data-idx')))" style="flex:1;padding:6px;border-radius:8px;border:none;background:var(--a);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">💾 Guardar</button>';
+        h += '<button data-idx="'+idx_nota+'" data-local="'+(nombreLocal||"").replace(/"/g,"&quot;")+'" onclick="pfCancelarEdicionNota(this.getAttribute('data-local'),parseInt(this.getAttribute('data-idx')))" style="flex:1;padding:6px;border-radius:8px;border:1.5px solid var(--bo);background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Cancelar</button>';
+        h += '</div>';
+      } else {
+        h += '<div style="font-size:13px;color:var(--ng);line-height:1.5">'+n.texto+'</div>';
+        // #064 FIX: usar idx_nota (parámetro del forEach) en lugar de indexOf
+        h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">';
+        h += '<div style="font-size:11px;color:var(--g3)">'+n.fecha+' · '+n.usuario+'</div>';
+        h += '<div style="display:flex;gap:4px">';
+        h += '<button data-idx="'+idx_nota+'" data-local="'+(nombreLocal||"").replace(/"/g,"&quot;")+'" onclick="pfIniciarEdicionNota(this.getAttribute(\'data-local\'),parseInt(this.getAttribute(\'data-idx\')))" style="font-size:10px;color:var(--a);background:none;border:none;cursor:pointer;padding:2px 6px">✏️</button>';
+        h += '<button data-idx="'+idx_nota+'" data-local="'+(nombreLocal||"").replace(/"/g,"&quot;")+'" onclick="pfEliminarNotaCRM(this.getAttribute(\'data-local\'),parseInt(this.getAttribute(\'data-idx\')))" style="font-size:10px;color:var(--r);background:none;border:none;cursor:pointer;padding:2px 6px">🗑</button>';
+        h += '</div></div>';
+      }
+      h += '</div>';
     });
   }
   el.innerHTML = h;

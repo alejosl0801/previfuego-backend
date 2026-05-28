@@ -236,6 +236,11 @@ window.addEventListener("load", function() {
     admScr.appendChild(panel);
 
     window.PF_TAB_HANDLERS[14] = function() { pfRenderHistorialFacturas(); };
+
+  // Tab 15 = Proformas (proforma.js)
+  window.PF_TAB_HANDLERS[15] = function() {
+    if (typeof pfRenderTabProformas === "function") pfRenderTabProformas();
+  };
   })();
 
   // Función guardar api_key Azur (llama a Code.gs)

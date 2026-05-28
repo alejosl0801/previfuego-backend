@@ -211,7 +211,7 @@ function pfHacerBackup() {
     "pf_recorrido_texto", "pf_recorrido_data", "pf_recorrido_jornadas",
     "pf_certCount", "pyro_ordenes", "pyro_oe_nro", "pf_usuario",
     "pf_clientes_custom", "pf_correos_clientes", "pf_facturas_emitidas", "pf_precios_accs", "pf_iva",
-    "pf_taller", "pf_tareas", "pf_crm" // #125 FIX: incluir taller, tareas y CRM en backup
+    "pf_taller", "pf_tareas", "pf_crm", "pf_proformas", "pf_entregas_pendientes", "pf_prof_count" // #125 FIX: incluir taller, tareas, CRM y proformas en backup
   ];
   var backup = { version: "1.0", fecha: new Date().toISOString(), datos: {} };
   claves.forEach(function(k) {
