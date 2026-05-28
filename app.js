@@ -3,7 +3,7 @@
 //  Bloque A: PDF fixes + tipo trabajo + fotos libres + roles
 // ═══════════════════════════════════════════════════════════
 
-var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsGUa-Z31KwPkixPxM8tLgEoyj7HsYRmdic8-HCuE9ZLjBfCYSGPJKmNDT9jOITxlO/exec";
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx-4FG2ZAFtQRCTmFDxBJCBYaEEf0EzTJXiBbyrArh5ru14WdvL663osLSNUbkwy0VE/exec";
 var VERSION    = "3.4";
 
 // ── ACCESORIOS ───────────────────────────────────────────────
