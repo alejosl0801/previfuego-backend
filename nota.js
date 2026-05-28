@@ -797,7 +797,6 @@ function pfEnviarFacturaAzur(cliente, ruc, dir, correo, _subtotalPre, _totalPre)
   payload.token = localStorage.getItem("pf_token") || ""; // #100 FIX: token requerido
   fetch(_surl, {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
     body:   JSON.stringify(payload)
   })
   .then(function(r) { return r.json(); })

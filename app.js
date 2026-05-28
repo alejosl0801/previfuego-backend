@@ -1958,7 +1958,6 @@ function pfSincronizarFichas(callback) {
   // 1. Subir fichas locales
   fetch(SCRIPT_URL, {
     method:  "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       accion:      "guardar_fichas",
       fichas:      fichasLocales,
@@ -1971,7 +1970,6 @@ function pfSincronizarFichas(callback) {
     // 2. Bajar fichas merged de todos los dispositivos
     return fetch(SCRIPT_URL, {
       method:  "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ accion: "get_fichas", dispositivo: dispositivo, token: localStorage.getItem("pf_token") || "" })
     });
   })

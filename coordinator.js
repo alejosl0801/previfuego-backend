@@ -261,7 +261,6 @@ window.addEventListener("load", function() {
     pfConfirm("¿Guardar esta api_key de Azur en el servidor?\n\nNo se puede recuperar desde la app una vez guardada, pero puede sobreescribirse.", function() {
       fetch(SCRIPT_URL, {
         method:  "POST",
-        headers: { "Content-Type": "application/json" }, // BAJO FIX
         body: JSON.stringify({ accion: "guardar_azur_key", azur_key: key, token: localStorage.getItem("pf_token") || "" })
       })
       .then(function(r){ return r.json(); })
@@ -315,7 +314,6 @@ window.addEventListener("load", function() {
     mostrarCargando(true, "Consultando Azur...", "");
     fetch(SCRIPT_URL, {
       method:  "POST",
-      headers: { "Content-Type": "application/json" }, // BAJO FIX
       body: JSON.stringify({ accion: "consultar_comprobante", claveAcceso: claveAcceso, token: localStorage.getItem("pf_token") || "" })
     })
     .then(function(r){ return r.json(); })
