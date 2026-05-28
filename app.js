@@ -13,7 +13,7 @@ var ACCESORIOS = [
   {id:"cabezal_pqs",     n:"Cabezal extintor PQS",    p:8.80},
   {id:"manguera_pqs",    n:"Manguera PQS",             p:4.80},
   {id:"corneta_co2_5",   n:"Corneta CO₂ 5 lbs",       p:8.80},
-  {id:"corneta_co2_10",  n:"Corneta CO₂ 10 lbs",      p:0},
+  {id:"corneta_co2_10",  n:"Corneta CO₂ 10 lbs",      p:13.80},
   {id:"manguera_co2_10", n:"Manguera CO₂ 10 lbs",     p:13.80},
   {id:"empaque",         n:"Empaque válvula",          p:1.50},
   {id:"soporte",         n:"Soporte metálico",         p:5.00},
@@ -42,10 +42,10 @@ var ACCESORIOS = [
 
 // ── USUARIOS ─────────────────────────────────────────────────
 var USUARIOS = {
-  raul:      { nombre:"Raúl Romero", rol:"Técnico Operativo y Logístico", emoji:"👷" },
-  juan:      { nombre:"Juan Arboleda", rol:"Técnico Operativo y Logístico", emoji:"👷" },
-  fabiola:   { nombre:"Fabiola Mejía", rol:"Administración y Taller",     emoji:"💼" },
-  alejandro: { nombre:"Alejandro",   rol:"Jefe de Operaciones",           emoji:"👔" }
+  raul:      { nombre:"Raúl",      rol:"Técnico Operativo y Logístico", emoji:"👷" },
+  juan:      { nombre:"Juan",      rol:"Técnico Operativo y Logístico", emoji:"👷" },
+  fabiola:   { nombre:"Fabiola",   rol:"Administración y Taller",       emoji:"💼", soloTaller:true },
+  alejandro: { nombre:"Alejandro", rol:"Jefe de Operaciones",           emoji:"👔" }
 };
 
 // ── TIPOS DE TRABAJO ─────────────────────────────────────────
@@ -153,9 +153,21 @@ function seleccionarUsuario(key) {
   document.querySelectorAll(".sperf-nom").forEach(function(el){ el.textContent = TECNICO_NOMBRE; });
   document.querySelectorAll(".sperf-rol").forEach(function(el){ el.textContent = USUARIOS[key].rol; });
   if (key === "alejandro") { ir("sadmin"); cargarRecorridoAdmin(); }
+  else if (USUARIOS[key] && USUARIOS[key].soloTaller) { ir("s1"); cargarRecorrido(); } // Fabiola ve recorrido pero no modifica
   else { ir("s1"); cargarRecorrido(); }
   // #22 FIX: sincronizar fichas al login (todos los usuarios)
-  setTimeout(function(){ if (typeof pfAutoSync === "function") pfAutoSync(); }, 3000);
+  // #AUDIO FIX: sync inmediato para que calendario móvil vea fichas actualizadas
+  setTimeout(function(){
+    if (typeof pfSincronizarFichas === "function") {
+      pfSincronizarFichas(function(ok, n) {
+        if (ok) {
+          console.log("Sync OK: " + n + " locales");
+          // Refrescar calendario si está abierto
+          if (typeof pfRenderCalendario === "function") pfRenderCalendario();
+        }
+      });
+    }
+  }, 1500);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1263,6 +1275,12 @@ function renderPerfil() {
   var ver = document.getElementById("sperf-ver");
   if (ver) ver.textContent = "Previfuego Field v"+VERSION;
   renderEstadisticasPerfil();
+  // Mostrar tareas personales en perfil
+  pfRenderTareasPerfil();
+  // #AUDIO FIX: backup solo visible para Alejandro
+  var backupEl = document.getElementById("pf-backup-btn");
+  var backupSec = backupEl ? backupEl.closest("div[style]") : null;
+  if (backupSec) backupSec.style.display = (USUARIO_ACTUAL === "alejandro") ? "block" : "none";
 }
 
 function cerrarSesion() {
@@ -2212,6 +2230,37 @@ function pfMarcarNoDisponible() {
       certNum: "ND", duracion: duracion, tipo: "no_disponible" });
     renderPuntos(); ir("s1");
   });
+}
+
+// ════════════════════════════════════════════════════════════
+//  TAREAS PERSONALES EN PERFIL (#AUDIO FIX)
+// ════════════════════════════════════════════════════════════
+function pfRenderTareasPerfil() {
+  var el = document.getElementById("sperf-tareas");
+  if (!el || !USUARIO_ACTUAL) return;
+  var tareas = pfGetTareas();
+  // Filtrar tareas del usuario actual
+  var misKey = USUARIO_ACTUAL;
+  var misTareas = tareas.filter(function(t) {
+    return t.tecnico === misKey || t.tecnico === "todos";
+  });
+  var pendientes = misTareas.filter(function(t){ return !t.completada; });
+  if (pendientes.length === 0) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--g3);padding:8px 16px">Sin tareas pendientes ✓</div>';
+    return;
+  }
+  var prioIco = { urgente:"🔴", normal:"🔵", baja:"⬜" };
+  var h = '<div class="slbl">Mis tareas ('+pendientes.length+')</div>';
+  pendientes.forEach(function(t) {
+    h += '<div style="margin:0 12px 8px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:10px 14px">';
+    h += '<div style="display:flex;align-items:center;gap:8px">';
+    h += '<div style="font-size:16px">'+(prioIco[t.prioridad]||"📋")+'</div>';
+    h += '<div style="flex:1"><div style="font-size:13px;font-weight:700">'+t.desc+'</div>';
+    h += '<div style="font-size:11px;color:var(--g3);margin-top:2px">'+t.fecha+'</div></div>';
+    h += '<button onclick="pfCompletarTarea(\''+t.id+'\');pfRenderTareasPerfil()" style="padding:6px 12px;border-radius:8px;border:none;background:var(--v);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✓ Listo</button>';
+    h += '</div></div>';
+  });
+  el.innerHTML = h;
 }
 
 // ════════════════════════════════════════════════════════════

@@ -319,27 +319,21 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     doc.text("DIRECCIÓN", ML+2, y+11.5);
     doc.text("CONTACTO",  ML+2, y+18.5);
     doc.text("TELÉFONO",  ML+2, y+25.5);
-    // Col derecha
+    // Col derecha — #AUDIO FIX: solo RUC y FECHA (sin Validez ni Forma de Pago)
     var rx = ML+CW*0.6+2;
-    doc.text("RUC",       rx, y+4.5);
-    doc.text("VALIDEZ",   rx, y+11.5);
-    doc.text("FORMA",     rx, y+18.5);
-    doc.text("DE PAGO",   rx, y+25.5);
+    doc.text("RUC",   rx, y+4.5);
+    doc.text("FECHA", rx, y+11.5);
 
     doc.setFont("helvetica","normal"); doc.setFontSize(8.5); tN();
     var lx = ML+22;
     doc.text(cliente,   lx, y+4.5,  {maxWidth: CW*0.6-25});
     doc.text(direccion, lx, y+11.5, {maxWidth: CW*0.6-25});
+    doc.text(contacto||"", lx, y+18.5, {maxWidth: CW*0.6-25});
     doc.text(telefono,  lx, y+25.5, {maxWidth: CW*0.6-25});
 
     var rx2 = ML+CW*0.6+22;
-    doc.text(ruc,       rx2, y+4.5);
-    doc.text(localStorage.getItem("pf_nota_validez")||"30 DÍAS", rx2, y+11.5); // #72 FIX
-    doc.text(localStorage.getItem("pf_nota_pago")||"CRÉDITO", rx2, y+18.5); // #73 FIX
-
-    // Fecha a la derecha
-    doc.setFont("helvetica","bold"); doc.setFontSize(8); tR();
-    doc.text("GUAYAQUIL, "+fecha, PW-ML-2, y+4.5, {align:"right"});
+    doc.text(ruc,   rx2, y+4.5);
+    doc.text(fecha, rx2, y+11.5); // #AUDIO FIX: fecha separada
 
     y += 32;
 
@@ -483,7 +477,8 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     dL(); doc.line(rx3+2, y+14, rx3+firW-2, y+14);
     doc.setFont("helvetica","normal"); doc.setFontSize(7.5); tG();
     doc.text("Jefe de Operaciones", rx3+firW/2, y+19, {align:"center"});
-    doc.text("Previfuego / Pyroshield", rx3+firW/2, y+24, {align:"center"});
+    doc.text("Documento autorizado por:", rx3+firW/2, y+18, {align:"center"});
+    doc.text("Alejandro López | Jefe de Operaciones", rx3+firW/2, y+24, {align:"center"});
     doc.text("RUC: 0952773976001", rx3+firW/2, y+29, {align:"center"});
 
     y += 36;

@@ -602,7 +602,7 @@ function pfRenderFormProforma() {
   h += '<div><div style="font-size:11px;font-weight:700;color:var(--g3);margin-bottom:4px">CONDICIÓN DE PAGO</div>';
   h += '<input id="prof-pago" type="text" value="'+(PF_PROF_EDITANDO ? (pfGetProformas().find(function(p){return p.id===PF_PROF_EDITANDO;})||{}).pago||"CRÉDITO 30 DÍAS" : "CRÉDITO 30 DÍAS")+'" style="width:100%;padding:9px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:13px"></div>';
   h += '<div><div style="font-size:11px;font-weight:700;color:var(--g3);margin-bottom:4px">VÁLIDA POR</div>';
-  h += '<input id="prof-validez" type="text" value="15 días" style="width:100%;padding:9px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:13px"></div>';
+  h += '<input id="prof-validez" type="text" value="'+(PF_PROF_EDITANDO ? (pfGetProformas().find(function(p){return p.id===PF_PROF_EDITANDO;})||{}).validez||"10 días" : "10 días")+'" style="width:100%;padding:9px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:13px"></div>';
   h += '</div>';
 
   // Botones
@@ -643,11 +643,17 @@ function pfBuscarClienteDist(q) {
   var res = document.getElementById("prof-cli-results");
   if (!res) return;
   if (!q || q.length < 2) { res.style.display = "none"; return; }
-  var q2 = q.toLowerCase();
+  var q2 = q.toLowerCase().trim();
+  // #AUDIO FIX: buscar por cualquier palabra del nombre
+  var palabras = q2.split(/\s+/).filter(function(p){ return p.length >= 2; });
   var matches = PF_CLIENTES_DIST.filter(function(c){
-    return (c.razon||"").toLowerCase().indexOf(q2) !== -1 ||
-           (c.ruc||"").indexOf(q) !== -1;
-  }).slice(0, 8);
+    var razon = (c.razon||"").toLowerCase();
+    var ruc   = (c.ruc||"");
+    if (ruc.indexOf(q) !== -1) return true;
+    if (razon.indexOf(q2) !== -1) return true;
+    // Buscar por palabras individuales
+    return palabras.length > 0 && palabras.every(function(p){ return razon.indexOf(p) !== -1; });
+  }).slice(0, 10);
   if (!matches.length) { res.innerHTML = '<div style="padding:10px;font-size:13px;color:var(--g3)">No encontrado</div>'; res.style.display = "block"; return; }
   res.style.display = "block";
   res.innerHTML = matches.map(function(c){
@@ -771,9 +777,45 @@ function pfActualizarTotalesProforma() {
 }
 
 function pfRenderTotalesInline(calc) {
-  // Buscar el div de totales y actualizarlo
-  // Se rellena completo via pfRenderFormProforma pero aquí
-  // actualizamos solo los valores para no hacer re-render completo
+  // #AUDIO FIX: actualizar totales en tiempo real sin re-render completo
+  var ids = {
+    "prof-res-pbase":    "$" + calc.pbase.toFixed(2),
+    "prof-res-desc":     "-$" + calc.desc.toFixed(2),
+    "prof-res-subtotal": "$" + calc.subtotal.toFixed(2),
+    "prof-res-iva":      "$" + calc.iva.toFixed(2),
+    "prof-res-total":    "$" + calc.total.toFixed(2)
+  };
+  Object.keys(ids).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = ids[id];
+  });
+  // Si no existen los elementos, inyectar el bloque de totales
+  if (!document.getElementById("prof-res-total")) {
+    var contenedor = document.getElementById("prof-totales-wrap");
+    if (contenedor) {
+      contenedor.innerHTML = pfRenderTotalesHTML(calc);
+    }
+  }
+}
+
+function pfRenderTotalesHTML(calc) {
+  var rows = [
+    ["Precio de lista:", "$" + calc.pbase.toFixed(2), "prof-res-pbase"],
+    ["Descuento:", "-$" + calc.desc.toFixed(2), "prof-res-desc"],
+    ["Subtotal:", "$" + calc.subtotal.toFixed(2), "prof-res-subtotal"],
+    ["IVA " + (PF_IVA_PROF*100).toFixed(0) + "%:", "$" + calc.iva.toFixed(2), "prof-res-iva"],
+    ["TOTAL:", "$" + calc.total.toFixed(2), "prof-res-total"]
+  ];
+  var h = '<div style="background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:12px 14px;margin:0 12px 12px">';
+  rows.forEach(function(r, i) {
+    var bold = i === rows.length - 1;
+    h += '<div style="display:flex;justify-content:space-between;padding:4px 0;'+(i>0?'border-top:1px solid var(--g1)':'')+'">';
+    h += '<span style="font-size:13px;color:var(--g4)">'+r[0]+'</span>';
+    h += '<span id="'+r[2]+'" style="font-size:13px;font-weight:'+(bold?'700':'600')+';color:'+(bold?'var(--r)':'var(--ng)')+'">'+r[1]+'</span>';
+    h += '</div>';
+  });
+  h += '</div>';
+  return h;
 }
 
 function pfActualizarTipoProforma() {
@@ -961,7 +1003,7 @@ function pfHacerPDFProforma(prof) {
   // Badge tipo
   setFill([253,236,234]); doc.roundedRect(BX+3, BY+32, BW-6, 5.5, 2, 2, "F");
   doc.setFont("helvetica","bold"); doc.setFontSize(6.5); setTxt(ROJO);
-  doc.text("DISTRIBUIDOR PREFERENCIAL", BX+BW/2, BY+35.5, {align:"center"});
+  // #AUDIO FIX: CLIENTE PREFERENCIAL va al lado de la razón social, no aquí
 
   y += 38;
 
@@ -977,7 +1019,7 @@ function pfHacerPDFProforma(prof) {
   doc.text("DATOS DEL COMPRADOR", MAR+3, y+5.5);
 
   // Badge tipo en header
-  var tipoLabel = "DISTRIBUIDOR PREFERENCIAL";
+  var tipoLabel = "CLIENTE PREFERENCIAL"; // #AUDIO FIX: cambiar a CLIENTE PREFERENCIAL
   var tipoW = doc.getTextWidth(tipoLabel) + 7;
   setFill(ROJO); doc.roundedRect(W-MAR-tipoW-0.5, y+1, tipoW, 5, 1.5, 1.5, "F");
   doc.setFont("helvetica","bold"); doc.setFontSize(6.5); setTxt([255,255,255]);
