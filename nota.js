@@ -523,3 +523,276 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     pfModal("Error generando nota: " + err.message);
   }
 }
+
+
+// ═══════════════════════════════════════════════════════════
+//  INTEGRACIÓN AZUR — Emisión desde nota de entrega
+// ═══════════════════════════════════════════════════════════
+
+// Estado de la última factura emitida (para consultar estado)
+var PF_ULTIMA_FACTURA = null;
+
+// ── Leer correo guardado para un cliente ─────────────────────
+function pfGetCorreoCliente(nombreLocal) {
+  try {
+    var correos = JSON.parse(localStorage.getItem("pf_correos_clientes") || "{}");
+    return correos[nombreLocal] || "";
+  } catch(e) { return ""; }
+}
+
+function pfGuardarCorreoCliente(nombreLocal, correo) {
+  try {
+    var correos = JSON.parse(localStorage.getItem("pf_correos_clientes") || "{}");
+    correos[nombreLocal] = correo.trim().toLowerCase();
+    localStorage.setItem("pf_correos_clientes", JSON.stringify(correos));
+  } catch(e) {}
+}
+
+// ── Abrir modal de emisión de factura Azur ───────────────────
+function pfAbrirEmitirFactura() {
+  // Validar que hay datos de nota disponibles
+  if (!NOTA_ACTUAL || !NOTA_ITEMS || NOTA_ITEMS.length === 0) {
+    pfModal("⚠️ No hay datos de nota para facturar. Genera la nota primero.");
+    return;
+  }
+
+  // Verificar que hay ítems con precio
+  var hayPrecio = NOTA_ITEMS.some(function(i) { return parseFloat(i.puni) > 0; });
+  if (!hayPrecio) {
+    pfModal("⚠️ Ningún ítem tiene precio. No se puede emitir una factura en $0.");
+    return;
+  }
+
+  // Calcular totales actuales
+  var tasaIVA  = parseFloat(localStorage.getItem("pf_iva") || "0.15");
+  var subtotal = 0;
+  NOTA_ITEMS.forEach(function(i) { subtotal += parseFloat(i.puni || 0) * parseFloat(i.cant || 1); });
+  var ivaVal   = subtotal * tasaIVA;
+  var totalVal = subtotal + ivaVal;
+
+  // Leer correo guardado
+  var correoGuardado = pfGetCorreoCliente(NOTA_ACTUAL.local || "");
+
+  // Leer RUC actual (puede haber sido editado en pantalla)
+  var rucActual  = (document.getElementById("nota-ruc")    || {}).value || NOTA_ACTUAL.ruc    || "";
+  var nomActual  = (document.getElementById("nota-cliente") || {}).value || NOTA_ACTUAL.cliente || "";
+  var dirActual  = (document.getElementById("nota-dir")    || {}).value || NOTA_ACTUAL.direccion || "";
+
+  // Detectar tipo de identificación para mostrar al usuario
+  var tipoLabel = "RUC";
+  var rucLimpio = rucActual.replace(/[^0-9]/g, "");
+  if      (rucLimpio.length === 10) tipoLabel = "Cédula";
+  else if (rucLimpio.length === 13) tipoLabel = "RUC";
+  else if (rucLimpio.length === 0)  tipoLabel = "Consumidor Final";
+
+  var ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;display:flex;align-items:flex-end;justify-content:center";
+
+  var h = '<div style="background:#fff;border-radius:20px 20px 0 0;padding:0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto">';
+
+  // Header
+  h += '<div style="background:var(--r);padding:16px 18px;border-radius:20px 20px 0 0;display:flex;align-items:center;justify-content:space-between">';
+  h += '<div><div style="font-size:17px;font-weight:700;color:#fff">📄 Emitir Factura Electrónica</div>';
+  h += '<div style="font-size:12px;color:rgba(255,255,255,.8);margin-top:2px">Azur · SRI Ecuador</div></div>';
+  h += '<button id="azur-modal-close" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:22px;width:36px;height:36px;border-radius:10px;cursor:pointer">✕</button>';
+  h += '</div>';
+
+  h += '<div style="padding:16px 16px 0">';
+
+  // Resumen de la factura
+  h += '<div style="background:var(--g1);border-radius:12px;padding:12px 14px;margin-bottom:14px">';
+  h += '<div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;margin-bottom:8px">RESUMEN</div>';
+  h += '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:13px;color:var(--g4)">Subtotal</span><span style="font-size:13px;font-weight:700">$' + subtotal.toFixed(2) + '</span></div>';
+  h += '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:13px;color:var(--g4)">IVA ' + (tasaIVA * 100).toFixed(0) + '%</span><span style="font-size:13px;font-weight:700">$' + ivaVal.toFixed(2) + '</span></div>';
+  h += '<div style="display:flex;justify-content:space-between;border-top:1.5px solid var(--r);padding-top:6px;margin-top:4px"><span style="font-size:15px;font-weight:700;color:var(--r)">TOTAL</span><span style="font-size:17px;font-weight:700;color:var(--r)">$' + totalVal.toFixed(2) + '</span></div>';
+  h += '</div>';
+
+  // Datos del comprador (editables)
+  h += '<div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;margin-bottom:6px">DATOS DEL COMPRADOR</div>';
+
+  // Cliente
+  h += '<div style="margin-bottom:8px">';
+  h += '<div style="font-size:11px;color:var(--g4);margin-bottom:3px">Razón social *</div>';
+  h += '<input id="azur-cliente" value="' + (nomActual || "").replace(/"/g, "&quot;") + '" style="width:100%;padding:9px 11px;border:1.5px solid var(--bo);border-radius:9px;font-family:inherit;font-size:14px;box-sizing:border-box">';
+  h += '</div>';
+
+  // RUC + tipo
+  h += '<div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:8px">';
+  h += '<div>';
+  h += '<div style="font-size:11px;color:var(--g4);margin-bottom:3px">RUC / Cédula (vacío = Consumidor Final)</div>';
+  h += '<input id="azur-ruc" value="' + (rucLimpio || "") + '" inputmode="numeric" style="width:100%;padding:9px 11px;border:1.5px solid var(--bo);border-radius:9px;font-family:inherit;font-size:14px;box-sizing:border-box" oninput="pfActualizarTipoId(this.value)">';
+  h += '</div>';
+  h += '<div style="display:flex;align-items:flex-end">';
+  h += '<div id="azur-tipo-id" style="padding:9px 11px;border-radius:9px;background:var(--ac);color:var(--a);font-size:12px;font-weight:700;white-space:nowrap">' + tipoLabel + '</div>';
+  h += '</div></div>';
+
+  // Dirección
+  h += '<div style="margin-bottom:8px">';
+  h += '<div style="font-size:11px;color:var(--g4);margin-bottom:3px">Dirección</div>';
+  h += '<input id="azur-dir" value="' + (dirActual || "GUAYAQUIL").replace(/"/g, "&quot;") + '" style="width:100%;padding:9px 11px;border:1.5px solid var(--bo);border-radius:9px;font-family:inherit;font-size:14px;box-sizing:border-box">';
+  h += '</div>';
+
+  // Correo
+  h += '<div style="margin-bottom:14px">';
+  h += '<div style="font-size:11px;color:var(--g4);margin-bottom:3px">Correo electrónico (para envío de RIDE)</div>';
+  h += '<input id="azur-correo" type="email" value="' + (correoGuardado || "") + '" placeholder="facturacion@empresa.com" inputmode="email" style="width:100%;padding:9px 11px;border:1.5px solid var(--bo);border-radius:9px;font-family:inherit;font-size:14px;box-sizing:border-box">';
+  h += '<div style="font-size:11px;color:var(--g3);margin-top:3px">Si lo ingresas se guarda automáticamente para este cliente</div>';
+  h += '</div>';
+
+  // Aviso consumidor final
+  h += '<div id="azur-aviso-cf" style="display:' + (rucLimpio.length === 0 ? 'block' : 'none') + ';background:var(--nc);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--n)">⚠️ <strong>Consumidor Final:</strong> el total no puede superar $200 según normativa SRI.</div>';
+
+  // Botones
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-bottom:20px">';
+  h += '<button id="azur-btn-cancel" style="padding:14px;border-radius:12px;border:1.5px solid var(--bo);background:#fff;color:var(--g4);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Cancelar</button>';
+  h += '<button id="azur-btn-emitir" style="padding:14px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">📄 Emitir Factura</button>';
+  h += '</div>';
+
+  h += '</div></div>';
+
+  ov.innerHTML = h;
+  document.body.appendChild(ov);
+
+  // Event listeners
+  ov.querySelector("#azur-modal-close").onclick = function() { document.body.removeChild(ov); };
+  ov.querySelector("#azur-btn-cancel").onclick   = function() { document.body.removeChild(ov); };
+
+  ov.querySelector("#azur-btn-emitir").onclick = function() {
+    var cliente = (ov.querySelector("#azur-cliente").value || "").trim();
+    var ruc     = (ov.querySelector("#azur-ruc").value     || "").replace(/[^0-9]/g, "").trim();
+    var dir     = (ov.querySelector("#azur-dir").value     || "").trim() || "GUAYAQUIL";
+    var correo  = (ov.querySelector("#azur-correo").value  || "").trim();
+
+    if (!cliente) { pfModal("⚠️ La razón social es obligatoria."); return; }
+
+    // Guardar correo si fue ingresado
+    if (correo && correo.indexOf("@") !== -1) {
+      pfGuardarCorreoCliente(NOTA_ACTUAL.local || "", correo);
+    }
+
+    // Cerrar modal y proceder
+    document.body.removeChild(ov);
+    pfConfirmarEmisionFactura(cliente, ruc, dir, correo);
+  };
+}
+
+// ── Actualizar badge de tipo de identificación en tiempo real ─
+function pfActualizarTipoId(valor) {
+  var el      = document.getElementById("azur-tipo-id");
+  var avisoEl = document.getElementById("azur-aviso-cf");
+  if (!el) return;
+  var limpio = (valor || "").replace(/[^0-9]/g, "");
+  var label, color, bg;
+  if      (limpio.length === 13) { label = "RUC";            color = "var(--v)"; bg = "var(--vc)"; }
+  else if (limpio.length === 10) { label = "Cédula";         color = "var(--a)"; bg = "var(--ac)"; }
+  else if (limpio.length === 0)  { label = "Cons. Final";    color = "var(--n)"; bg = "var(--nc)"; }
+  else                           { label = limpio.length + " dígitos"; color = "var(--g4)"; bg = "var(--g2)"; }
+  el.textContent = label;
+  el.style.color = color;
+  el.style.background = bg;
+  if (avisoEl) avisoEl.style.display = limpio.length === 0 ? "block" : "none";
+}
+
+// ── Confirmar y enviar factura ───────────────────────────────
+function pfConfirmarEmisionFactura(cliente, ruc, dir, correo) {
+  var tasaIVA  = parseFloat(localStorage.getItem("pf_iva") || "0.15");
+  var subtotal = 0;
+  NOTA_ITEMS.forEach(function(i) { subtotal += parseFloat(i.puni || 0) * parseFloat(i.cant || 1); });
+  var total = subtotal * (1 + tasaIVA);
+
+  var msg = "¿Emitir factura electrónica?\n\n";
+  msg += "Cliente: " + cliente + "\n";
+  msg += "RUC/CI:  " + (ruc || "Consumidor Final") + "\n";
+  msg += "Total:   $" + total.toFixed(2) + "\n\n";
+  msg += "Esta acción emite el comprobante en el SRI y no se puede cancelar fácilmente.";
+
+  pfConfirm(msg, function() {
+    pfEnviarFacturaAzur(cliente, ruc, dir, correo);
+  });
+}
+
+// ── Enviar factura vía Apps Script → Azur ───────────────────
+function pfEnviarFacturaAzur(cliente, ruc, dir, correo) {
+  if (!NOTA_ACTUAL || !NOTA_ITEMS || !NOTA_ITEMS.length) {
+    pfModal("⚠️ Sin datos de nota para facturar.");
+    return;
+  }
+
+  mostrarCargando(true, "Emitiendo factura...", "Conectando con Azur SRI");
+
+  // Fecha actual en formato dd/MM/YYYY para que Code.gs la convierta
+  var d = new Date();
+  var ec = new Date(d.toLocaleString("en-US", { timeZone: "America/Guayaquil" }));
+  var fechaHoyEC = String(ec.getDate()).padStart(2,"0") + "/" +
+                   String(ec.getMonth()+1).padStart(2,"0") + "/" +
+                   ec.getFullYear();
+
+  // Leer certNum si existe (del PDF generado)
+  var certNum = (typeof CERT_CONTADOR !== "undefined" && CERT_CONTADOR)
+    ? (NOTA_ACTUAL.local || "").substring(0,8).toUpperCase().replace(/[^A-Z0-9]/g,"") + "-MANT EXTINTORES-" + ec.getFullYear()
+    : "";
+
+  var payload = {
+    accion:    "emitir_factura_azur",
+    cliente:   cliente,
+    ruc:       ruc,
+    direccion: dir,
+    correo:    correo,
+    local:     NOTA_ACTUAL.local || cliente,
+    fecha:     fechaHoyEC,
+    certNum:   certNum,
+    tecnico:   typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "Alejandro",
+    tasaIVA:   parseFloat(localStorage.getItem("pf_iva") || "0.15"),
+    items:     NOTA_ITEMS.map(function(i) {
+      return {
+        desc: i.desc || "Servicio mantenimiento extintores",
+        puni: parseFloat(i.puni || 0),
+        cant: parseFloat(i.cant || 1)
+      };
+    }).filter(function(i) { return i.puni > 0; }) // solo ítems con precio
+  };
+
+  fetch(typeof SCRIPT_URL !== "undefined" ? SCRIPT_URL : "", {
+    method: "POST",
+    body:   JSON.stringify(payload)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    mostrarCargando(false);
+    if (data.ok) {
+      // Guardar clave de acceso para consultas futuras
+      PF_ULTIMA_FACTURA = {
+        claveAcceso: data.claveAcceso,
+        cliente:     cliente,
+        total:       data.total,
+        fecha:       fechaHoyEC,
+        local:       NOTA_ACTUAL.local || ""
+      };
+      try {
+        var hist = JSON.parse(localStorage.getItem("pf_facturas_emitidas") || "[]");
+        hist.unshift(PF_ULTIMA_FACTURA);
+        localStorage.setItem("pf_facturas_emitidas", JSON.stringify(hist.slice(0, 100)));
+      } catch(e) {}
+
+      pfModal(
+        "✅ Factura emitida correctamente\n\n" +
+        "Cliente: " + cliente + "\n" +
+        "Total: $" + data.total + "\n\n" +
+        "Clave de acceso:\n" + data.claveAcceso + "\n\n" +
+        "Azur enviará el RIDE al correo del cliente automáticamente."
+      );
+    } else {
+      var errorTxt = "❌ Error al emitir factura:\n\n";
+      if (data.errores && data.errores.length) {
+        errorTxt += data.errores.join("\n");
+      } else {
+        errorTxt += data.msg || "Error desconocido";
+      }
+      pfModal(errorTxt);
+    }
+  })
+  .catch(function(err) {
+    mostrarCargando(false);
+    pfModal("❌ Error de conexión: " + err.message + "\n\nVerifica tu internet e intenta de nuevo.");
+  });
+}

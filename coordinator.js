@@ -195,6 +195,13 @@ window.addEventListener("load", function() {
       '<div style="padding:0 12px 12px">' +
       '<button type="button" onclick="pfAbrirFormNuevoCliente()" style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">➕ Agregar nuevo cliente</button>' +
       '</div>' +
+      '<div class="slbl">Azur — Facturación Electrónica</div>' +
+      '<div style="margin:0 12px 10px;background:#fff;border-radius:14px;border:1.5px solid var(--bo);padding:14px">' +
+      '<div style="font-size:12px;color:var(--g4);margin-bottom:10px">Pega tu api_key de Azur aquí. Se guarda en Google y nunca aparece en GitHub.</div>' +
+      '<input id="azur-apikey-inp" type="password" placeholder="API_1_1_xxxxxxxxxxxxxxx" style="width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:monospace;font-size:13px;box-sizing:border-box;margin-bottom:8px">' +
+      '<button type="button" onclick="pfGuardarAzurKey()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--r);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">💾 Guardar api_key</button>' +
+      '<div style="font-size:11px;color:var(--g3);margin-top:6px">Una vez guardada no aparece en pantalla por seguridad.</div>' +
+      '</div>' +
       '<div style="height:80px"></div></div>';
     admScr.appendChild(panel);
 
@@ -202,6 +209,116 @@ window.addEventListener("load", function() {
       if (typeof pfRenderConfigPrecios === "function") pfRenderConfigPrecios();
     };
   })();
+
+
+
+  // Inyectar tab 14 — Historial de Facturas Azur
+  (function() {
+    var tabBar = document.querySelector(".adm-tab");
+    var admScr = document.getElementById("sadmin");
+    if (!tabBar || !admScr) return;
+    if (document.getElementById("adm-t14")) return;
+
+    var btn = document.createElement("button");
+    btn.id = "adm-t14"; btn.className = "adm-tab-btn";
+    btn.textContent = "📄 Facturas";
+    btn.onclick = function(){ admTab(14); };
+    tabBar.appendChild(btn);
+
+    var panel = document.createElement("div");
+    panel.id = "adm-p14"; panel.className = "adm-panel";
+    panel.innerHTML =
+      '<div style="padding:12px 0">' +
+      '<div class="slbl">Facturas emitidas</div>' +
+      '<div id="pf-facturas-lista"><div style="padding:40px 16px;text-align:center;color:var(--g3)">Cargando...</div></div>' +
+      '<div style="height:80px"></div></div>';
+    admScr.appendChild(panel);
+
+    window.PF_TAB_HANDLERS[14] = function() { pfRenderHistorialFacturas(); };
+  })();
+
+  // Función guardar api_key Azur (llama a Code.gs)
+  window.pfGuardarAzurKey = function() {
+    var inp = document.getElementById("azur-apikey-inp");
+    if (!inp) return;
+    var key = (inp.value || "").trim();
+    if (!key || key.length < 10) { pfModal("⚠️ La api_key parece inválida. Debe tener al menos 10 caracteres."); return; }
+
+    pfConfirm("¿Guardar esta api_key de Azur en el servidor?\n\nNo se puede recuperar desde la app una vez guardada, pero puede sobreescribirse.", function() {
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({ accion: "guardar_azur_key", azur_key: key })
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d.ok) {
+          inp.value = "";
+          pfModal("✅ api_key de Azur guardada correctamente.\nYa puedes emitir facturas desde la nota de entrega.");
+        } else {
+          pfModal("❌ Error: " + (d.msg || "Error desconocido"));
+        }
+      })
+      .catch(function(e){ pfModal("❌ Error de conexión: " + e.message); });
+    });
+  };
+
+  // Función render historial de facturas
+  window.pfRenderHistorialFacturas = function() {
+    var el = document.getElementById("pf-facturas-lista");
+    if (!el) return;
+
+    var facturas = [];
+    try { facturas = JSON.parse(localStorage.getItem("pf_facturas_emitidas") || "[]"); } catch(e) {}
+
+    if (!facturas.length) {
+      el.innerHTML = '<div style="padding:40px 16px;text-align:center;color:var(--g3);font-size:14px">No hay facturas emitidas aún.<br><br>Genera una nota de entrega y presiona<br>"Emitir Factura Electrónica".</div>';
+      return;
+    }
+
+    var h = '';
+    facturas.forEach(function(f, idx) {
+      h += '<div style="margin:0 12px 8px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:12px 14px">';
+      h += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
+      h += '<div style="flex:1;min-width:0">';
+      h += '<div style="font-size:14px;font-weight:700;color:var(--ng);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (f.local || f.cliente || "—") + '</div>';
+      h += '<div style="font-size:12px;color:var(--g4);margin-top:2px">' + (f.cliente || "") + ' · ' + (f.fecha || "") + '</div>';
+      h += '<div style="font-family:monospace;font-size:10px;color:var(--g3);margin-top:4px;word-break:break-all">' + (f.claveAcceso || "—") + '</div>';
+      h += '</div>';
+      h += '<div style="font-size:15px;font-weight:700;color:var(--v);flex-shrink:0">$' + (parseFloat(f.total || 0).toFixed(2)) + '</div>';
+      h += '</div>';
+      if (f.claveAcceso) {
+        h += '<div style="margin-top:8px"><button onclick="pfConsultarFactura('' + f.claveAcceso + '')" style="width:100%;padding:8px;border-radius:8px;border:1.5px solid var(--bo);background:var(--g1);color:var(--g4);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🔍 Consultar estado en Azur</button></div>';
+      }
+      h += '</div>';
+    });
+
+    el.innerHTML = h;
+  };
+
+  // Consultar estado de factura en Azur
+  window.pfConsultarFactura = function(claveAcceso) {
+    mostrarCargando(true, "Consultando Azur...", "");
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({ accion: "consultar_comprobante", claveAcceso: claveAcceso })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      mostrarCargando(false);
+      if (d.ok && d.data) {
+        var info = d.data;
+        var msg = "Estado del comprobante:\n\n";
+        msg += "Estado: " + (info.estado || info.ESTADO || JSON.stringify(info));
+        pfModal(msg);
+      } else {
+        pfModal("❌ " + (d.msg || "No se pudo consultar el estado"));
+      }
+    })
+    .catch(function(e){
+      mostrarCargando(false);
+      pfModal("❌ Error: " + e.message);
+    });
+  };
 
 
   }); // end load

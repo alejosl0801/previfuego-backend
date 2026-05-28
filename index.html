@@ -355,6 +355,7 @@
     </div>
 
     <div class="bw"><button type="button" class="btn btn-r" onclick="generarNotaPDF('entrega')">&#128196; Generar Nota de Entrega PDF</button></div>
+    <div class="bw" style="padding-top:0"><button type="button" class="btn" style="background:#1A5FAA;color:#fff" onclick="pfAbrirEmitirFactura()">&#128196; Emitir Factura Electrónica (Azur)</button></div>
     <div style="height:80px"></div>
   </div>
   <div class="nav">
@@ -377,22 +378,25 @@
       <button type="button" class="btn" style="background:var(--n);color:#fff" onclick="generarNotaPDF('accesorios')">&#128196; Generar nota de accesorios</button>
     </div>
     <div class="bw"><button type="button" class="btn btn-v" onclick="ir('s1')">&#8592; Volver al recorrido</button></div>
+    <div id="nota-gen-azur" style="margin:0 12px 10px;display:none">
+      <button type="button" class="btn" style="background:#1A5FAA;color:#fff" onclick="pfAbrirEmitirFactura()">&#128196; También emitir Factura Electrónica</button>
+    </div>
     <div style="height:80px"></div>
   </div>
 </div>
 
 <script src="logo.js"></script>
-<script src="clientes.js?v=1.0"></script>
-<script src="app.js?v=3.3"></script>
-<script src="pdf.js?v=3.3"></script>
-<script src="nota.js?v=1.0"></script>
-<script src="retiros.js?v=1.0"></script>
-<script src="dashboard.js?v=1.0"></script>
-<script src="extras.js?v=1.0"></script>
-<script src="mejoras2.js?v=1.0"></script>
-<script src="crm.js?v=1.0"></script>
-<script src="inteligencia.js?v=1.0"></script>
-<script src="coordinator.js?v=1.0"></script>
+<script src="clientes.js?v=2.0"></script>
+<script src="app.js?v=3.4"></script>
+<script src="pdf.js?v=3.4"></script>
+<script src="nota.js?v=3.4"></script>
+<script src="retiros.js?v=3.4"></script>
+<script src="dashboard.js?v=3.4"></script>
+<script src="extras.js?v=3.4"></script>
+<script src="mejoras2.js?v=3.4"></script>
+<script src="crm.js?v=3.4"></script>
+<script src="inteligencia.js?v=3.4"></script>
+<script src="coordinator.js?v=3.4"></script>
 
 <script>
 // #011 FIX: Registrar Service Worker para soporte offline
