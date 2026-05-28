@@ -61,7 +61,10 @@ var TIPOS_TRABAJO = {
 
 function detectarTipoTrabajo(mision) {
   if (!mision) return TIPOS_TRABAJO.MANTENIMIENTO;
-  var m = mision.toLowerCase();
+  // #18 FIX: normalizar acentos antes de regex
+  var m = mision.toLowerCase()
+    .replace(/[áà]/g,"a").replace(/[éè]/g,"e").replace(/[íì]/g,"i")
+    .replace(/[óò]/g,"o").replace(/[úù]/g,"u").replace(/ñ/g,"n");
   if (/entregar|entrega|devolver|devolu/.test(m))                       return TIPOS_TRABAJO.ENTREGA;
   if (/cobro|cheque|pago|retirar cheque|retirar pago/.test(m))          return TIPOS_TRABAJO.COBRO;
   if (/instalar|instalaci|colocar|etiqueta/.test(m))                    return TIPOS_TRABAJO.INSTALACION;
@@ -91,7 +94,8 @@ var FB64            = {};
 var FOTOS_COUNT     = 0;
 var ACCS            = [], NOV = null, FIRMADO = false, HISTORIAL = [];
 var canvas, ctx, drawing = false, trazado = false;
-var CERT_CONTADOR   = parseInt(localStorage.getItem("pf_certCount") || "0");
+var _certRaw = parseInt(localStorage.getItem("pf_certCount") || "0");
+var CERT_CONTADOR = isNaN(_certRaw) ? 0 : _certRaw; // BAJO FIX: guard NaN
 var URLS_GENERADAS  = [];
 var TIMER_INICIO    = null;   // timestamp al abrir un local
 var TIMER_INTERVAL  = null;   // setInterval del timer
@@ -111,11 +115,13 @@ function ir(id) {
 
 // ── FECHA ────────────────────────────────────────────────────
 function initFecha() {
-  var d     = new Date();
+  // #5 FIX: usar timezone Ecuador para mostrar la fecha correcta
+  var d  = new Date();
+  var ec = new Date(d.toLocaleString("en-US", {timeZone: "America/Guayaquil"}));
   var dias  = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
   var meses = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
   var el    = document.getElementById("s1f");
-  if (el) el.textContent = dias[d.getDay()]+" "+d.getDate()+" "+meses[d.getMonth()];
+  if (el) el.textContent = dias[ec.getDay()]+" "+ec.getDate()+" "+meses[ec.getMonth()];
 }
 
 function fechaHoy() {
@@ -148,6 +154,8 @@ function seleccionarUsuario(key) {
   document.querySelectorAll(".sperf-rol").forEach(function(el){ el.textContent = USUARIOS[key].rol; });
   if (key === "alejandro") { ir("sadmin"); cargarRecorridoAdmin(); }
   else { ir("s1"); cargarRecorrido(); }
+  // #22 FIX: sincronizar fichas al login (todos los usuarios)
+  setTimeout(function(){ if (typeof pfAutoSync === "function") pfAutoSync(); }, 3000);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -191,6 +199,7 @@ function parsearJornadas(texto) {
 }
 
 function capitalizar(str) {
+  if (!str || !str.length) return ""; // #52 FIX: string vacío
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
@@ -201,7 +210,7 @@ function parsearRecorrido(texto) {
   var localActual = null;
   var misionBuffer = [];
   var localIdCounter = 0;
-  var rePunto  = /^Punto\s+(\d+)\s*[–\-—:]\s*(.+)$/i;
+  var rePunto  = /^Punto\s+(\d+)\s*[–\-—:\u2013\u2014]\s*(.+)$/i; // #17 FIX: guiones extendidos
   var reMision = /^Misión\s*:/i;
   var reBullet = /^[\*\-•]\s+.+/;  // #101 FIX: acepta *, -, • como bullets
 
@@ -294,7 +303,7 @@ function renderPizarraSeccion(seccion, elId) {
     var colTx = item.estado === "done" ? "var(--v)"  : item.estado === "urgente" ? "var(--r)"  : "var(--ng)";
     h += '<div class="piz-item" style="background:'+colBg+';border-color:'+(item.estado==="urgente"?"var(--r)":"var(--bo)")+'">';
     h += '<div style="flex:1">';
-    h += '<div style="font-size:14px;font-weight:700;color:'+colTx+';'+(item.estado==="done"?"text-decoration:line-through":"")+'">'+item.texto+'</div>';
+    h += '<div style="font-size:14px;font-weight:700;color:'+colTx+';'+(item.estado==="done"?"text-decoration:line-through":"")+'">'+String(item.texto||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'; // MEDIO FIX: XSS
     if (item.nota) h += '<div style="font-size:11px;color:var(--g4);margin-top:2px">'+item.nota+'</div>';
     h += '</div>';
     h += '<div style="display:flex;gap:6px;flex-shrink:0">';
@@ -406,15 +415,17 @@ function publicarRecorrido() {
   localStorage.setItem("pf_recorrido_jornadas", JSON.stringify(jornadas));
   localStorage.setItem("pf_recorrido_data", JSON.stringify(jornadas[0].puntos));
   var payload = { accion:"publicar_recorrido", fecha:fechaRecorrido, tecnico:TECNICO_NOMBRE||"Alejandro", texto:txt, jornadas:jornadas };
+  // #21 FIX: usar .then().catch() en lugar de .finally() (no disponible en todos los móviles)
+  var _pubDone = function() {
+    mostrarCargando(false);
+    renderCalendarioMes();
+    var ok = document.getElementById("admin-pub-ok");
+    if (ok) { ok.style.display = "block"; setTimeout(function(){ ok.style.display = "none"; }, 3000); }
+  };
   fetch(SCRIPT_URL, { method:"POST", body:JSON.stringify(payload) })
     .then(function(r){ return r.json(); })
-    .catch(function(){})
-    .finally(function(){
-      mostrarCargando(false);
-      renderCalendarioMes();
-      var ok = document.getElementById("admin-pub-ok");
-      if (ok) { ok.style.display = "block"; setTimeout(function(){ ok.style.display = "none"; }, 3000); }
-    });
+    .then(function(){ _pubDone(); })
+    .catch(function(){ _pubDone(); });
 }
 
 function limpiarRecorrido() {
@@ -458,10 +469,16 @@ function cargarRecorridoLocal() {
   var legData  = localStorage.getItem("pf_recorrido_data");
   if (fecha === fechaHoy()) {
     if (jorData) {
-      try { procesarJornadas(JSON.parse(jorData), "Raúl Romero"); return; } catch(e) {}
+      try { procesarJornadas(JSON.parse(jorData), "Raúl Romero"); return; }
+      catch(e) {
+        // #19 FIX: notificar si datos corruptos en lugar de fallar silenciosamente
+        console.warn("pf_recorrido_jornadas corrupto:", e);
+        localStorage.removeItem("pf_recorrido_jornadas");
+      }
     }
     if (legData) {
-      try { procesarPuntos(JSON.parse(legData), "Raúl Romero"); return; } catch(e) {}
+      try { procesarPuntos(JSON.parse(legData), "Raúl Romero"); return; }
+      catch(e) { console.warn("pf_recorrido_data corrupto:", e); localStorage.removeItem("pf_recorrido_data"); }
     }
   }
   mostrarSinRecorrido();
@@ -594,25 +611,13 @@ function abrirLocal(pi, li) {
   LOCAL_ACTUAL._li = li;
   TIPO_TRABAJO    = loc.tipo || detectarTipoTrabajo(loc.mision);
 
-  // #017 FIX: preservar foto ANTES del retiro previo ANTES de resetear
-  var _fotoAntesRetiro = null;
-  if (TIPO_TRABAJO === "entrega" || (loc.tipo || "").indexOf("entrega") !== -1) {
-    try {
-      var _retiros = JSON.parse(localStorage.getItem("pf_retiros") || "[]");
-      var _retPrev = _retiros.filter(function(r){ return r.local === loc.nombre && r.estado === "pendiente"; });
-      if (_retPrev.length > 0 && _retPrev[0].fotoAntes) {
-        _fotoAntesRetiro = _retPrev[0].fotoAntes;
-      }
-    } catch(e) {}
-  }
-
-  // #017 FIX: preservar foto ANTES del retiro previo ANTES de resetear
-  var _fotoAntesRetiro = null;
+  // #017 FIX: preservar foto ANTES del retiro previo (un solo bloque)
   var _tipoDetectado = loc.tipo || detectarTipoTrabajo(loc.mision || "");
+  var _fotoAntesRetiro = null;
   if (_tipoDetectado === "entrega" || _tipoDetectado === TIPOS_TRABAJO.ENTREGA) {
     try {
-      var _retiros = JSON.parse(localStorage.getItem("pf_retiros") || "[]");
-      var _retPrev = _retiros.filter(function(r){ return r.local === loc.nombre && r.estado === "pendiente"; });
+      var _retPrevArr = JSON.parse(localStorage.getItem("pf_retiros") || "[]");
+      var _retPrev = _retPrevArr.filter(function(r){ return r.local === loc.nombre && r.estado === "pendiente"; });
       if (_retPrev.length > 0 && _retPrev[0].fotoAntes) _fotoAntesRetiro = _retPrev[0].fotoAntes;
     } catch(e) {}
   }
@@ -627,14 +632,9 @@ function abrirLocal(pi, li) {
 
   // Restaurar foto ANTES del retiro si existe
   if (_fotoAntesRetiro) { FB64["antes"] = _fotoAntesRetiro; FD["antes"] = _fotoAntesRetiro; }
-
-  // Restaurar foto ANTES si existe del retiro
-  if (_fotoAntesRetiro) {
-    FB64["antes"] = _fotoAntesRetiro;
-    FD["antes"]   = _fotoAntesRetiro;
-  }
   // Guardar ACCS del local anterior por si vuelve (no perder selección)
-  if (LOCAL_ACTUAL && ACCS.length > 0) {
+  // #48 FIX: solo guardar snapshot si hay accesorios (evitar escrituras innecesarias)
+  if (LOCAL_ACTUAL && ACCS && ACCS.length > 0) {
     try {
       var snapKey = "pf_accs_snap_" + (LOCAL_ACTUAL.id || LOCAL_ACTUAL.nombre);
       localStorage.setItem(snapKey, JSON.stringify(ACCS));
@@ -711,7 +711,7 @@ function labelBotonFotos() {
     case TIPOS_TRABAJO.RETIRO:      return "Registrar retiro y firma";
     case TIPOS_TRABAJO.ENTREGA:     return "Registrar entrega y firma";
     case TIPOS_TRABAJO.INSTALACION: return "Registrar fotos de instalación";
-    case TIPOS_TRABAJO.COBRO:       return "—";
+    case TIPOS_TRABAJO.COBRO:       return "Registrar cobro";
     default:                        return "Registrar fotos y firma";
   }
 }
@@ -852,13 +852,20 @@ function confirmarSin() {
     PUNTOS[LOCAL_ACTUAL._pi].locales[LOCAL_ACTUAL._li].done = true;
     // Guardar en jornada activa también
     if (JORNADAS[JORNADA_ACTIVA]) JORNADAS[JORNADA_ACTIVA].puntos = PUNTOS;
-    localStorage.setItem("pf_recorrido_data",    JSON.stringify(PUNTOS));
-    localStorage.setItem("pf_recorrido_jornadas", JSON.stringify(JORNADAS));
+    try {
+      localStorage.setItem("pf_recorrido_data",    JSON.stringify(PUNTOS));
+      localStorage.setItem("pf_recorrido_jornadas", JSON.stringify(JORNADAS));
+    } catch(e) {
+      if (e.name === "QuotaExceededError") pfModal("⚠️ Almacenamiento lleno. Ve a Perfil → Backup y descarga tus datos.");
+    }
     var hora = new Date().toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"});
-    // Guardar foto de retiro vinculada al local
-    if (TIPO_TRABAJO === TIPOS_TRABAJO.RETIRO && Object.keys(FB64).length > 0) {
-      var primeraFoto = FB64[Object.keys(FB64)[0]];
-      if (primeraFoto) guardarFotoRetiro(LOCAL_ACTUAL.nombre, primeraFoto);
+    // #14 FIX: guardar foto del retiro si existe, aunque se complete sin fotos
+    if (TIPO_TRABAJO === TIPOS_TRABAJO.RETIRO) {
+      var keysRet = Object.keys(FB64);
+      if (keysRet.length > 0) {
+        var primeraFoto = FB64[keysRet[0]];
+        if (primeraFoto) guardarFotoRetiro(LOCAL_ACTUAL.nombre, primeraFoto);
+      }
     }
     var item = { local:LOCAL_ACTUAL, punto:PUNTO_ACTUAL, hora:hora, fotos:0, accs:0, url:null, nombre:null, certNum:null, duracion:duracion, tipo:"sin_cert" };
     HISTORIAL.unshift(item);
@@ -932,10 +939,14 @@ function fotoOk(n, input) {
 function actualizarContadorFotos() {
   var c = 0;
   for (var k in FD) { if (FD[k]) c++; }
+  // #63 FIX: mostrar requeridas vs tomadas
+  var requeridas = 0;
+  var sfotFotos = document.getElementById("sfot-fotos");
+  if (sfotFotos) requeridas = sfotFotos.querySelectorAll(".fpend").length;
   var sfc  = document.getElementById("sfc");
   var sfpf = document.getElementById("sfpf");
-  if (sfc)  sfc.textContent  = c+" foto(s)";
-  if (sfpf) sfpf.style.width = Math.min(c*33.3, 100)+"%";
+  if (sfc)  sfc.textContent  = c + (requeridas > 0 ? "/"+requeridas : "") + " foto(s)";
+  if (sfpf) sfpf.style.width = Math.min(c * (requeridas > 0 ? 100/requeridas : 33.3), 100)+"%";
 }
 
 function irFirma() {
@@ -1140,11 +1151,15 @@ function irSig() {
       if (!PUNTOS[i].locales[j].done) { abrirLocal(i,j); return; }
     }
   }
-  // #021 FIX: limpiar estado al terminar el recorrido
-  LOCAL_ACTUAL  = null;
-  PUNTO_ACTUAL  = null;
-  TIPO_TRABAJO  = null;
+  // #021 #53 FIX: limpiar estado completo al terminar el recorrido
+  detenerTimer(); // MEDIO FIX: detener timer al terminar recorrido
+  LOCAL_ACTUAL       = null;
+  PUNTO_ACTUAL       = null;
+  TIPO_TRABAJO       = null;
   FIRMA_GUARDADA_B64 = null;
+  FIRMADO            = false;
+  ACCS               = [];
+  NOV                = null;
   ir("s1");
 }
 
@@ -1172,6 +1187,7 @@ function renderHistorial() {
 }
 
 // ── OVERLAY ──────────────────────────────────────────────────
+var _pfLoadingTimeout = null;
 function mostrarCargando(mostrar, titulo, sub) {
   var lov = document.getElementById("lov");
   var ltx = document.getElementById("ltx");
@@ -1181,7 +1197,14 @@ function mostrarCargando(mostrar, titulo, sub) {
     if (ltx) ltx.textContent = titulo || "Cargando...";
     if (lsb) lsb.textContent = sub    || "Por favor espera";
     lov.classList.add("show");
+    // #47 FIX: timeout de seguridad — si en 30s no se oculta, ocultarlo automáticamente
+    if (_pfLoadingTimeout) clearTimeout(_pfLoadingTimeout);
+    _pfLoadingTimeout = setTimeout(function() {
+      lov.classList.remove("show");
+      console.warn("mostrarCargando: timeout de seguridad activado");
+    }, 30000);
   } else {
+    if (_pfLoadingTimeout) { clearTimeout(_pfLoadingTimeout); _pfLoadingTimeout = null; }
     lov.classList.remove("show");
   }
 }
@@ -1199,7 +1222,7 @@ function renderPerfil() {
 
 function cerrarSesion() {
   pfConfirm("¿Cambiar de usuario?", function() {
-  localStorage.removeItem("pf_usuario");
+    localStorage.removeItem("pf_usuario");
     USUARIO_ACTUAL = null; PUNTOS = []; HISTORIAL = []; HISTORIAL_DIA = [];
     FIRMA_GUARDADA_B64 = null; NOV = null; FIRMADO = false;
     ir("slogin");
@@ -1211,6 +1234,15 @@ window.addEventListener("load", function() {
   initLogos();
   initFecha();
   renderAccSel();
+  // #66 FIX: precargar jsPDF en background para que primera generación sea instantánea
+  setTimeout(function() {
+    if (!window.jspdf) {
+      var s = document.createElement("script");
+      s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+      s.onerror = function(){ console.warn("No se pudo precargar jsPDF"); };
+      document.head.appendChild(s);
+    }
+  }, 4000); // 4 segundos después del login
   cargarHistorialDia();
   canvas = document.getElementById("cnv");
   if (canvas) setupCanvasEvents();
@@ -1279,7 +1311,8 @@ function renderResumenJornadas() {
 // ════════════════════════════════════════════════════════════
 function abrirMaps(nombre, direccion) {
   var query = encodeURIComponent((nombre || "") + " " + (direccion || "") + " Guayaquil Ecuador");
-  window.open("https://maps.google.com/maps?q=" + query, "_blank");
+  var ciudad = localStorage.getItem("pf_ciudad") || "Guayaquil Ecuador"; // #59 FIX: ciudad configurable
+  window.open("https://maps.google.com/maps?q=" + encodeURIComponent((nombre||"")+" "+(direccion||"")+" "+ciudad), "_blank");
 }
 
 function irAMaps() {
@@ -1319,7 +1352,8 @@ function actualizarTimer() {
 }
 
 function tiempoFormateado(seg) {
-  if (!seg || seg < 60) return seg + "s";
+  if (!seg || seg === 0) return "—";
+  if (seg < 60) return seg + "s";
   var m = Math.floor(seg/60), s = seg%60;
   return m + "min" + (s > 0 ? " "+s+"s" : "");
 }
@@ -1344,7 +1378,21 @@ function cargarHistorialDia() {
 }
 
 function guardarHistorialDia(item) {
-  HISTORIAL_DIA.unshift(item);
+  // #65 FIX: no guardar blob URL (inválida en futura sesión) — guardar solo metadata
+  var itemSafe = {
+    local:    item.local    ? { nombre: item.local.nombre, _pi: item.local._pi, _li: item.local._li } : null,
+    punto:    item.punto    ? { nombre: item.punto.nombre, num: item.punto.num } : null,
+    hora:     item.hora,
+    fotos:    item.fotos,
+    accs:     item.accs,
+    url:      null,          // blob URL no persiste entre sesiones
+    nombre:   item.nombre,
+    certNum:  item.certNum,
+    duracion: item.duracion,
+    tipo:     item.tipo
+  };
+  HISTORIAL_DIA.unshift(itemSafe);
+  HISTORIAL_DIA = HISTORIAL_DIA.slice(0, 200); // máximo 200 entradas
   HISTORIAL = HISTORIAL_DIA; // #012 FIX: mantener sincronizados
   localStorage.setItem("pf_hist_data", JSON.stringify(HISTORIAL_DIA));
 }
@@ -1353,16 +1401,20 @@ function guardarHistorialDia(item) {
 //  SEMÁFORO DE VENCIMIENTOS EN LISTA DE PUNTOS
 // ════════════════════════════════════════════════════════════
 function semaforoVencimiento(proxMant) {
+  // #56 FIX: delegar a pfSemaforoColor de mejoras2.js para evitar duplicación
   if (!proxMant) return "";
   try {
     var partes = proxMant.split("/");
     if (partes.length !== 3) return "";
     var fecha = new Date(parseInt(partes[2]), parseInt(partes[1])-1, parseInt(partes[0]));
-    var hoy   = new Date();
-    var dias  = Math.round((fecha - hoy) / (1000*60*60*24));
-    if (dias < 0)   return '<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;background:#FFE0E0;color:#C00">VENCIDO</span>';
-    if (dias < 30)  return '<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;background:var(--rc);color:var(--r)">🔴 '+dias+'d</span>';
-    if (dias < 60)  return '<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;background:var(--nc);color:var(--n)">🟡 '+dias+'d</span>';
+    var dias  = Math.round((fecha - new Date()) / (1000*60*60*24));
+    if (typeof pfSemaforoColor === "function") {
+      var s = pfSemaforoColor(dias);
+      return '<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;background:'+s.bg+';color:'+s.tx+'">'+s.ico+' '+s.label+'</span>';
+    }
+    if (dias < 0)  return '<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;background:var(--rc);color:var(--r)">VENCIDO</span>';
+    if (dias < 30) return '<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;background:var(--rc);color:var(--r)">🔴 '+dias+'d</span>';
+    if (dias < 60) return '<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;background:var(--nc);color:var(--n)">🟡 '+dias+'d</span>';
     return '<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;background:var(--vc);color:var(--v)">🟢 '+dias+'d</span>';
   } catch(e) { return ""; }
 }
@@ -1551,7 +1603,9 @@ function pfIngresarManualTaller() {
   var desc = document.getElementById("tal-desc");
   var cant = document.getElementById("tal-cant");
   if (!loc || !loc.value.trim()) { pfModal("Ingresa el nombre del cliente."); return; }
-  pfIngresarAlTaller(loc.value.trim(), desc ? desc.value.trim() : "", cant ? parseInt(cant.value)||1 : 1);
+  var _cantVal = cant ? parseInt(cant.value)||1 : 1;
+if (_cantVal < 1) _cantVal = 1; // BAJO FIX: cantidad mínima 1
+  pfIngresarAlTaller(loc.value.trim(), desc ? desc.value.trim() : "", _cantVal);
   if (loc) loc.value = ""; if (desc) desc.value = ""; if (cant) cant.value = "1";
   pfRenderTaller();
 }
@@ -1568,18 +1622,18 @@ function pfAbrirAgregarAcc(talId) {
 
 // Vista para técnicos — misma lógica pero en div distinto
 function pfRenderTallerTec() {
-  // Sincronizar pf-taller-lista-tec con pfRenderTaller
-  var orig = document.getElementById("pf-taller-lista");
-  var tec  = document.getElementById("pf-taller-lista-tec");
+  // MEDIO FIX: eliminado hack de id-swap — copiar HTML del render del admin
+  var tec = document.getElementById("pf-taller-lista-tec");
   if (!tec) return;
-  // Reusar pfRenderTaller apuntando al div de técnicos
-  var _orig = orig;
-  // Temporalmente redirigir el render
-  if (orig) orig.id = "pf-taller-lista-hidden";
-  tec.id = "pf-taller-lista";
+  // Renderizar en un div temporal y copiar el HTML
+  var tmp = document.createElement("div");
+  tmp.id  = "pf-taller-lista";
+  tmp.style.display = "none";
+  document.body.appendChild(tmp);
   pfRenderTaller();
-  tec.id = "pf-taller-lista-tec";
-  if (orig) orig.id = "pf-taller-lista";
+  tec.innerHTML = tmp.innerHTML;
+  document.body.removeChild(tmp);
+  // Re-vincular eventos (los onclick son strings en el HTML, funcionan sin re-binding)
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1593,7 +1647,7 @@ function pfModal(msg, onOk) {
   ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px";
   ov.innerHTML =
     '<div style="background:#fff;border-radius:20px;padding:24px 20px;max-width:320px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18)">' +
-    '<div style="font-size:15px;font-weight:600;color:var(--ng);line-height:1.5;margin-bottom:20px">'+msg+'</div>' +
+    '<div style="font-size:15px;font-weight:600;color:var(--ng);line-height:1.5;margin-bottom:20px;white-space:pre-wrap">'+msg.replace(/</g,"&lt;").replace(/>/g,"&gt;")+'</div>' + // FIX: pre-wrap + XSS
     '<button style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit" id="pfm-ok">Aceptar</button>' +
     '</div>';
   document.body.appendChild(ov);
@@ -1608,7 +1662,7 @@ function pfConfirm(msg, onSi, onNo) {
   ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px";
   ov.innerHTML =
     '<div style="background:#fff;border-radius:20px;padding:24px 20px;max-width:320px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18)">' +
-    '<div style="font-size:15px;font-weight:600;color:var(--ng);line-height:1.5;margin-bottom:20px">'+msg+'</div>' +
+    '<div style="font-size:15px;font-weight:600;color:var(--ng);line-height:1.5;margin-bottom:20px;white-space:pre-wrap">'+msg.replace(/</g,"&lt;").replace(/>/g,"&gt;")+'</div>' + // FIX: pre-wrap + XSS
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
     '<button style="padding:14px;border-radius:12px;border:1.5px solid var(--bo);background:var(--g1);color:var(--g4);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit" id="pfm-no">Cancelar</button>' +
     '<button style="padding:14px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit" id="pfm-si">Confirmar</button>' +
@@ -1623,7 +1677,7 @@ function pfPrompt(msg, defVal, onOk) {
   ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px";
   ov.innerHTML =
     '<div style="background:#fff;border-radius:20px;padding:24px 20px;max-width:320px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18)">' +
-    '<div style="font-size:15px;font-weight:600;color:var(--ng);line-height:1.5;margin-bottom:12px">'+msg+'</div>' +
+    '<div style="font-size:15px;font-weight:600;color:var(--ng);line-height:1.5;margin-bottom:12px;white-space:pre-wrap">'+msg.replace(/</g,"&lt;").replace(/>/g,"&gt;")+'</div>' + // FIX
     '<input id="pfm-inp" value="'+(defVal||"")+'" style="width:100%;padding:12px 14px;border:1.5px solid var(--bo);border-radius:12px;font-family:inherit;font-size:15px;margin-bottom:16px">' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
     '<button style="padding:14px;border-radius:12px;border:1.5px solid var(--bo);background:var(--g1);color:var(--g4);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit" id="pfm-no">Cancelar</button>' +
@@ -1669,7 +1723,7 @@ function pfCrearTarea() {
   var tareas = pfGetTareas();
   var tecNombres = { raul:"Raúl Romero", juan:"Juan Arboleda", fabiola:"Fabiola Mejía", todos:"Todos" };
   tareas.unshift({
-    id: "tar_" + Date.now(),
+    id: "tar_" + Date.now() + "_" + Math.random().toString(36).substr(2,5) // BAJO FIX: evitar colisión,
     desc: desc.trim(),
     tecnico: tec,
     tecNombre: tecNombres[tec] || tec,
@@ -1780,7 +1834,8 @@ function pfSincronizarFichas(callback) {
 
   // 1. Subir fichas locales
   fetch(SCRIPT_URL, {
-    method: "POST",
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       accion:      "guardar_fichas",
       fichas:      fichasLocales,
@@ -1791,7 +1846,8 @@ function pfSincronizarFichas(callback) {
   .then(function() {
     // 2. Bajar fichas merged de todos los dispositivos
     return fetch(SCRIPT_URL, {
-      method: "POST",
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ accion: "get_fichas", dispositivo: dispositivo })
     });
   })
@@ -1883,6 +1939,24 @@ function pfRenderConfigPrecios() {
   h += '<button type="button" onclick="pfGuardarPrecios()" style="flex:1;padding:14px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">💾 Guardar precios</button>';
   h += '<button type="button" onclick="pfResetPrecios()" style="padding:14px 16px;border-radius:12px;border:1.5px solid var(--bo);background:#fff;color:var(--g4);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">↺</button>';
   h += '</div>';
+  // #72 #73 FIX: config nota de entrega
+  h += '<div class="slbl">Configuración Nota de Entrega</div>';
+  h += '<div style="margin:0 12px 12px;background:#fff;border-radius:14px;border:1.5px solid var(--bo);overflow:hidden">';
+  var cfgCampos = [
+    {id:"cfg-validez", label:"Validez de la nota", key:"pf_nota_validez", def:"30 DÍAS"},
+    {id:"cfg-pago",    label:"Forma de pago",       key:"pf_nota_pago",    def:"CRÉDITO"},
+    {id:"cfg-ciudad",  label:"Ciudad para Maps",     key:"pf_ciudad",       def:"Guayaquil Ecuador"}
+  ];
+  cfgCampos.forEach(function(c) {
+    h += '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--bo)">';
+    h += '<div style="flex:1;font-size:13px;font-weight:600;color:var(--ng)">'+c.label+'</div>';
+    h += '<input type="text" id="'+c.id+'" value="'+(localStorage.getItem(c.key)||c.def)+'" ';
+    h += 'style="width:120px;padding:6px 8px;border:1.5px solid var(--bo);border-radius:8px;font-family:inherit;font-size:13px">';
+    h += '</div>';
+  });
+  h += '</div>';
+  // Botón guardar config
+  h += '<div style="padding:0 12px 8px"><button type="button" onclick="pfGuardarConfigNota()" style="width:100%;padding:12px;border-radius:12px;border:none;background:var(--a);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">💾 Guardar configuración</button></div>';
   h += '<div style="height:80px"></div></div>';
 
   el.innerHTML = h;
@@ -1992,6 +2066,11 @@ function pfMarcarNoDisponible() {
     var duracion = detenerTimer();
     PUNTOS[LOCAL_ACTUAL._pi].locales[LOCAL_ACTUAL._li].done   = true;
     PUNTOS[LOCAL_ACTUAL._pi].locales[LOCAL_ACTUAL._li].noDisp = true;
+    // #4 FIX: actualizar JORNADAS también para que persista entre recargas
+    if (typeof JORNADAS !== "undefined" && JORNADAS[JORNADA_ACTIVA]) {
+      JORNADAS[JORNADA_ACTIVA].puntos = PUNTOS;
+      localStorage.setItem("pf_recorrido_jornadas", JSON.stringify(JORNADAS));
+    }
     localStorage.setItem("pf_recorrido_data", JSON.stringify(PUNTOS));
     if (typeof pfRegistrarVisitaEnFicha === "function") {
       pfRegistrarVisitaEnFicha(LOCAL_ACTUAL.nombre, {

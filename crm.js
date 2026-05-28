@@ -1,3 +1,8 @@
+
+// ── HELPER: escapar nombre para uso en onclick HTML ──────────
+function pfEscNom(nombre) {
+  return (nombre||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/"/g,"&quot;");
+}
 // ═══════════════════════════════════════════════════════════
 //  PREVIFUEGO — crm.js  v1.0
 //  44 — CRM básico: notas y contactos por cliente
@@ -33,10 +38,14 @@ function pfGuardarNota(nombreLocal, nota, tipo) {
   pfSaveCRM(crm);
   // Sincronizar con Sheets si hay conexión
   if (typeof SCRIPT_URL !== "undefined") {
-    fetch(SCRIPT_URL, { method:"POST", body:JSON.stringify({
-      accion:"guardar_crm", local:nombreLocal, tipo:tipo||"nota",
-      nota:nota, usuario: typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "—"
-    })}).catch(function(){});
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        accion:"guardar_crm", local:nombreLocal, tipo:tipo||"nota",
+        nota:nota, usuario: typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "—"
+      })
+    }).catch(function(){});
   }
 }
 
@@ -73,8 +82,8 @@ function pfAbrirCRM(nombreLocal) {
   h += '<select id="crm-tipo" style="width:100%;margin-bottom:8px;padding:8px 10px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:13px">';
   tipoOpts.forEach(function(o){ h += '<option value="'+o.v+'">'+o.l+'</option>'; });
   h += '</select>';
-  h += '<textarea id="crm-nota-txt" placeholder="Escribe una nota sobre este cliente..." style="width:100%;height:80px;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:13px;resize:none;margin-bottom:8px"></textarea>';
-  h += '<button onclick="pfEnviarNota(\''+nombreLocal.replace(/'/g,"")+'\')" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--a);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">💾 Guardar nota</button>';
+  h += '<textarea id="crm-nota-txt" maxlength="2000" placeholder="Escribe una nota sobre este cliente..." style="width:100%;height:80px;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:13px;resize:none;margin-bottom:8px"></textarea>';
+  h += '<button onclick="pfEnviarNota(\''+pfEscNom(nombreLocal)+'\')" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--a);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">💾 Guardar nota</button>';
   h += '</div>';
 
   // Contactos
@@ -97,7 +106,7 @@ function pfAbrirCRM(nombreLocal) {
   h += '<input id="crm-cont-cargo" placeholder="Cargo (opcional)" style="width:100%;padding:8px 10px;border:1.5px solid var(--bo);border-radius:8px;font-family:inherit;font-size:13px;margin-bottom:6px">';
   h += '<input id="crm-cont-tel" placeholder="Teléfono" style="width:100%;padding:8px 10px;border:1.5px solid var(--bo);border-radius:8px;font-family:inherit;font-size:13px;margin-bottom:6px">';
   h += '<input id="crm-cont-email" placeholder="Email" style="width:100%;padding:8px 10px;border:1.5px solid var(--bo);border-radius:8px;font-family:inherit;font-size:13px;margin-bottom:6px">';
-  h += '<button onclick="pfGuardarContactoUI(\''+nombreLocal.replace(/'/g,"")+'\')" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--bo);background:var(--g1);color:var(--ng);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ Agregar contacto</button>';
+  h += '<button onclick="pfGuardarContactoUI(\''+pfEscNom(nombreLocal)+'\')" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--bo);background:var(--g1);color:var(--ng);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ Agregar contacto</button>';
   h += '</div></div>';
 
   // Historial de notas
@@ -125,7 +134,6 @@ function pfAbrirCRM(nombreLocal) {
   if (!modal) {
     modal = document.createElement("div");
     modal.id = "pf-crm-modal";
-    // #070 FIX: z-index 350 > ficha (300) para no superponerse
     modal.style.cssText = "position:fixed;inset:0;background:var(--g1);z-index:350;overflow-y:auto;display:none;padding-bottom:80px";
     document.body.appendChild(modal);
   }
@@ -291,13 +299,13 @@ function pfRenderNotasCRM(nombreLocal, el) {
   if (data.notas.length === 0) {
     h = '<div style="padding:16px;text-align:center;color:var(--g3);font-size:14px">Sin notas aún.</div>';
   } else {
-    data.notas.slice(0, 20).forEach(function(n) {
+    data.notas.slice(0, 20).forEach(function(n, idx_nota) {
       h += '<div style="background:var(--g1);border-radius:10px;padding:10px 12px;margin-bottom:6px">';
       h += '<div style="font-size:13px;color:var(--ng);line-height:1.5">'+n.texto+'</div>';
       var ni = data.notas.indexOf(n);
       h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">';
-      h += '<div style="font-size:11px;color:var(--g3)">'+n.fecha+' · '+n.autor+'</div>';
-      h += '<button onclick="pfEliminarNotaCRM(\''+nombreLocal.replace(/'/g,"")+'\','+ni+')" style="font-size:10px;color:var(--r);background:none;border:none;cursor:pointer;padding:2px 6px">🗑</button>';
+      h += '<div style="font-size:11px;color:var(--g3)">'+n.fecha+' · '+n.usuario+'</div>' // FIX: campo correcto es 'usuario';
+      h += '<button onclick="pfEliminarNotaCRM(\''+pfEscNom(nombreLocal)+'\','+ni+')" style="font-size:10px;color:var(--r);background:none;border:none;cursor:pointer;padding:2px 6px">🗑</button>';
       h += '</div></div>';
     });
   }

@@ -30,22 +30,32 @@ function generarPDF() {
   function esperarFotos() {
     var listas = 0, total = 0;
     for (var k in FD) { total++; if (FB64[k]) listas++; }
-    if (listas >= total || intentos > 30) { cargarJsPDF(fc); }
+    if (listas >= total || intentos > 60) { cargarJsPDF(fc); } // #67 FIX: máx 9s
     else { intentos++; setTimeout(esperarFotos, 150); }
   }
   setTimeout(esperarFotos, 300);
 }
 
+var _jspdfLoading = false;
 function cargarJsPDF(fc) {
   if (window.jspdf && window.jspdf.jsPDF) { hacerPDF(fc); return; }
+  // BAJO FIX: evitar doble inyección si ya se está cargando
+  if (_jspdfLoading) { setTimeout(function(){ cargarJsPDF(fc); }, 300); return; }
+  _jspdfLoading = true;
   var s   = document.createElement("script");
   s.src   = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-  s.onload  = function(){ hacerPDF(fc); };
-  s.onerror = function(){ mostrarCargando(false); pfModal("Error cargando el generador de PDF. Verifica tu conexión a internet."); };
+  s.onload  = function(){ _jspdfLoading = false; hacerPDF(fc); };
+  s.onerror = function(){ _jspdfLoading = false; mostrarCargando(false); pfModal("Error cargando el generador de PDF. Verifica tu conexión a internet."); };
   document.head.appendChild(s);
 }
 
 function hacerPDF(fc) {
+  // CRÍTICO FIX: guard contra LOCAL_ACTUAL null
+  if (!LOCAL_ACTUAL || !LOCAL_ACTUAL.nombre) {
+    mostrarCargando(false);
+    pfModal("Error: no hay local activo. Vuelve al recorrido e intenta de nuevo.");
+    return;
+  }
   try {
     var J   = window.jspdf.jsPDF;
     var doc = new J({orientation:"portrait", unit:"mm", format:"a4"});
@@ -83,12 +93,17 @@ function hacerPDF(fc) {
       }
     } catch(e) {}
 
+    // MEDIO FIX: incrementar CERT_CONTADOR después de validaciones
     CERT_CONTADOR++;
     localStorage.setItem("pf_certCount", CERT_CONTADOR);
     // Buscar código real del cliente en base de datos
-    var _cliDB = (typeof pfBuscarCliente === "function") ? pfBuscarCliente(LOCAL_ACTUAL.nombre) : null;
-    var _codLocal = (_cliDB && _cliDB.codigo) ? _cliDB.codigo : (LOCAL_ACTUAL.nombre.substring(0,8).toUpperCase().replace(/[^A-Z0-9]/g,""));
-    var CERT_NUM = _codLocal + "-MANT EXTINTORES-" + ANO;
+    // #9 FIX: una sola llamada a pfBuscarCliente, reutilizada en todo el PDF
+    var _cliDB    = (typeof pfBuscarCliente === "function") ? pfBuscarCliente(LOCAL_ACTUAL.nombre) : null;
+    var _codLocal = (_cliDB && _cliDB.codigo) ? _cliDB.codigo : LOCAL_ACTUAL.nombre.substring(0,8).toUpperCase().replace(/[^A-Z0-9]/g,"");
+    var _empresa  = (_cliDB && _cliDB.razon)  ? _cliDB.razon  : (LOCAL_ACTUAL.empresa || LOCAL_ACTUAL.nombre || "");
+    var _ruc      = (_cliDB && _cliDB.ruc)    ? _cliDB.ruc    : (LOCAL_ACTUAL.ruc || "—");
+    var _marca    = (_cliDB && _cliDB.marca)  ? _cliDB.marca  : "";
+    var CERT_NUM  = _codLocal + "-MANT EXTINTORES-" + ANO;
 
     function fondoBase() {
       doc.setFillColor(255,255,255); doc.rect(0,0,PW,PH,"F");
@@ -132,11 +147,7 @@ function hacerPDF(fc) {
     doc.text(CERT_NUM, PW-5, 12, {align:"right"});
 
     // Datos reales del cliente
-    var _empDB = (typeof pfBuscarCliente === "function") ? pfBuscarCliente(LOCAL_ACTUAL.nombre) : null;
-    var _empresa = (_empDB && _empDB.razon) ? _empDB.razon : (LOCAL_ACTUAL.empresa || LOCAL_ACTUAL.nombre || "");
-    var _ruc     = (_empDB && _empDB.ruc)   ? _empDB.ruc   : (LOCAL_ACTUAL.ruc || "—");
-    var _marca   = (_empDB && _empDB.marca)  ? _empDB.marca  : "";
-        // Header empresa
+    // Header empresa (usa _cliDB ya declarado arriba)
     var HX=ML+28, HW=PW-5-HX;
     doc.setFont("helvetica","bold"); doc.setFontSize(22); tR();
     var pW = doc.getTextWidth("PREVIFUEGO");
@@ -389,7 +400,7 @@ function hacerPDF(fc) {
 
     // ── GUARDAR ────────────────────────────────────────────
     // Nombre archivo = mismo que CERT_NUM pero seguro para sistema de archivos
-    var nom = CERT_NUM.replace(/[^a-zA-Z0-9\-]/g,"-") + ".pdf";
+    var nom = CERT_NUM.replace(/[^a-zA-Z0-9\-]/g,"-").substring(0,55) + ".pdf"; // #68 FIX: máx 55 chars
     var blob     = doc.output("blob");
     // #016 #029 FIX: conservar URL hasta que el usuario navegue a otro local
     // Revocar solo la URL anterior de ESTE local (no todas)
@@ -461,7 +472,7 @@ function hacerPDF(fc) {
     // Enviar accesorios a Sheets
     if (ACCS.length > 0) {
       var payload = {
-        accion:"facturacion", fecha:new Date().toLocaleDateString("es-EC"),
+        accion:"guardarFacturacion", fecha:new Date().toLocaleDateString("es-EC"),
         hora:hora, cliente:LOCAL_ACTUAL.nombre,
         punto:PUNTO_ACTUAL?PUNTO_ACTUAL.nombre:"", empresa:"",
         certificado:CERT_NUM,
@@ -470,6 +481,14 @@ function hacerPDF(fc) {
       fetch(SCRIPT_URL, {method:"POST", body:JSON.stringify(payload)}).catch(function(){});
     }
 
+    // #10 FIX: registrar visita ANTES de ir("senv") para evitar race condition
+    try {
+      if (typeof pfOnLocalCompletado === "function") {
+        pfOnLocalCompletado(LOCAL_ACTUAL, PUNTO_ACTUAL, TIPO_TRABAJO,
+          (typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "Técnico"), "");
+      }
+    } catch(e2) { console.warn("pfOnLocalCompletado error:", e2); }
+
     ir("senv");
 
   } catch(err) {
@@ -477,14 +496,6 @@ function hacerPDF(fc) {
     pfModal("Error generando el PDF: "+err.message);
     return;
   }
-
-  // #032 FIX: registrar visita FUERA del try/catch de PDF pero en su propio try/catch
-  try {
-    if (typeof pfOnLocalCompletado === "function") {
-      pfOnLocalCompletado(LOCAL_ACTUAL, PUNTO_ACTUAL, TIPO_TRABAJO,
-        (typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "Técnico"), "");
-    }
-  } catch(e2) { console.warn("pfOnLocalCompletado error:", e2); }
   // fin generarPDF
 }
 

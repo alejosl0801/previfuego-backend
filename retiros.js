@@ -31,6 +31,8 @@ function pfSaveFichas(obj) {
 
 // ── REGISTRO DE RETIRO ───────────────────────────────────────
 function pfRegistrarRetiro(local, punto, tecnico, desc) {
+  // BAJO FIX: validar local.nombre
+  if (!local || !local.nombre) { console.warn("pfRegistrarRetiro: local sin nombre"); return null; }
   var retiros = pfGetRetiros();
   var id = "ret_" + Date.now();
   var r = {
@@ -69,11 +71,7 @@ function pfMarcarEntregado(retiroId) {
       break;
     }
   }
-  // Registrar entrega en ficha del local
-  var allRetiros = retiros; // usar la lista ya modificada
-  for (var i = 0; i < allRetiros.length; i++) {
-    if (allRetiros[i].id === retiroId) { retiroEntregado = allRetiros[i]; break; }
-  }
+  // #41 FIX: retiroEntregado ya fue asignado arriba con snapshot correcto
   if (retiroEntregado) {
     pfRegistrarVisitaEnFicha(retiroEntregado.local, {
       fecha: fechaHoy(),
@@ -89,10 +87,18 @@ function pfMarcarEntregado(retiroId) {
 
 // ── FICHA DEL LOCAL ────────────────────────────────────────── ──────────────────────────────────────────
 function pfRegistrarVisitaEnFicha(nombreLocal, visita) {
-  var fichas = pfGetFichas();
-  if (!fichas[nombreLocal]) fichas[nombreLocal] = { nombre: nombreLocal, visitas: [] };
-  fichas[nombreLocal].visitas.unshift(visita);
-  pfSaveFichas(fichas);
+  // BAJO FIX: try/catch para QuotaExceededError
+  try {
+    var fichas = pfGetFichas();
+    if (!fichas[nombreLocal]) fichas[nombreLocal] = { nombre: nombreLocal, visitas: [] };
+    // Limitar a 200 visitas por local para controlar tamaño
+    fichas[nombreLocal].visitas.unshift(visita);
+    if (fichas[nombreLocal].visitas.length > 200) fichas[nombreLocal].visitas = fichas[nombreLocal].visitas.slice(0, 200);
+    pfSaveFichas(fichas);
+  } catch(e) {
+    if (e.name === "QuotaExceededError") pfModal("⚠️ Almacenamiento lleno. Ve a Perfil → Backup.");
+    else console.error("pfRegistrarVisitaEnFicha:", e);
+  }
 }
 
 function pfRegistrarVisita(local, punto, tipo, tecnico, nota) {
@@ -111,7 +117,8 @@ function pfDiasTranscurridos(fechaStr) {
   try {
     var p = fechaStr.split("/");
     var d = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
-    return Math.floor((new Date() - d) / 86400000);
+    var hoy = new Date(new Date().toLocaleString("en-US", {timeZone:"America/Guayaquil"}));
+    return Math.floor((hoy - d) / 86400000);
   } catch(e) { return 0; }
 }
 

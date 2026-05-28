@@ -5,17 +5,18 @@
 // ═══════════════════════════════════════════════════════════
 
 function pfMesActual() {
-  var d = new Date();
-  return String(d.getMonth()+1).padStart(2,"0") + "/" + d.getFullYear();
+  var d  = new Date();
+  var ec = new Date(d.toLocaleString("en-US", {timeZone:"America/Guayaquil"}));
+  return String(ec.getMonth()+1).padStart(2,"0") + "/" + ec.getFullYear();
 }
 
 function pfFechaEnMes(fechaStr) {
-  // #048 FIX: llamar pfMesActual una sola vez
   if (!fechaStr) return false;
   var p = fechaStr.split("/");
   if (p.length < 3) return false;
   var ma = pfMesActual().split("/");
-  return p[1] === ma[0] && p[2] === ma[1];
+  // #NEW FIX: comparar correctamente MM y YYYY
+  return p[1].padStart(2,"0") === ma[0].padStart(2,"0") && p[2] === ma[1];
 }
 
 // ── CALCULAR MÉTRICAS ────────────────────────────────────────
@@ -79,9 +80,13 @@ function pfRenderDashboard() {
   // #052 FIX: si el panel no existe aún, reintentar en 200ms
   var el = document.getElementById("pf-dash-contenido");
   if (!el) {
-    setTimeout(pfRenderDashboard, 200);
+    // BAJO FIX: limitar reintentos a 10 (2 segundos total)
+    pfRenderDashboard._retries = (pfRenderDashboard._retries || 0) + 1;
+    if (pfRenderDashboard._retries < 10) setTimeout(pfRenderDashboard, 200);
+    else console.warn("pfRenderDashboard: pf-dash-contenido no encontrado");
     return;
   }
+  pfRenderDashboard._retries = 0;
 
   var d   = pfCalcDashboard();
   var mes = pfMesActual();

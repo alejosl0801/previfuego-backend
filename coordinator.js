@@ -142,7 +142,7 @@ window.addEventListener("load", function() {
     // Fix: adm-tab-btn no deben tener flex:1 cuando hay muchos tabs
     var style = document.createElement("style");
     style.textContent =
-      ".adm-tab-btn { flex: none !important; min-width: 80px; white-space: nowrap; font-size: 12px !important; padding: 10px 10px !important; }" +
+      ".adm-tab-btn { min-width: 80px; white-space: nowrap; }" + // #103 FIX: flex:none ya en CSS, quitar !important duplicado
       ".adm-tab::-webkit-scrollbar { display: none; }";
     document.head.appendChild(style);
 
@@ -242,11 +242,17 @@ window.addEventListener("load", function() {
     var inp = document.getElementById("azur-apikey-inp");
     if (!inp) return;
     var key = (inp.value || "").trim();
+    // #87 FIX: validar formato api_key de Azur (comienza con API_)
     if (!key || key.length < 10) { pfModal("⚠️ La api_key parece inválida. Debe tener al menos 10 caracteres."); return; }
+    if (key.indexOf("API_") !== 0 && key.indexOf("api_") !== 0) {
+      pfModal("⚠️ La api_key debe comenzar con 'API_'. Revisa que copiaste el valor correcto desde Azur → Configuración.");
+      return;
+    }
 
     pfConfirm("¿Guardar esta api_key de Azur en el servidor?\n\nNo se puede recuperar desde la app una vez guardada, pero puede sobreescribirse.", function() {
       fetch(SCRIPT_URL, {
-        method: "POST",
+        method:  "POST",
+        headers: { "Content-Type": "application/json" }, // BAJO FIX
         body: JSON.stringify({ accion: "guardar_azur_key", azur_key: key })
       })
       .then(function(r){ return r.json(); })
@@ -287,7 +293,7 @@ window.addEventListener("load", function() {
       h += '<div style="font-size:15px;font-weight:700;color:var(--v);flex-shrink:0">$' + (parseFloat(f.total || 0).toFixed(2)) + '</div>';
       h += '</div>';
       if (f.claveAcceso) {
-        h += '<div style="margin-top:8px"><button onclick="pfConsultarFactura('' + f.claveAcceso + '')" style="width:100%;padding:8px;border-radius:8px;border:1.5px solid var(--bo);background:var(--g1);color:var(--g4);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🔍 Consultar estado en Azur</button></div>';
+        h += '<div style="margin-top:8px"><button onclick="pfConsultarFactura(\"' + (f.claveAcceso||'').replace(/"/g,'') + '\")" style="width:100%;padding:8px;border-radius:8px;border:1.5px solid var(--bo);background:var(--g1);color:var(--g4);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🔍 Consultar estado en Azur</button></div>'; // #39 FIX: comillas escapadas
       }
       h += '</div>';
     });
@@ -299,7 +305,8 @@ window.addEventListener("load", function() {
   window.pfConsultarFactura = function(claveAcceso) {
     mostrarCargando(true, "Consultando Azur...", "");
     fetch(SCRIPT_URL, {
-      method: "POST",
+      method:  "POST",
+      headers: { "Content-Type": "application/json" }, // BAJO FIX
       body: JSON.stringify({ accion: "consultar_comprobante", claveAcceso: claveAcceso })
     })
     .then(function(r){ return r.json(); })

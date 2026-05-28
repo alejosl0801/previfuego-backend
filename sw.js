@@ -1,6 +1,8 @@
 // PREVIFUEGO FIELD — Service Worker v1.0
 // #011 FIX: soporte offline básico
-const CACHE_NAME = 'previfuego-v3.4';
+const CACHE_VERSION = '3.4'; // Actualizar al subir nueva versión
+const CACHE_NAME = 'previfuego-v' + CACHE_VERSION;
+// #11 #12 FIX: no cachear script.google.com, no incluir iconos que no existen
 const ASSETS = [
   '/previfuego-backend/',
   '/previfuego-backend/index.html',
@@ -9,7 +11,6 @@ const ASSETS = [
   '/previfuego-backend/pdf.js',
   '/previfuego-backend/nota.js',
   '/previfuego-backend/crm.js',
-  '/previfuego-backend/inteligencia.js',
   '/previfuego-backend/dashboard.js',
   '/previfuego-backend/retiros.js',
   '/previfuego-backend/extras.js',
@@ -18,6 +19,8 @@ const ASSETS = [
   '/previfuego-backend/logo.js',
   '/previfuego-backend/style.css',
   '/previfuego-backend/manifest.json'
+  // Nota: icon-192.png e icon-512.png deben existir para incluirlos aquí
+  // Nota: script.google.com NUNCA debe cachearse (es la API de Apps Script)
 ];
 
 // Instalar: cachear todos los assets
@@ -60,22 +63,21 @@ self.addEventListener('fetch', function(event) {
   }
 
   // Assets: cache-first
+  // #112 FIX: stale-while-revalidate para JS/CSS — sirve caché y actualiza en background
+  var isJSorCSS = /\.(js|css)(\?.*)?$/.test(url);
   event.respondWith(
     caches.match(event.request).then(function(cached) {
-      if (cached) return cached;
-      return fetch(event.request).then(function(response) {
-        // Guardar en caché si es exitoso
+      var fetchPromise = fetch(event.request).then(function(response) {
         if (response && response.status === 200) {
           var clone = response.clone();
-          caches.open(CACHE_NAME).then(function(cache) {
-            cache.put(event.request, clone);
-          });
+          caches.open(CACHE_NAME).then(function(cache) { cache.put(event.request, clone); });
         }
         return response;
       }).catch(function() {
-        // Offline y no está en caché — devolver index.html como fallback
         return caches.match('/previfuego-backend/index.html');
       });
+      // Para JS/CSS: servir caché inmediatamente y actualizar en background
+      return (cached && isJSorCSS) ? cached : (fetchPromise.catch(function(){ return cached; }));
     })
   );
 });

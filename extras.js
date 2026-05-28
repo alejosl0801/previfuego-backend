@@ -10,9 +10,10 @@
 //  Se inyecta sobre fotoOk() de app.js
 // ════════════════════════════════════════════════════════════
 function pfAgregarMarcaAgua(canvas, ctx) {
-  var ahora   = new Date();
-  var fecha   = ahora.toLocaleDateString("es-EC", {day:"2-digit", month:"2-digit", year:"numeric"});
-  var hora    = ahora.toLocaleTimeString("es-EC", {hour:"2-digit", minute:"2-digit"});
+  var _ahoraRaw = new Date();
+  var ahora = new Date(_ahoraRaw.toLocaleString("en-US", {timeZone:"America/Guayaquil"}));
+  var fecha = ahora.toLocaleDateString("es-EC", {day:"2-digit", month:"2-digit", year:"numeric"});
+  var hora  = ahora.toLocaleTimeString("es-EC", {hour:"2-digit", minute:"2-digit"});
   var tecnico = (typeof TECNICO_NOMBRE !== "undefined" && TECNICO_NOMBRE && TECNICO_NOMBRE !== "Raúl Romero") ? TECNICO_NOMBRE : ((typeof USUARIO_ACTUAL !== "undefined" && USUARIO_ACTUAL) ? USUARIO_ACTUAL : "Técnico Previfuego");
   var local   = (typeof LOCAL_ACTUAL !== "undefined" && LOCAL_ACTUAL ? LOCAL_ACTUAL.nombre : "");
   var lineas  = [
@@ -56,6 +57,15 @@ function pfAgregarMarcaAgua(canvas, ctx) {
 // Reemplazar fotoOk para agregar marca de agua en compresión
 window.addEventListener("load", function() {
   var _fotoOkOrig = window.fotoOk;
+  // #60 FIX: si app.js no cargó aún, no parchear
+  if (typeof _fotoOkOrig !== "function") {
+    console.warn("extras.js: fotoOk no encontrada en app.js — carga diferida");
+    setTimeout(function(){
+      var _fo2 = window.fotoOk;
+      if (typeof _fo2 === "function") window.fotoOk = function(n,input){ _fo2(n,input); };
+    }, 500);
+    return;
+  }
   window.fotoOk = function(n, input) {
     if (!input.files || !input.files[0]) return;
     var file = input.files[0];
@@ -79,6 +89,12 @@ window.addEventListener("load", function() {
       var imgEl = document.createElement("img");
       imgEl.src = url;
       prev.insertBefore(imgEl, prev.firstChild);
+    }
+
+    // #64 FIX: validar tamaño máximo antes de comprimir (evitar OOM)
+    if (file.size > 20 * 1024 * 1024) { // 20MB límite
+      pfModal("⚠️ La foto es demasiado grande ("+Math.round(file.size/1024/1024)+"MB). Máximo 20MB.");
+      return;
     }
 
     // Comprimir + marca de agua
@@ -118,7 +134,7 @@ function pfCapturarGPS() {
       };
     },
     function() { PF_FIRMA_GEO = null; }, // si niega permiso, sin GPS
-    { timeout: 8000, maximumAge: 30000 }
+    { timeout: 4000, maximumAge: 60000 } // BAJO FIX: 4s suficiente, maximumAge más alto para reusar pos
   );
 }
 
@@ -192,7 +208,8 @@ function pfHacerBackup() {
     "pf_retiros", "pf_fichas", "pf_pizarra",
     "pf_hist_data", "pf_hist_fecha",
     "pf_recorrido_texto", "pf_recorrido_data", "pf_recorrido_jornadas",
-    "pf_certCount", "pyro_ordenes", "pyro_oe_nro", "pf_usuario"
+    "pf_certCount", "pyro_ordenes", "pyro_oe_nro", "pf_usuario",
+    "pf_clientes_custom", "pf_correos_clientes", "pf_facturas_emitidas", "pf_precios_accs", "pf_iva" // BAJO FIX
   ];
   var backup = { version: "1.0", fecha: new Date().toISOString(), datos: {} };
   claves.forEach(function(k) {
@@ -230,7 +247,7 @@ function pfRestaurarBackup(file) {
         Object.keys(backup.datos).forEach(function(k) {
           localStorage.setItem(k, JSON.stringify(backup.datos[k]));
         });
-        pfModal("✅ Backup restaurado correctamente. Recarga la app.");
+        pfModal("✅ Backup restaurado correctamente. Recargando...", function(){ location.reload(); }); // BAJO FIX
       });
     } catch(e) { pfModal("Error al leer el backup: " + e.message); }
   };

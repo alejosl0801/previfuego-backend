@@ -1,9 +1,7 @@
 // ═══════════════════════════════════════════════════════════
-//  PREVIFUEGO — clientes.js  v2.0
-//  Base de datos de 341 clientes
-//  Actualizado desde PREVIFUEGO_BASE_DE_DATOS_v2
-//  #085: KFC ahora incluye campo mes (pendiente llenar)
-//  #086: Independientes tienen código IND-NNN generado
+//  PREVIFUEGO — clientes.js  v3.0
+//  341 clientes — 200 KFC con mes + 141 independientes
+//  Generado: 27/05/2026 desde PRESUPUESTO + PROYECCION + CSV
 // ═══════════════════════════════════════════════════════════
 
 var PF_CLIENTES = [
@@ -15,7 +13,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "WILLIAM ZAMBRANO",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -27,7 +25,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "LAURA SANTILLAN",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -39,7 +37,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "LAURA SANTILLAN",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -51,7 +49,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "MARIUXI CHICO",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -63,7 +61,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "LAURA SANTILLAN",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -75,7 +73,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JUDITH CASTRO",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -87,7 +85,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "WILLIAM ZAMBRANO",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -99,7 +97,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "LEONARDO MONCAYO",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -111,7 +109,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JOHANNA ESPIN",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -123,7 +121,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JUDITH CASTRO",
-    "mes": "",
+    "mes": "DICIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -135,7 +133,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "WILLIAM ZAMBRANO",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -147,7 +145,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JUAN CARLOS LOPEZ",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -159,7 +157,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "LAURA SANTILLAN",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -171,7 +169,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "WILLIAM ZAMBRANO",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -183,7 +181,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "GLORIA MUÑOZ",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -195,7 +193,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "WILLIAM ZAMBRANO",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -207,7 +205,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JOHANNA ESPIN",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -219,7 +217,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JOHANNA ESPIN",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -231,7 +229,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JOHANNA ESPIN",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -243,7 +241,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "MARIUXI CHICO",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -255,7 +253,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JUDITH CASTRO",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -267,7 +265,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "MARJORIE MONTAÑO",
-    "mes": "",
+    "mes": "ABRIL",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -279,7 +277,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "LEONARDO MONCAYO",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -291,7 +289,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "LAURA SANTILLAN",
-    "mes": "",
+    "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -303,7 +301,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "WILLIAM ZAMBRANO",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -315,7 +313,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "LEONARDO MONCAYO",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -327,7 +325,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "LAURA SANTILLAN",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -339,7 +337,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "GLORIA MUÑOZ",
-    "mes": "",
+    "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -351,7 +349,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "WILLIAM ZAMBRANO",
-    "mes": "",
+    "mes": "ABRIL",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -363,7 +361,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "NURIA FARRO",
-    "mes": "",
+    "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -375,7 +373,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "LEONARDO MONCAYO",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -387,7 +385,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JUDITH CASTRO",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -399,7 +397,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "LEONARDO MONCAYO",
-    "mes": "",
+    "mes": "OCTUBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -411,7 +409,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "DARIO COCHANCELA",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -423,7 +421,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "DARIO COCHANCELA",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -435,7 +433,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JUAN CARLOS LOPEZ",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -447,7 +445,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "GLORIA MUÑOZ",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -459,7 +457,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JUDITH CASTRO",
-    "mes": "",
+    "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -471,7 +469,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "LEONARDO MONCAYO",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -483,7 +481,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JOHANNA ESPIN",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -495,7 +493,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "NURIA FARRO",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -507,7 +505,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "GLORIA MUÑOZ",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -519,7 +517,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "NURIA FARRO",
-    "mes": "",
+    "mes": "OCTUBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -531,7 +529,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "NURIA FARRO",
-    "mes": "",
+    "mes": "OCTUBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -543,7 +541,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JUAN CARLOS LOPEZ",
-    "mes": "",
+    "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -555,7 +553,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JOHANNA ESPIN",
-    "mes": "",
+    "mes": "OCTUBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -567,7 +565,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "MARIUXI CHICO",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -579,7 +577,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "MARJORIE MONTAÑO",
-    "mes": "",
+    "mes": "ABRIL",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -591,7 +589,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JOHANNA ESPIN",
-    "mes": "",
+    "mes": "SEPTIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -603,7 +601,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "GLORIA MUÑOZ",
-    "mes": "",
+    "mes": "DICIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -615,7 +613,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "LEONARDO MONCAYO",
-    "mes": "",
+    "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -627,7 +625,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "DARIO COCHANCELA",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -639,7 +637,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "GLORIA MUÑOZ",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -651,7 +649,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JUDITH CASTRO",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -663,7 +661,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "MARIUXI CHICO",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -675,7 +673,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "NURIA FARRO",
-    "mes": "",
+    "mes": "ABRIL",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -687,7 +685,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "MARIUXI CHICO",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -699,7 +697,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JUDITH CASTRO",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -711,7 +709,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "MARIUXI CHICO",
-    "mes": "",
+    "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -723,7 +721,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JUAN CARLOS LOPEZ",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -735,7 +733,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "NURIA FARRO",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -747,7 +745,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "MARIUXI CHICO",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -759,7 +757,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JUAN CARLOS LOPEZ",
-    "mes": "",
+    "mes": "DICIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -771,7 +769,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "LAURA SANTILLAN",
-    "mes": "",
+    "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -783,7 +781,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JUAN CARLOS LOPEZ",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -795,7 +793,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "JUAN CARLOS LOPEZ",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -807,7 +805,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "DARIO COCHANCELA",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -819,7 +817,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "NURIA FARRO",
-    "mes": "",
+    "mes": "DICIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -831,7 +829,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "GLORIA MUÑOZ",
-    "mes": "",
+    "mes": "DICIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -843,7 +841,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "DARIO COCHANCELA",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -855,7 +853,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "GLORIA MUÑOZ",
-    "mes": "",
+    "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -867,7 +865,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -891,7 +889,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "RUSBELIS FARIAS",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -903,7 +901,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "RUSBELIS FARIAS",
-    "mes": "",
+    "mes": "ABRIL",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -915,7 +913,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "RUSBELIS FARIAS",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -927,7 +925,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "RUSBELIS FARIAS",
-    "mes": "",
+    "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -939,7 +937,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "RUSBELIS FARIAS",
-    "mes": "",
+    "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -951,7 +949,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "RUSBELIS FARIAS",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -963,7 +961,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "GLORIA MUÑOZ",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -975,7 +973,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "RUSBELIS FARIAS",
-    "mes": "",
+    "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -987,7 +985,7 @@ var PF_CLIENTES = [
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "RUSBELIS FARIAS",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -999,7 +997,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "XAVIER MUÑOZ",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1011,7 +1009,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "XAVIER MUÑOZ",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1023,7 +1021,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "XAVIER MUÑOZ",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1035,7 +1033,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "MARIA MORAN",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1047,7 +1045,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "XAVIER MUÑOZ",
-    "mes": "",
+    "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1059,7 +1057,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "XAVIER MUÑOZ",
-    "mes": "",
+    "mes": "DICIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1071,7 +1069,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "XAVIER MUÑOZ",
-    "mes": "",
+    "mes": "OCTUBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1083,7 +1081,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "MARIA MORAN",
-    "mes": "",
+    "mes": "DICIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1095,7 +1093,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "XAVIER MUÑOZ",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1107,7 +1105,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "MARIA MORAN",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1119,7 +1117,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "MARIA MORAN",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1131,7 +1129,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "MARIA MORAN",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1143,7 +1141,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "DARIO COCHANCELA",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1155,7 +1153,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "ALEX ANDRADE",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1167,7 +1165,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "ALEX ANDRADE",
-    "mes": "",
+    "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1179,7 +1177,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "JORGE PUNGUIL",
-    "mes": "",
+    "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1191,7 +1189,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "LUIS LOMAS",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1203,7 +1201,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "LUIS LOMAS",
-    "mes": "",
+    "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1215,7 +1213,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "LUIS LOMAS",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1227,7 +1225,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "GLORIA MUÑOZ",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1239,7 +1237,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "LUIS LOMAS",
-    "mes": "",
+    "mes": "OCTUBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1251,7 +1249,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "JORGE PUNGUIL",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1263,7 +1261,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "JORGE PUNGUIL",
-    "mes": "",
+    "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1275,7 +1273,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "OMAR ROSAS",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1287,7 +1285,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "JORGE PUNGUIL",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1299,7 +1297,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "JORGE PUNGUIL",
-    "mes": "",
+    "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1311,7 +1309,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "ALEX ANDRADE",
-    "mes": "",
+    "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1323,7 +1321,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "ALEX ANDRADE",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1335,7 +1333,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "LUIS LOMAS",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1347,7 +1345,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "ALEX ANDRADE",
-    "mes": "",
+    "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1359,7 +1357,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "JORGE PUNGUIL",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1371,7 +1369,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "LUIS LOMAS",
-    "mes": "",
+    "mes": "OCTUBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1383,7 +1381,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "LUIS LOMAS",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1395,7 +1393,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "DARIO COCHANCELA",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1407,7 +1405,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "ISABEL GARCIA",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1419,7 +1417,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "ISABEL GARCIA",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1431,7 +1429,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "ISABEL GARCIA",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1443,7 +1441,7 @@ var PF_CLIENTES = [
     "razon": "SHEMLON S.A.",
     "ruc": "1792049504001",
     "responsable": "ISABEL GARCIA",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1455,7 +1453,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "POLLETT ZEA",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1467,7 +1465,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "POLLETT ZEA",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1479,7 +1477,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "POLLETT ZEA",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1491,7 +1489,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "POLLETT ZEA",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1503,7 +1501,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "POLLETT ZEA",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1515,7 +1513,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "POLLETT ZEA",
-    "mes": "",
+    "mes": "SEPTIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1527,7 +1525,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "POLLETT ZEA",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1539,7 +1537,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "POLLETT ZEA",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1551,7 +1549,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "JOFFRE PEREZ",
-    "mes": "",
+    "mes": "OCTUBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1563,7 +1561,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "JOFFRE PEREZ",
-    "mes": "",
+    "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1575,7 +1573,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "NESTOR PINARGOTE",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1587,7 +1585,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "NESTOR PINARGOTE",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1599,7 +1597,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "NESTOR PINARGOTE",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1611,7 +1609,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "NESTOR PINARGOTE",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1623,7 +1621,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "NESTOR PINARGOTE",
-    "mes": "",
+    "mes": "SEPTIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1635,7 +1633,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "NESTOR PINARGOTE",
-    "mes": "",
+    "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1647,7 +1645,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "NESTOR PINARGOTE",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1659,7 +1657,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "NESTOR PINARGOTE",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1671,7 +1669,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "NESTOR PINARGOTE",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1683,7 +1681,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "NESTOR PINARGOTE",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1695,7 +1693,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "NESTOR PINARGOTE",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1707,7 +1705,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "NESTOR PINARGOTE",
-    "mes": "",
+    "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1719,7 +1717,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "NESTOR PINARGOTE",
-    "mes": "",
+    "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1731,7 +1729,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "NESTOR PINARGOTE",
-    "mes": "",
+    "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1743,7 +1741,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "INES BRIONES",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1755,7 +1753,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "INES BRIONES",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1767,7 +1765,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "INES BRIONES",
-    "mes": "",
+    "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1779,7 +1777,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "INES BRIONES",
-    "mes": "",
+    "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1791,7 +1789,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "INES BRIONES",
-    "mes": "",
+    "mes": "ABRIL",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1803,7 +1801,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "INES BRIONES",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1815,7 +1813,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "INES BRIONES",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1827,7 +1825,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "AMANDA FUENTES",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1839,7 +1837,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "AMANDA FUENTES",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1851,7 +1849,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "ERICKA DELGADO",
-    "mes": "",
+    "mes": "OCTUBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1863,7 +1861,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "AMANDA FUENTES",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1875,7 +1873,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "ERICKA DELGADO",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1887,7 +1885,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "ERICKA DELGADO",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1899,7 +1897,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "ERICKA DELGADO",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1911,7 +1909,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "AMANDA FUENTES",
-    "mes": "",
+    "mes": "OCTUBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1923,7 +1921,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "AMANDA FUENTES",
-    "mes": "",
+    "mes": "SEPTIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1935,7 +1933,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "ERICKA DELGADO",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1947,7 +1945,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "FREDDY VERA",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1959,7 +1957,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "FREDDY VERA",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1971,7 +1969,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "FREDDY VERA",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1983,7 +1981,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "FREDDY VERA",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -1995,7 +1993,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "FELIX ESPINOZA",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2007,7 +2005,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "FELIX ESPINOZA",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2019,7 +2017,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "FELIX ESPINOZA",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2031,7 +2029,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "FRANCISCO VELOZ",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2043,7 +2041,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "FRANCISCO VELOZ",
-    "mes": "",
+    "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2055,7 +2053,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "FRANCISCO VELOZ",
-    "mes": "",
+    "mes": "DICIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2067,7 +2065,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "DARIO COCHANCELA",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2079,7 +2077,7 @@ var PF_CLIENTES = [
     "razon": "DELI INTERNACIONAL S.A.",
     "ruc": "1792072018001",
     "responsable": "MIREYA MESA",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2091,7 +2089,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2103,7 +2101,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2115,7 +2113,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2127,7 +2125,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2139,7 +2137,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2151,7 +2149,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2163,7 +2161,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2175,7 +2173,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2187,7 +2185,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2199,7 +2197,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "ENERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2211,7 +2209,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "ABRIL",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2223,7 +2221,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "MARZO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2235,7 +2233,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "GLORIA MUÑOZ",
-    "mes": "",
+    "mes": "JULIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2247,7 +2245,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2259,7 +2257,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2271,7 +2269,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2283,7 +2281,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2295,7 +2293,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2307,7 +2305,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "FEBRERO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2319,7 +2317,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "SEPTIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2331,7 +2329,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2343,7 +2341,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "DICIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2355,7 +2353,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "NOVIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2367,7 +2365,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "PAOLA MIELES",
-    "mes": "",
+    "mes": "DICIEMBRE",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2379,7 +2377,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "",
-    "mes": "",
+    "mes": "ABRIL",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2391,7 +2389,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "",
-    "mes": "",
+    "mes": "JUNIO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -2403,7 +2401,7 @@ var PF_CLIENTES = [
     "razon": "PROMOTORA ECUATORIANA DE CAF DE COLOMBIA S.A.",
     "ruc": "1792141486001",
     "responsable": "",
-    "mes": "",
+    "mes": "AGOSTO",
     "freqMant": "1 año",
     "freqRec": "3 años"
   },
@@ -4101,9 +4099,9 @@ var PF_CLIENTES = [
   }
 ];
 
-
 // ── BÚSQUEDA DE CLIENTE ──────────────────────────────────────
-// Busca por: código exacto → nombre exacto → nombre sin código → todas las palabras → palabra única
+// Una sola definición global — no sobreescribir con window.pfBuscarCliente
+// #114 FIX: evitar doble declaración
 function pfBuscarCliente(nombreLocal) {
   if (!nombreLocal || !window.PF_CLIENTES) return null;
   var q = nombreLocal.trim().toUpperCase();
@@ -4112,107 +4110,76 @@ function pfBuscarCliente(nombreLocal) {
   for (var i = 0; i < PF_CLIENTES.length; i++) {
     if (PF_CLIENTES[i].codigo && PF_CLIENTES[i].codigo.toUpperCase() === q) return PF_CLIENTES[i];
   }
-
   // 2. Nombre exacto
   for (var i = 0; i < PF_CLIENTES.length; i++) {
     if (PF_CLIENTES[i].nombre.toUpperCase() === q) return PF_CLIENTES[i];
   }
-
-  // 3. Nombre del cliente contiene el query (sin código prefijo)
-  // ej: query = "K002 - 9 DE OCTUBRE", busca nombre que lo contenga
+  // 3. Nombre contiene query o query contiene nombre
   for (var i = 0; i < PF_CLIENTES.length; i++) {
-    if (PF_CLIENTES[i].nombre.toUpperCase().indexOf(q) !== -1) return PF_CLIENTES[i];
-    if (q.indexOf(PF_CLIENTES[i].nombre.toUpperCase()) !== -1) return PF_CLIENTES[i];
+    var nm = PF_CLIENTES[i].nombre.toUpperCase();
+    if (nm.indexOf(q) !== -1 || q.indexOf(nm) !== -1) return PF_CLIENTES[i];
   }
-
-  // 4. Quitar código del query (ej "K002 - 9 DE OCTUBRE" → "9 DE OCTUBRE")
+  // 4. Quitar código del query
   var sinCod = q.replace(/^[A-Z0-9\-]+ - /, '').trim();
   if (sinCod !== q) {
     for (var i = 0; i < PF_CLIENTES.length; i++) {
-      var nm = PF_CLIENTES[i].nombre.toUpperCase().replace(/^[A-Z0-9\-]+ - /, '').trim();
-      if (nm === sinCod || nm.indexOf(sinCod) !== -1 || sinCod.indexOf(nm) !== -1) return PF_CLIENTES[i];
+      var nm2 = PF_CLIENTES[i].nombre.toUpperCase().replace(/^[A-Z0-9\-]+ - /, "").trim();
+      if (nm2 === sinCod || nm2.indexOf(sinCod) !== -1 || sinCod.indexOf(nm2) !== -1) return PF_CLIENTES[i];
     }
   }
-
-  // 5. Todas las palabras del query están en el nombre
+  // 5. Todas las palabras significativas
   var palabras = q.split(/\s+/).filter(function(p){ return p.length > 2; });
   for (var i = 0; i < PF_CLIENTES.length; i++) {
-    var nm = PF_CLIENTES[i].nombre.toUpperCase();
-    if (palabras.length > 0 && palabras.every(function(p){ return nm.indexOf(p) !== -1; })) return PF_CLIENTES[i];
+    var nm3 = PF_CLIENTES[i].nombre.toUpperCase();
+    if (palabras.length > 0 && palabras.every(function(p){ return nm3.indexOf(p) !== -1; })) return PF_CLIENTES[i];
   }
-
-  // 6. Palabra única significativa (>= 4 chars)
+  // 6. Palabra única de 5+ chars (evitar falsos positivos de 4 chars como MALL)
   for (var pi = 0; pi < palabras.length; pi++) {
-    if (palabras[pi].length >= 4) {
+    if (palabras[pi].length >= 5) {
       for (var i = 0; i < PF_CLIENTES.length; i++) {
         if (PF_CLIENTES[i].nombre.toUpperCase().indexOf(palabras[pi]) !== -1) return PF_CLIENTES[i];
       }
     }
   }
-
   return null;
 }
 
-// ── CLIENTES CUSTOM (agregados desde la app) ─────────────────
-// #088 FIX: Alejandro puede agregar clientes sin editar GitHub
-// Se guardan en localStorage pf_clientes_custom
+// Clientes temporales agregados desde la app (se pierden al recargar si no se sincronizan)
 function pfGetClientesCustom() {
   try { return JSON.parse(localStorage.getItem("pf_clientes_custom") || "[]"); } catch(e) { return []; }
 }
 
 function pfAgregarClienteTemp(datos) {
-  // datos: {nombre, razon, ruc, grupo, marca, responsable, mes, freqMant, freqRec}
   var custom = pfGetClientesCustom();
   var idx = "CUST-" + String(custom.length + 1).padStart(3, "0");
   var cliente = {
     codigo:      datos.codigo || idx,
-    grupo:       datos.grupo || "Independiente",
-    marca:       datos.marca || "",
-    nombre:      (datos.nombre || "").toUpperCase().trim(),
-    razon:       datos.razon || datos.nombre || "",
-    ruc:         datos.ruc || "—",
-    responsable: datos.responsable || "",
-    mes:         datos.mes || "",
-    freqMant:    datos.freqMant || "1 año",
-    freqRec:     datos.freqRec || "1 año",
+    grupo:       datos.grupo || 'Independiente',
+    marca:       datos.marca || '',
+    nombre:      (datos.nombre || '').toUpperCase().trim(),
+    razon:       datos.razon || datos.nombre || '',
+    ruc:         datos.ruc || '—',
+    responsable: datos.responsable || '',
+    mes:         datos.mes || '',
+    freqMant:    datos.freqMant || '1 año',
+    freqRec:     datos.freqRec || '1 año',
     _custom:     true
   };
-  // No duplicar
   var existe = pfBuscarCliente(cliente.nombre);
-  if (existe) return existe;
+  if (existe && !existe._custom) return existe;
   custom.push(cliente);
   localStorage.setItem("pf_clientes_custom", JSON.stringify(custom));
   return cliente;
 }
 
-// Extender pfBuscarCliente para incluir clientes custom
-(function() {
-  var _pfBuscarBase = window.pfBuscarCliente || pfBuscarCliente;
-  window.pfBuscarCliente = function(nombreLocal) {
-    // Buscar primero en lista base
-    var res = _pfBuscarBase(nombreLocal);
-    if (res) return res;
-    // Luego en clientes custom
-    var custom = pfGetClientesCustom();
-    if (!custom.length) return null;
-    var q = (nombreLocal || "").trim().toUpperCase();
-    for (var i = 0; i < custom.length; i++) {
-      if (custom[i].nombre.toUpperCase() === q) return custom[i];
-      if (custom[i].codigo && custom[i].codigo.toUpperCase() === q) return custom[i];
-    }
-    return null;
-  };
-})();
-
-// UI para agregar cliente desde perfil admin
 function pfAbrirFormNuevoCliente() {
   var campos = [
-    {id:"nc-nom",  label:"Nombre del local *",   type:"text",   req:true},
-    {id:"nc-razon",label:"Razón social",          type:"text",   req:false},
-    {id:"nc-ruc",  label:"RUC",                   type:"text",   req:false},
-    {id:"nc-resp", label:"Responsable",           type:"text",   req:false},
-    {id:"nc-mes",  label:"Mes de visita",         type:"text",   req:false},
-    {id:"nc-grupo",label:"Grupo (KFC/Indep.)",    type:"text",   req:false}
+    {id:"nc-nom",  label:"Nombre del local *", type:"text", req:true},
+    {id:"nc-razon",label:"Razón social",       type:"text", req:false},
+    {id:"nc-ruc",  label:"RUC",                type:"text", req:false},
+    {id:"nc-resp", label:"Responsable",        type:"text", req:false},
+    {id:"nc-mes",  label:"Mes de visita",      type:"text", req:false},
+    {id:"nc-grupo",label:"Grupo",              type:"text", req:false}
   ];
   var ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:flex-end;justify-content:center";
@@ -4220,8 +4187,8 @@ function pfAbrirFormNuevoCliente() {
   inner += '<div style="font-size:17px;font-weight:700;color:var(--ng);margin-bottom:16px">➕ Nuevo cliente</div>';
   campos.forEach(function(c) {
     inner += '<div style="margin-bottom:10px">';
-    inner += '<div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;margin-bottom:4px">'+c.label+'</div>';
-    inner += '<input id="'+c.id+'" type="'+c.type+'" style="width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px">';
+    inner += '<div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;margin-bottom:4px">' + c.label + '</div>';
+    inner += '<input id="' + c.id + '" type="' + c.type + '" style="width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px">';
     inner += '</div>';
   });
   inner += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
@@ -4233,7 +4200,7 @@ function pfAbrirFormNuevoCliente() {
   ov.querySelector("#nc-cancel").onclick = function() { document.body.removeChild(ov); };
   ov.querySelector("#nc-ok").onclick = function() {
     var nom = (ov.querySelector("#nc-nom").value || "").trim();
-    if (!nom) { alert("El nombre es obligatorio"); return; }
+    if (!nom) { pfModal("El nombre es obligatorio"); return; }
     var cli = pfAgregarClienteTemp({
       nombre:      nom,
       razon:       ov.querySelector("#nc-razon").value.trim(),
@@ -4243,6 +4210,44 @@ function pfAbrirFormNuevoCliente() {
       grupo:       ov.querySelector("#nc-grupo").value.trim() || "Independiente"
     });
     document.body.removeChild(ov);
-    if (typeof pfModal === "function") pfModal("✅ Cliente «"+cli.nombre+"» agregado temporalmente.\n\nRecuerda agregarlo al CSV y republicar clientes.js para que sea permanente.");
+    if (typeof pfModal === "function") pfModal("✅ Cliente «" + cli.nombre + "» agregado temporalmente.");
   };
 }
+// ── ÍNDICE PARA BÚSQUEDA O(1) ────────────────────────────────
+// MEJORA FIX: construir índice Map al cargar para evitar 6 loops sobre 341 clientes
+var _PF_IDX_CODIGO = null;
+var _PF_IDX_NOMBRE = null;
+
+function pfBuildIndex() {
+  _PF_IDX_CODIGO = {};
+  _PF_IDX_NOMBRE = {};
+  for (var i = 0; i < PF_CLIENTES.length; i++) {
+    var c = PF_CLIENTES[i];
+    if (c.codigo) _PF_IDX_CODIGO[c.codigo.toUpperCase()] = c;
+    _PF_IDX_NOMBRE[c.nombre.toUpperCase()] = c;
+  }
+}
+
+// Sobrescribir pfBuscarCliente con versión optimizada usando índice
+var _pfBuscarOriginal = pfBuscarCliente;
+pfBuscarCliente = function(nombreLocal) {
+  // Construir índice si no existe
+  if (!_PF_IDX_CODIGO) pfBuildIndex();
+  if (!nombreLocal) return null;
+  var q = nombreLocal.trim().toUpperCase();
+
+  // 1. Índice por código O(1)
+  if (_PF_IDX_CODIGO[q]) return _PF_IDX_CODIGO[q];
+  // 2. Índice por nombre exacto O(1)
+  if (_PF_IDX_NOMBRE[q]) return _PF_IDX_NOMBRE[q];
+  // 3. Fallback al original (búsqueda lineal para casos complejos)
+  var res = _pfBuscarOriginal(nombreLocal);
+  if (res) return res;
+  // 4. Buscar en clientes custom
+  var custom = pfGetClientesCustom();
+  for (var i = 0; i < custom.length; i++) {
+    if (custom[i].nombre.toUpperCase() === q) return custom[i];
+    if (custom[i].codigo && custom[i].codigo.toUpperCase() === q) return custom[i];
+  }
+  return null;
+};

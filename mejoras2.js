@@ -25,10 +25,13 @@ var PF_GRUPO_KFC = ["INT FOOD","SHEMLON","DELI INT","PROMOTORA","NOVOEVENTOS","S
   // #108 FIX: SAN MARINO es Grupo KFC (Casa Res)
   "SAN MARINO"];
 
+// #82 FIX: usar Set para búsqueda eficiente + cache del resultado
+var _PF_KFC_SET = null;
 function pfEsGrupoKFC(nombreLocal) {
+  if (!_PF_KFC_SET) _PF_KFC_SET = PF_GRUPO_KFC;
   var n = (nombreLocal || "").toUpperCase();
-  for (var i = 0; i < PF_GRUPO_KFC.length; i++) {
-    if (n.indexOf(PF_GRUPO_KFC[i]) !== -1) return true;
+  for (var i = 0; i < _PF_KFC_SET.length; i++) {
+    if (n.indexOf(_PF_KFC_SET[i]) !== -1) return true;
   }
   return false;
 }
@@ -49,7 +52,13 @@ function pfProximoMantenimiento(nombreLocal, ultimaVisita) {
         else                             freq = PF_FREQ.independiente;
       }
     }
-    d.setDate(d.getDate() + freq);
+    // #83 FIX: usar setFullYear en vez de sumar días para manejar bisiestos
+    if (freq === 365 || freq === 365 * 3) {
+      var anios = Math.round(freq / 365);
+      d.setFullYear(d.getFullYear() + anios);
+    } else {
+      d.setDate(d.getDate() + freq);
+    }
     return d;
   } catch(e) { return null; }
 }
@@ -67,13 +76,11 @@ function pfSemaforoColor(dias) {
   return              { bg:"var(--vc)", tx:"var(--v)", ico:"🟢", label:dias+"d" };
 }
 
-// Filtro activo del semáforo: "todos" | "vencidos" | "proximos" | "01".."12"
-var PF_SEM_FILTRO = "todos";
+// Filtro activo del semáforo: "todos" | "vencidos" | "proximos" | mes
+var PF_SEM_FILTRO = "todos"; // declarado UNA sola vez
 
-function pfSetFiltroSemaforo(f) {
-  PF_SEM_FILTRO = f;
-  pfRenderSemaforo();
-}
+// #33 FIX: pfGenerarRecorridoDesdeList eliminada (duplicada con pfGenerarRecorridoSemaforo)
+function pfSetFiltroSemaforo(f) { PF_SEM_FILTRO = f; pfRenderSemaforo(); }
 
 function pfGenerarRecorridoDesdeList(items) {
   if (!items || !items.length) { pfModal("No hay locales en el filtro actual."); return; }
@@ -90,10 +97,7 @@ function pfGenerarRecorridoDesdeList(items) {
   }
 }
 
-// #061 #062 #063 FIX: Filtros + generador de recorrido
-var PF_SEM_FILTRO = "todos";
-
-function pfSetFiltroSemaforo(f) { PF_SEM_FILTRO = f; pfRenderSemaforo(); }
+// #061 #062 #063 FIX: Filtros + generador de recorrido (PF_SEM_FILTRO ya declarado arriba)
 
 function pfGenerarRecorridoSemaforo(items) {
   if (!items || !items.length) { pfModal("No hay locales con ese filtro."); return; }
@@ -158,22 +162,27 @@ function pfRenderSemaforo() {
     if (PF_SEM_FILTRO === "vencidos") return item.dias !== null && item.dias < 0;
     if (PF_SEM_FILTRO === "proximos") return item.dias !== null && item.dias >= 0 && item.dias < 90;
     if (PF_SEM_FILTRO === "sin_datos") return item.dias === null;
-    if (PF_SEM_FILTRO === "junio") return item.proxFecha && item.proxFecha.getMonth() === 5;
-    if (PF_SEM_FILTRO === "julio") return item.proxFecha && item.proxFecha.getMonth() === 6;
-    if (PF_SEM_FILTRO === "agosto") return item.proxFecha && item.proxFecha.getMonth() === 7;
+    // #35 FIX: filtros de mes dinámicos
+    var _mesIdx = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"].indexOf(PF_SEM_FILTRO);
+    if (_mesIdx >= 0) return item.proxFecha && item.proxFecha.getMonth() === _mesIdx;
     return true;
   });
 
   // Barra de filtros
   h += '<div style="display:flex;gap:6px;padding:0 12px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch">';
+  // #35 FIX: filtros de mes dinámicos — próximos 3 meses desde hoy
+  var _hoy = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Guayaquil"}));
+  var _mesesNombres = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  var _mesesClave   = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  var _m1 = _hoy.getMonth(), _m2 = (_m1+1)%12, _m3 = (_m1+2)%12;
   var filtros = [
-    {k:"todos",   l:"Todos ("+items.length+")"},
-    {k:"vencidos",l:"🔴 Vencidos ("+vencidos+")"},
-    {k:"proximos",l:"🟡 Próximos ("+proximos+")"},
+    {k:"todos",    l:"Todos ("+items.length+")"},
+    {k:"vencidos", l:"🔴 Vencidos ("+vencidos+")"},
+    {k:"proximos", l:"🟡 Próximos ("+proximos+")"},
     {k:"sin_datos",l:"⬜ Sin datos"},
-    {k:"junio",   l:"Junio"},
-    {k:"julio",   l:"Julio"},
-    {k:"agosto",  l:"Agosto"}
+    {k:_mesesClave[_m1], l:_mesesNombres[_m1]},
+    {k:_mesesClave[_m2], l:_mesesNombres[_m2]},
+    {k:_mesesClave[_m3], l:_mesesNombres[_m3]}
   ];
   filtros.forEach(function(fi) {
     var activo = PF_SEM_FILTRO === fi.k;
@@ -186,9 +195,11 @@ function pfRenderSemaforo() {
 
   // Botón generar recorrido desde filtro
   if (itemsFiltrados.length > 0 && PF_SEM_FILTRO !== "todos") {
-    h += '<div style="padding:0 12px 10px"><button onclick="pfGenerarRecorridoSemaforo(window._pfSemItems)" style="width:100%;padding:11px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📋 Copiar recorrido con estos '+itemsFiltrados.length+' locales</button></div>';
+    h += '<div style="padding:0 12px 10px"><button onclick="pfGenerarRecorridoSemaforo(window.PF_SEM && window.PF_SEM.items || [])" style="width:100%;padding:11px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📋 Copiar recorrido con estos '+itemsFiltrados.length+' locales</button></div>';
   }
-  window._pfSemItems = itemsFiltrados;
+  // BAJO FIX: usar variable de módulo en lugar de global window
+  if (!window.PF_SEM) window.PF_SEM = {};
+  window.PF_SEM.items = itemsFiltrados;
 
   // Lista
   itemsFiltrados.forEach(function(item) {

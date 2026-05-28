@@ -4,7 +4,8 @@
 //  Numeración desde 7500, correlativa, guardada en localStorage
 // ═══════════════════════════════════════════════════════════
 
-var NOTA_CONTADOR = parseInt(localStorage.getItem("pf_notaCount") || "7499");
+var _notaRaw = parseInt(localStorage.getItem("pf_notaCount") || "7499");
+var NOTA_CONTADOR = isNaN(_notaRaw) ? 7499 : _notaRaw; // BAJO FIX: guard NaN
 
 // ── ESTADO NOTA ──────────────────────────────────────────────
 var NOTA_ACTUAL = null;  // nota en construcción
@@ -44,13 +45,14 @@ function abrirNotaEntrega(pi, li) {
   var now    = new Date();
   var fecha  = String(now.getDate()).padStart(2,"0") + " DE " + mesEnLetras(now.getMonth()) + " DEL " + now.getFullYear();
 
+  // #27 FIX: obtener todos los datos del cliente en una sola llamada
+  var _notaCli = (typeof pfBuscarCliente === "function") ? pfBuscarCliente(loc.nombre) : null;
   NOTA_ACTUAL = {
-    numero:    null, // se asigna al generar
-    // #033 #034 #035 FIX: usar pfBuscarCliente para obtener razón social, RUC y dirección reales
-    cliente:   (function(){ var _cl = (typeof pfBuscarCliente==="function") ? pfBuscarCliente(loc.nombre) : null; return _cl ? (_cl.razon || loc.nombre) : loc.nombre; })(),
+    numero:    null,
+    cliente:   _notaCli ? (_notaCli.razon  || loc.nombre) : loc.nombre,
     direccion: p.nombre || "",
-    ruc:       (function(){ var _cl = (typeof pfBuscarCliente==="function") ? pfBuscarCliente(loc.nombre) : null; return _cl ? (_cl.ruc || "") : ""; })(),
-    telefono:  "",
+    ruc:       _notaCli ? (_notaCli.ruc    || "") : "",
+    telefono:  _notaCli ? (_notaCli.responsable || "") : "",
     fecha:     fecha,
     local:     loc.nombre,
     items:     NOTA_ITEMS
@@ -128,12 +130,15 @@ function renderNotaItems() {
   if (elSon) elSon.textContent = numeroALetras(total);
 }
 
+var _notaChangeTimer = null;
 function notaItemChange(idx, campo, valor) {
+  // #26 FIX: debounce para evitar re-render en cada tecla
   if (!NOTA_ITEMS[idx]) return;
   if (campo === "cant") NOTA_ITEMS[idx].cant = parseFloat(valor) || 0;
   if (campo === "desc") NOTA_ITEMS[idx].desc = valor;
   if (campo === "puni") NOTA_ITEMS[idx].puni = parseFloat(valor) || 0;
-  renderNotaItems();
+  if (_notaChangeTimer) clearTimeout(_notaChangeTimer);
+  _notaChangeTimer = setTimeout(renderNotaItems, 300);
 }
 
 function notaEliminar(idx) {
@@ -147,8 +152,12 @@ function notaAgregarItem() {
   // Focus en el último campo de descripción
   setTimeout(function() {
     var rows = document.querySelectorAll(".nota-desc");
-    if (rows.length > 0) rows[rows.length-1].focus();
-  }, 100);
+    if (rows.length > 0) {
+      rows[rows.length-1].focus();
+      // #79 FIX: scroll al nuevo campo
+      rows[rows.length-1].scrollIntoView({ behavior:"smooth", block:"center" });
+    }
+  }, 150);
 }
 
 // ── NÚMERO EN LETRAS ─────────────────────────────────────────
@@ -161,13 +170,14 @@ function numeroALetras(n) {
 }
 
 function enteroALetras(n) {
+  if (n < 0) return "MENOS " + enteroALetras(-n); // #25 FIX: negativos
   if (n === 0) return "CERO";
   var unidades  = ["","UNO","DOS","TRES","CUATRO","CINCO","SEIS","SIETE","OCHO","NUEVE","DIEZ","ONCE","DOCE","TRECE","CATORCE","QUINCE","DIECISÉIS","DIECISIETE","DIECIOCHO","DIECINUEVE","VEINTE"];
   var decenas   = ["","","VEINTI","TREINTA","CUARENTA","CINCUENTA","SESENTA","SETENTA","OCHENTA","NOVENTA"];
   var centenas  = ["","CIENTO","DOSCIENTOS","TRESCIENTOS","CUATROCIENTOS","QUINIENTOS","SEISCIENTOS","SETECIENTOS","OCHOCIENTOS","NOVECIENTOS"];
 
   if (n <= 20)  return unidades[n];
-  if (n < 30)   return "VEINTI" + unidades[n-20].toLowerCase();
+  if (n < 30)   return (n === 21 ? "VEINTIUN" : n === 22 ? "VEINTIDOS" : n === 23 ? "VEINTITRES" : "VEINTI" + unidades[n-20].toLowerCase()); // #76 FIX
   if (n < 100)  return decenas[Math.floor(n/10)] + (n%10 > 0 ? " Y " + unidades[n%10] : "");
   if (n === 100) return "CIEN";
   if (n < 1000) return centenas[Math.floor(n/100)] + (n%100 > 0 ? " " + enteroALetras(n%100) : "");
@@ -192,10 +202,15 @@ function notaTienePrecios() {
   return true; // mantenimiento: siempre con precios
 }
 
+var _notaGenerando = false;
 function generarNotaPDF(tipo) {
+  // MEDIO FIX: guard contra doble generación
+  if (_notaGenerando) return;
+  _notaGenerando = true;
+  setTimeout(function(){ _notaGenerando = false; }, 5000); // resetear después de 5s
   // tipo: "entrega" o "accesorios"
   var items = tipo === "accesorios" ? ACCS.map(function(a){ return {cant:1, desc:a.n, puni:a.p, total:a.p}; }) : NOTA_ITEMS;
-  if (!items || items.length === 0) { pfModal("Agrega al menos un ítem a la nota."); return; }
+  if (!items || items.length === 0) { _notaGenerando = false; pfModal("Agrega al menos un ítem a la nota."); return; }
 
   mostrarCargando(true, "Generando nota de entrega...", "Por favor espera");
 
@@ -318,8 +333,8 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
 
     var rx2 = ML+CW*0.6+22;
     doc.text(ruc,       rx2, y+4.5);
-    doc.text("30 DÍAS",  rx2, y+11.5);
-    doc.text("CRÉDITO",  rx2, y+18.5);
+    doc.text(localStorage.getItem("pf_nota_validez")||"30 DÍAS", rx2, y+11.5); // #72 FIX
+    doc.text(localStorage.getItem("pf_nota_pago")||"CRÉDITO", rx2, y+18.5); // #73 FIX
 
     // Fecha a la derecha
     doc.setFont("helvetica","bold"); doc.setFontSize(8); tR();
@@ -390,7 +405,7 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
 
     // Nota local
     doc.setFont("helvetica","bolditalic"); doc.setFontSize(8.5); tN();
-    doc.text("LOCAL: " + local.toUpperCase(), colX[1]+2, y+5);
+    if (local && local.trim()) doc.text("LOCAL: " + local.toUpperCase(), colX[1]+2, y+5); // #75 FIX: solo si tiene nombre
     y += 10;
 
     // ── TOTALES ──────────────────────────────────────────────
@@ -475,15 +490,19 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     // ── PIE ──────────────────────────────────────────────────
     fR(); doc.rect(0, PH-10, PW, 10, "F");
     doc.setFont("helvetica","bold"); doc.setFontSize(6.8); tW();
-    doc.text("DIR: PORTETE #3007 Y GALLEGOS LARA  |  TELEF.:04-2192274 · 0986772944 · 0978997247 · 0983583325", PW/2, PH-3.8, {align:"center"});
+    doc.text("DIR: PORTETE #3007 Y GALLEGOS LARA  |  TEL: 04-2374822 · 0978997247 · 0983588325  |  ventas_previfuego@hotmail.com", PW/2, PH-3.8, {align:"center"});
 
     // ── GUARDAR ──────────────────────────────────────────────
     var safeName = (LOCAL_ACTUAL ? LOCAL_ACTUAL.nombre : "LOCAL").replace(/[^a-zA-Z0-9]/g,"").substring(0,15);
     var nom      = "NE-"+numNota+"-"+safeName+".pdf";
     var blob     = doc.output("blob");
-    var blobUrl  = URL.createObjectURL(blob);
+    // #7 #74 FIX: usar mismo patrón que pdf.js — no revocar hasta siguiente generación
+    if (window._ULTIMO_BLOB_URL_NOTA) {
+      try { URL.revokeObjectURL(window._ULTIMO_BLOB_URL_NOTA); } catch(e) {}
+    }
+    var blobUrl = URL.createObjectURL(blob);
+    window._ULTIMO_BLOB_URL_NOTA = blobUrl;
     URLS_GENERADAS.push(blobUrl);
-    if (URLS_GENERADAS.length > 10) URL.revokeObjectURL(URLS_GENERADAS.shift());
 
     mostrarCargando(false);
 
@@ -652,10 +671,12 @@ function pfAbrirEmitirFactura() {
 
   ov.innerHTML = h;
   document.body.appendChild(ov);
+  document.body.style.overflow = "hidden"; // BAJO FIX: bloquear scroll
 
+  var _cerrarOv = function() { document.body.style.overflow = ""; document.body.removeChild(ov); };
   // Event listeners
-  ov.querySelector("#azur-modal-close").onclick = function() { document.body.removeChild(ov); };
-  ov.querySelector("#azur-btn-cancel").onclick   = function() { document.body.removeChild(ov); };
+  ov.querySelector("#azur-modal-close").onclick = _cerrarOv;
+  ov.querySelector("#azur-btn-cancel").onclick   = _cerrarOv;
 
   ov.querySelector("#azur-btn-emitir").onclick = function() {
     var cliente = (ov.querySelector("#azur-cliente").value || "").trim();
@@ -671,7 +692,7 @@ function pfAbrirEmitirFactura() {
     }
 
     // Cerrar modal y proceder
-    document.body.removeChild(ov);
+    _cerrarOv();
     pfConfirmarEmisionFactura(cliente, ruc, dir, correo);
   };
 }
@@ -712,8 +733,13 @@ function pfConfirmarEmisionFactura(cliente, ruc, dir, correo) {
 }
 
 // ── Enviar factura vía Apps Script → Azur ───────────────────
+var _pfAzurEnviando = false;
 function pfEnviarFacturaAzur(cliente, ruc, dir, correo) {
+  // CRÍTICO FIX: guard contra doble envío
+  if (_pfAzurEnviando) { pfModal("⚠️ Ya hay una factura en proceso. Espera."); return; }
+  _pfAzurEnviando = true;
   if (!NOTA_ACTUAL || !NOTA_ITEMS || !NOTA_ITEMS.length) {
+    _pfAzurEnviando = false;
     pfModal("⚠️ Sin datos de nota para facturar.");
     return;
   }
@@ -752,12 +778,15 @@ function pfEnviarFacturaAzur(cliente, ruc, dir, correo) {
     }).filter(function(i) { return i.puni > 0; }) // solo ítems con precio
   };
 
-  fetch(typeof SCRIPT_URL !== "undefined" ? SCRIPT_URL : "", {
+  var _surl = typeof SCRIPT_URL !== "undefined" ? SCRIPT_URL : "";
+  if (!_surl) { _pfAzurEnviando=false; mostrarCargando(false); pfModal("❌ No está configurada la URL del servidor. Contacta a Alejandro."); return; }
+  fetch(_surl, { // BAJO FIX: verificar SCRIPT_URL
     method: "POST",
     body:   JSON.stringify(payload)
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
+    _pfAzurEnviando = false; // CRÍTICO FIX: resetear guard
     mostrarCargando(false);
     if (data.ok) {
       // Guardar clave de acceso para consultas futuras
@@ -792,7 +821,18 @@ function pfEnviarFacturaAzur(cliente, ruc, dir, correo) {
     }
   })
   .catch(function(err) {
+    _pfAzurEnviando = false; // CRÍTICO FIX: resetear guard en error
     mostrarCargando(false);
     pfModal("❌ Error de conexión: " + err.message + "\n\nVerifica tu internet e intenta de nuevo.");
+  });
+}
+
+// #78 FIX: limpiar campos de la nota
+function pfLimpiarNota() {
+  pfConfirm("¿Limpiar todos los campos de la nota?", function() {
+    NOTA_ITEMS = [];
+    var campos = ["nota-cliente","nota-dir","nota-ruc","nota-tel","nota-proforma","nota-marca"];
+    campos.forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ""; });
+    renderNotaItems();
   });
 }

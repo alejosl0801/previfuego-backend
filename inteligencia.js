@@ -156,6 +156,8 @@ function pfCalendarioMes(offsetMes) {
 var PF_CAL_OFFSET = 0;
 
 function pfRenderCalendario() {
+  if (typeof PF_CLIENTES === "undefined" || !PF_CLIENTES || !PF_CLIENTES.length) return;
+  
   var el = document.getElementById("pf-cal-contenido");
   if (!el) return;
 
