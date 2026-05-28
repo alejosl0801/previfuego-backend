@@ -83,11 +83,12 @@ function mesEnLetras(m) {
 }
 
 function generarDescExt(e) {
-  var cap  = (e.w || e.capacidad || "").toUpperCase();
-  var tipo = (e.t || e.tipo || "").toUpperCase();
+  var cap  = (e.w || e.capacidad || "").toUpperCase().trim();
+  var tipo = (e.t || e.tipo || "").toUpperCase().trim();
   var trabajo = (e.trabajo || "M").toUpperCase();
   var accion  = trabajo === "R" ? "RECARGA" : "MANTENIMIENTO";
-  return "EXTINTOR " + cap + " - " + tipo + " · " + accion;
+  var base = ["EXTINTOR", cap, cap && tipo ? "- " + tipo : tipo].filter(Boolean).join(" ");
+  return (base + " · " + accion).replace(/\s+/g, " ").trim(); // #104 FIX: sin doble espacio
 }
 
 // ── TABLA DE ÍTEMS ───────────────────────────────────────────
@@ -177,7 +178,7 @@ function enteroALetras(n) {
   var centenas  = ["","CIENTO","DOSCIENTOS","TRESCIENTOS","CUATROCIENTOS","QUINIENTOS","SEISCIENTOS","SETECIENTOS","OCHOCIENTOS","NOVECIENTOS"];
 
   if (n <= 20)  return unidades[n];
-  if (n < 30)   return (n === 21 ? "VEINTIUN" : n === 22 ? "VEINTIDOS" : n === 23 ? "VEINTITRES" : "VEINTI" + unidades[n-20].toLowerCase()); // #76 FIX
+  if (n < 30)   return (n === 21 ? "VEINTIUN" : n === 22 ? "VEINTIDÓS" : // #110 FIX: tilde n === 23 ? "VEINTITRÉS" : // #110 FIX: tilde "VEINTI" + unidades[n-20].toLowerCase()); // #76 FIX
   if (n < 100)  return decenas[Math.floor(n/10)] + (n%10 > 0 ? " Y " + unidades[n%10] : "");
   if (n === 100) return "CIEN";
   if (n < 1000) return centenas[Math.floor(n/100)] + (n%100 > 0 ? " " + enteroALetras(n%100) : "");
@@ -537,6 +538,7 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     }
 
   } catch(err) {
+    _notaGenerando = false; // #099 FIX: resetear flag en error
     mostrarCargando(false);
     console.error(err);
     pfModal("Error generando nota: " + err.message);
@@ -780,8 +782,10 @@ function pfEnviarFacturaAzur(cliente, ruc, dir, correo) {
 
   var _surl = typeof SCRIPT_URL !== "undefined" ? SCRIPT_URL : "";
   if (!_surl) { _pfAzurEnviando=false; mostrarCargando(false); pfModal("❌ No está configurada la URL del servidor. Contacta a Alejandro."); return; }
-  fetch(_surl, { // BAJO FIX: verificar SCRIPT_URL
+  payload.token = localStorage.getItem("pf_token") || ""; // #100 FIX: token requerido
+  fetch(_surl, {
     method: "POST",
+    headers: {"Content-Type": "application/json"},
     body:   JSON.stringify(payload)
   })
   .then(function(r) { return r.json(); })

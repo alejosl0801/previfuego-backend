@@ -219,3 +219,24 @@ body {
 body, .cd, .sc, .tb {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+/* #156 FIX: Landscape en móvil */
+@media (orientation: landscape) and (max-height: 500px) {
+  .fc { max-height: 120px; }
+  #cnv { height: 100px !important; }
+  .tb { padding: 6px 12px; }
+  .sc { padding-bottom: 60px; }
+}
+/* #157 FIX: canvas firma con altura mínima */
+#cnv { min-height: 130px; display: block; width: 100%; }
+/* #159 FIX: adm-tab-btn sin flex:1 cuando hay muchos tabs */
+.adm-tab-btn { flex: 0 0 auto; min-width: 80px; }
+/* #160 FIX: botones disabled */
+button:disabled, .btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+/* #161 FIX: item completado más claro */
+.cd.dn { opacity: 0.6; background: var(--vc) !important; border-color: var(--v) !important; }
+/* #162 FIX: print — ocultar overlays */
+@media print {
+  .lov, .ov, .asel, .nav, .tb { display: none !important; }
+  .screen { display: block !important; }
+}

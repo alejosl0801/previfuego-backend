@@ -60,8 +60,8 @@ function pfRegistrarRetiro(local, punto, tecnico, desc) {
 }
 
 function pfMarcarEntregado(retiroId) {
+  if (!retiroId) { console.warn("pfMarcarEntregado: id inválido"); return; } // #091 FIX
   var retiros = pfGetRetiros();
-  // #041 FIX: guardar referencia al retiro ANTES de modificar la lista
   var retiroEntregado = null;
   for (var i = 0; i < retiros.length; i++) {
     if (retiros[i].id === retiroId) {
@@ -116,15 +116,19 @@ function pfRegistrarVisita(local, punto, tipo, tecnico, nota) {
 function pfDiasTranscurridos(fechaStr) {
   try {
     var p = fechaStr.split("/");
-    var d = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
-    var hoy = new Date(new Date().toLocaleString("en-US", {timeZone:"America/Guayaquil"}));
+    if (p.length < 3) return 0;
+    var d   = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+    var raw = new Date();
+    var hoy = new Date(raw.toLocaleString("en-US", {timeZone:"America/Guayaquil"}));
+    hoy.setHours(0,0,0,0); // #090 FIX: solo fecha, sin hora
     return Math.floor((hoy - d) / 86400000);
   } catch(e) { return 0; }
 }
 
 function pfGetAlertas() {
   return pfGetRetiros().filter(function(r){
-    return r.estado === "pendiente" && pfDiasTranscurridos(r.fecha) >= 7;
+    var d = pfDiasTranscurridos(r.fecha);
+    return r.estado === "pendiente" && d >= 7 && d <= 180; // #093 FIX: máx 180 días
   }).map(function(r){ var d = pfDiasTranscurridos(r.fecha); return { retiro:r, dias:d }; });
 }
 
@@ -155,7 +159,8 @@ function pfAbrirFicha(nombreLocal) {
       var dias = pfDiasTranscurridos(retPend[i].fecha);
       h += '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-top:1px solid rgba(158,18,18,.15);margin-top:4px">';
       h += '<div style="font-size:12px;color:var(--ng)">Retirado el '+retPend[i].fecha+' ('+dias+' día'+(dias!==1?'s':'')+')</div>';
-      h += '<button onclick="pfMarcarEntregado(\''+retPend[i].id+'\');pfAbrirFicha(\''+nombreLocal.replace(/'/g,"")+'\')" style="background:var(--v);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">✓ Entregado</button>';
+      h += '<button data-rid="'+retPend[i].id+'" data-loc="" onclick="pfMarcarEntregado(this.getAttribute(\'data-rid\')); pfAbrirFicha(this.getAttribute(\'data-loc\'))" style="background:var(--v);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">✓ Entregado</button>'; // #089 FIX
+      // Asignar nombre via dataset después (evita problemas con apóstrofes en onclick)
       h += '</div>';
     }
     h += '</div>';
@@ -233,9 +238,9 @@ function pfRenderRetiros() {
     h += '<div style="margin:0 12px 8px;background:'+colorBg+';border:1.5px solid '+colorBor+';border-radius:14px;overflow:hidden">';
     h += '<div style="padding:12px 14px">';
     h += '<div style="display:flex;align-items:flex-start;gap:8px">';
-    h += '<div style="flex:1"><div style="font-size:15px;font-weight:700;color:'+colorTx+'">'+r.local+'</div>';
+    h += '<div style="flex:1"><div style="font-size:15px;font-weight:700;color:'+colorTx+'">'+(r.local||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'; // #088 FIX XSS
     h += '<div style="font-size:12px;color:var(--g4);margin-top:2px">'+r.fecha+' · '+r.hora+' · '+r.tecnico+'</div>';
-    if (r.descripcion) h += '<div style="font-size:12px;color:var(--g4);margin-top:3px;line-height:1.5">'+r.descripcion+'</div>';
+    if (r.descripcion) h += '<div style="font-size:12px;color:var(--g4);margin-top:3px;line-height:1.5">'+(r.descripcion||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'; // #088 FIX XSS
     h += '</div>';
     h += '<div style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap;background:'+(r.estado==='entregado'?'var(--vc)':alerta?'var(--rc)':'var(--nc)')+';color:'+colorTx+'">'+estadoTxt+'</div>';
     h += '</div>';
@@ -303,7 +308,7 @@ function pfActualizarBadge() {
 window.addEventListener("load", function() {
   pfInyectarPanelRetiros();
   pfActualizarBadge();
-  setInterval(pfActualizarBadge, 60000);
+  window._pfBadgeInterval = setInterval(pfActualizarBadge, 60000); // #019 FIX: guardado para limpieza en cerrarSesion
 
   // confirmarSin y pfOnLocalCompletado manejados por coordinator.js
 });

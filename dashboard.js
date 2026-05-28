@@ -11,9 +11,9 @@ function pfMesActual() {
 }
 
 function pfFechaEnMes(fechaStr) {
-  if (!fechaStr) return false;
+  if (!fechaStr || typeof fechaStr !== "string") return false; // #136 FIX
   var p = fechaStr.split("/");
-  if (p.length < 3) return false;
+  if (p.length < 3 || !p[2] || p[2].length < 4) return false;
   var ma = pfMesActual().split("/");
   // #NEW FIX: comparar correctamente MM y YYYY
   return p[1].padStart(2,"0") === ma[0].padStart(2,"0") && p[2] === ma[1];
@@ -21,9 +21,14 @@ function pfFechaEnMes(fechaStr) {
 
 // ── CALCULAR MÉTRICAS ────────────────────────────────────────
 function pfCalcDashboard() {
-  // Historial de hoy
+  // #135 FIX: verificar que el historial sea de hoy
   var histHoy = [];
-  try { histHoy = JSON.parse(localStorage.getItem("pf_hist_data") || "[]"); } catch(e){}
+  try {
+    var _histFecha = localStorage.getItem("pf_hist_fecha");
+    var _histData  = localStorage.getItem("pf_hist_data");
+    var _hoyEC = (function(){ var d=new Date(); var ec=new Date(d.toLocaleString("en-US",{timeZone:"America/Guayaquil"})); return String(ec.getDate()).padStart(2,"0")+"/"+String(ec.getMonth()+1).padStart(2,"0")+"/"+ec.getFullYear(); })();
+    if (_histFecha === _hoyEC && _histData) histHoy = JSON.parse(_histData);
+  } catch(e){}
 
   // Retiros del mes
   var retiros = [];
@@ -164,7 +169,7 @@ function pfRenderDashboard() {
   h += '</div>';
 
   // ── Botón actualizar
-  h += '<div style="padding:0 12px 16px"><button type="button" onclick="pfRenderDashboard()" style="width:100%;padding:12px;border-radius:12px;border:1.5px solid var(--bo);background:#fff;font-size:13px;font-weight:700;color:var(--g4);cursor:pointer;font-family:inherit">🔄 Actualizar datos</button></div>';
+  h += '<div style="padding:0 12px 16px"><button type="button" onclick="this.textContent=\'⏳ Actualizando...\';pfRenderDashboard()" style="width:100%;padding:12px;border-radius:12px;border:1.5px solid var(--bo);background:#fff;font-size:13px;font-weight:700;color:var(--g4);cursor:pointer;font-family:inherit">🔄 Actualizar datos</button></div>'; // #141 FIX
   h += '<div style="height:80px"></div>';
 
   el.innerHTML = h;

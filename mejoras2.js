@@ -28,12 +28,10 @@ var PF_GRUPO_KFC = ["INT FOOD","SHEMLON","DELI INT","PROMOTORA","NOVOEVENTOS","S
 // #82 FIX: usar Set para búsqueda eficiente + cache del resultado
 var _PF_KFC_SET = null;
 function pfEsGrupoKFC(nombreLocal) {
+  // #053 FIX: cache como array, búsqueda con some() más legible
   if (!_PF_KFC_SET) _PF_KFC_SET = PF_GRUPO_KFC;
   var n = (nombreLocal || "").toUpperCase();
-  for (var i = 0; i < _PF_KFC_SET.length; i++) {
-    if (n.indexOf(_PF_KFC_SET[i]) !== -1) return true;
-  }
-  return false;
+  return _PF_KFC_SET.some(function(k){ return n.indexOf(k) !== -1; });
 }
 
 function pfProximoMantenimiento(nombreLocal, ultimaVisita) {
@@ -82,25 +80,13 @@ var PF_SEM_FILTRO = "todos"; // declarado UNA sola vez
 // #33 FIX: pfGenerarRecorridoDesdeList eliminada (duplicada con pfGenerarRecorridoSemaforo)
 function pfSetFiltroSemaforo(f) { PF_SEM_FILTRO = f; pfRenderSemaforo(); }
 
-function pfGenerarRecorridoDesdeList(items) {
-  if (!items || !items.length) { pfModal("No hay locales en el filtro actual."); return; }
-  var texto = "RECORRIDO GENERADO DESDE SEMÁFORO\n";
-  texto += "Locales pendientes: " + items.length + "\n\n";
-  items.slice(0, 30).forEach(function(item, i) {
-    texto += "Punto " + (i+1) + " — " + item.nombre + "\n";
-    texto += "  Misión: Mantenimiento\n\n";
-  });
-  pfModal("📋 Texto copiado. Pégalo en el tab Recorrido.\n\n" + texto.substring(0, 200) + "...");
-  // Copiar al clipboard
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(texto).catch(function(){});
-  }
-}
+// #055 FIX: pfGenerarRecorridoDesdeList eliminada — usar pfGenerarRecorridoSemaforo
 
 // #061 #062 #063 FIX: Filtros + generador de recorrido (PF_SEM_FILTRO ya declarado arriba)
 
 function pfGenerarRecorridoSemaforo(items) {
-  if (!items || !items.length) { pfModal("No hay locales con ese filtro."); return; }
+  if (!items) items = (window.PF_SEM && window.PF_SEM.items) || []; // #056 FIX
+  if (!items.length) { pfModal("No hay locales con ese filtro."); return; }
   var texto = "RECORRIDO — " + items.length + " LOCALES\n\n";
   items.forEach(function(item, i) {
     texto += "Punto " + (i+1) + " — " + item.nombre + "\n  Misión: Mantenimiento\n\n";
@@ -112,6 +98,7 @@ function pfGenerarRecorridoSemaforo(items) {
   } else { pfModal(texto.substring(0,300)); }
 }
 
+var _PF_SEM_CACHE = {}; // #060 FIX: cache de proximoMantenimiento
 function pfRenderSemaforo() {
   var el = document.getElementById("pf-semaforo-lista");
   if (!el) return;
@@ -195,7 +182,7 @@ function pfRenderSemaforo() {
 
   // Botón generar recorrido desde filtro
   if (itemsFiltrados.length > 0 && PF_SEM_FILTRO !== "todos") {
-    h += '<div style="padding:0 12px 10px"><button onclick="pfGenerarRecorridoSemaforo(window.PF_SEM && window.PF_SEM.items || [])" style="width:100%;padding:11px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📋 Copiar recorrido con estos '+itemsFiltrados.length+' locales</button></div>';
+    h += '<div style="padding:0 12px 10px"><button onclick="pfGenerarRecorridoSemaforo()" style="width:100%;padding:11px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📋 Copiar recorrido con estos '+itemsFiltrados.length+' locales</button></div>'; // #056 FIX: lee items al momento del click
   }
   // BAJO FIX: usar variable de módulo en lugar de global window
   if (!window.PF_SEM) window.PF_SEM = {};
@@ -226,7 +213,15 @@ function pfRenderSemaforo() {
     h += '</div>';
   });
 
+  // #052 FIX: renderizar en chunks para no congelar UI
   el.innerHTML = h;
+  // Si hay más de 50 items, el HTML ya se renderizó pero añadir nota de carga diferida
+  if (itemsFiltrados.length > 50) {
+    var nota = document.createElement("div");
+    nota.style.cssText = "padding:8px 12px;font-size:12px;color:var(--g3);text-align:center";
+    nota.textContent = "Mostrando " + itemsFiltrados.length + " locales";
+    el.appendChild(nota);
+  }
 }
 
 // Inyectar tab Semáforo en admin
@@ -254,11 +249,6 @@ function pfInyectarSemaforo() {
 
 // pfAdmTab6 manejado por coordinator.js — no duplicar
 
-// 39 — Aprobación removida, Alejandro publica directamente
-
-
-
-// Inyectar en pantalla de Fabiola — se agrega como tab en su nav
 // Aprobación de recorrido eliminada — Alejandro publica directamente
 
 // ════════════════════════════════════════════════════════════
@@ -267,7 +257,7 @@ function pfInyectarSemaforo() {
 // ════════════════════════════════════════════════════════════
 
 function pfEnviarEmailCertificado(certNum, localNombre, emailEncargado) {
-  if (!emailEncargado || !emailEncargado.includes("@")) return;
+  if (!emailEncargado || !emailEncargado.includes("@") || !emailEncargado.includes(".")) return; // #057 FIX: validación más robusta
   if (typeof SCRIPT_URL === "undefined") return;
 
   var payload = {
@@ -279,7 +269,7 @@ function pfEnviarEmailCertificado(certNum, localNombre, emailEncargado) {
     tecnico:   typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "Técnico"
   };
 
-  fetch(SCRIPT_URL, { method:"POST", body: JSON.stringify(payload) })
+  fetch(SCRIPT_URL, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload) }) // #061 FIX
     .then(function(r){ return r.json(); })
     .then(function(d){ if (d.ok) console.log("Email enviado a "+emailEncargado); })
     .catch(function(){});

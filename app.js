@@ -3,7 +3,7 @@
 //  Bloque A: PDF fixes + tipo trabajo + fotos libres + roles
 // ═══════════════════════════════════════════════════════════
 
-var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw-Qo651QxP9DRWQkzVhkLCwWlO9Wpo4XbzhiQ_bDVKHWOFSR3Vxd1K8uCU28_fjsn0/exec";
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxr8EXO3AUvlt7iCTjtuScI49dOkRKMbsG9Cmg206IMhUQlSi2szTbCmWny1Tf1pr34/exec";
 var VERSION    = "3.4";
 
 // ── ACCESORIOS ───────────────────────────────────────────────
@@ -467,9 +467,10 @@ function cargarRecorridoLocal() {
   var fecha    = localStorage.getItem("pf_recorrido_fecha");
   var jorData  = localStorage.getItem("pf_recorrido_jornadas");
   var legData  = localStorage.getItem("pf_recorrido_data");
+  var _tecActual = (USUARIO_ACTUAL && USUARIOS[USUARIO_ACTUAL]) ? USUARIOS[USUARIO_ACTUAL].nombre : "Raúl Romero"; // #028 FIX
   if (fecha === fechaHoy()) {
     if (jorData) {
-      try { procesarJornadas(JSON.parse(jorData), "Raúl Romero"); return; }
+      try { procesarJornadas(JSON.parse(jorData), _tecActual); return; }
       catch(e) {
         // #19 FIX: notificar si datos corruptos en lugar de fallar silenciosamente
         console.warn("pf_recorrido_jornadas corrupto:", e);
@@ -477,7 +478,7 @@ function cargarRecorridoLocal() {
       }
     }
     if (legData) {
-      try { procesarPuntos(JSON.parse(legData), "Raúl Romero"); return; }
+      try { procesarPuntos(JSON.parse(legData), _tecActual); return; }
       catch(e) { console.warn("pf_recorrido_data corrupto:", e); localStorage.removeItem("pf_recorrido_data"); }
     }
   }
@@ -539,6 +540,35 @@ function renderSelectorJornada() {
 }
 
 // ── RENDER PUNTOS ────────────────────────────────────────────
+
+// #005 FIX: actualizar solo el div de un local sin regenerar toda la lista
+function actualizarItemLista(pi, li) {
+  var loc  = PUNTOS[pi] ? PUNTOS[pi].locales[li] : null;
+  if (!loc) { renderPuntos(); return; }
+  var itemId = "loc_item_" + pi + "_" + li;
+  var el = document.getElementById(itemId);
+  if (!el) { renderPuntos(); return; }
+  var tipo = loc.tipo || TIPOS_TRABAJO.OTRO;
+  var ico  = TIPO_ICON[tipo]  || "📋";
+  var col  = TIPO_COLOR[tipo] || "var(--g4)";
+  var bg   = TIPO_BG[tipo]    || "var(--g1)";
+  el.className = "cd" + (loc.done ? " dn" : "");
+  el.querySelector(".pn").style.background = loc.done ? "var(--vc)" : bg;
+  el.querySelector(".pn").style.color      = loc.done ? "var(--v)"  : col;
+  el.querySelector(".pn").textContent = ico;
+  el.querySelector(".pnm").textContent = loc.nombre;
+  el.querySelector(".psb").textContent = loc.done ? "Completado ✓" : PUNTOS[pi].nombre;
+  el.querySelector(".pch").textContent = loc.done ? "✓" : "›";
+  // Actualizar barra de progreso
+  var total = 0, comp = 0;
+  for (var i = 0; i < PUNTOS.length; i++)
+    for (var j = 0; j < PUNTOS[i].locales.length; j++) { total++; if (PUNTOS[i].locales[j].done) comp++; }
+  var s1p  = document.getElementById("s1p");
+  var s1pf = document.getElementById("s1pf");
+  if (s1p)  s1p.textContent  = comp + "/" + total + " misiones";
+  if (s1pf) s1pf.style.width = total > 0 ? (comp/total*100) + "%" : "0%";
+}
+
 var TIPO_ICON = { mantenimiento:"🔧", retiro:"📦", entrega:"🚚", instalacion:"🔩", cobro:"💰", otro:"📋" };
 var TIPO_COLOR = { mantenimiento:"var(--a)", retiro:"var(--n)", entrega:"var(--v)", instalacion:"var(--r)", cobro:"#888", otro:"var(--g4)" };
 var TIPO_BG    = { mantenimiento:"var(--ac)", retiro:"var(--nc)", entrega:"var(--vc)", instalacion:"var(--rc)", cobro:"var(--g1)", otro:"var(--g1)" };
@@ -574,7 +604,7 @@ function renderPuntos() {
       var ico  = TIPO_ICON[tipo]  || "📋";
       var col  = TIPO_COLOR[tipo] || "var(--g4)";
       var bg   = TIPO_BG[tipo]    || "var(--g1)";
-      h += '<div class="cd'+(loc.done?" dn":"")+'" onclick="abrirLocal('+i+','+j+')">';
+      h += '<div class="cd'+(loc.done?" dn":"")+'" id="loc_item_'+i+'_'+j+'" onclick="abrirLocal('+i+','+j+')">';
       h += '<div class="pr">';
       h += '<div class="pn" style="'+(loc.done?'background:var(--vc);color:var(--v)':'background:'+bg+';color:'+col)+'">'+ico+'</div>';
       h += '<div class="pi"><div class="pnm">'+loc.nombre+'</div>';
@@ -606,6 +636,8 @@ function abrirLocal(pi, li) {
   var p   = PUNTOS[pi];
   var loc = p.locales[li];
   PUNTO_ACTUAL    = p;
+  // #008 FIX: snapshot ANTES de reasignar
+  var _prevLocal = LOCAL_ACTUAL;
   LOCAL_ACTUAL    = loc;
   LOCAL_ACTUAL._pi = pi;
   LOCAL_ACTUAL._li = li;
@@ -634,9 +666,9 @@ function abrirLocal(pi, li) {
   if (_fotoAntesRetiro) { FB64["antes"] = _fotoAntesRetiro; FD["antes"] = _fotoAntesRetiro; }
   // Guardar ACCS del local anterior por si vuelve (no perder selección)
   // #48 FIX: solo guardar snapshot si hay accesorios (evitar escrituras innecesarias)
-  if (LOCAL_ACTUAL && ACCS && ACCS.length > 0) {
+  if (_prevLocal && ACCS && ACCS.length > 0) {
     try {
-      var snapKey = "pf_accs_snap_" + (LOCAL_ACTUAL.id || LOCAL_ACTUAL.nombre);
+      var snapKey = "pf_accs_snap_" + (_prevLocal.id || _prevLocal.nombre);
       localStorage.setItem(snapKey, JSON.stringify(ACCS));
     } catch(e) {}
   }
@@ -1045,7 +1077,7 @@ function renderAccSel() {
   for (var i = 0; i < ACCESORIOS.length; i++) {
     var a   = ACCESORIOS[i];
     var pid = a.id.replace(/['"]/g,"");
-    h += '<div class="asi" onclick="addAcc(\''+pid+'\')"><div class="asn">'+a.n+'</div><div class="asp">$'+a.p.toFixed(2)+'</div></div>';
+    h += '<div class="asi" onclick="addAcc(\''+pid+'\')"><div class="asn">'+(a.n.replace(/</g,'&lt;').replace(/>/g,'&gt;'))+'</div><div class="asp">$'+a.p.toFixed(2)+'</div></div>'; // #025 FIX XSS
   }
   var el = document.getElementById("asel-list");
   if (el) el.innerHTML = h;
@@ -1223,6 +1255,8 @@ function renderPerfil() {
 function cerrarSesion() {
   pfConfirm("¿Cambiar de usuario?", function() {
     localStorage.removeItem("pf_usuario");
+    // #019 FIX: limpiar interval de badge
+    if (window._pfBadgeInterval) { clearInterval(window._pfBadgeInterval); window._pfBadgeInterval = null; }
     USUARIO_ACTUAL = null; PUNTOS = []; HISTORIAL = []; HISTORIAL_DIA = [];
     FIRMA_GUARDADA_B64 = null; NOV = null; FIRMADO = false;
     ir("slogin");
@@ -1352,7 +1386,7 @@ function actualizarTimer() {
 }
 
 function tiempoFormateado(seg) {
-  if (!seg || seg === 0) return "—";
+  if (!seg || seg === 0) return "< 1 min"; // #034 FIX
   if (seg < 60) return seg + "s";
   var m = Math.floor(seg/60), s = seg%60;
   return m + "min" + (s > 0 ? " "+s+"s" : "");
@@ -1378,6 +1412,11 @@ function cargarHistorialDia() {
 }
 
 function guardarHistorialDia(item) {
+  // #020 FIX: revocar URLs viejas para evitar memory leak
+  if (URLS_GENERADAS.length > 5) {
+    var old = URLS_GENERADAS.splice(0, URLS_GENERADAS.length - 5);
+    old.forEach(function(u){ try { URL.revokeObjectURL(u); } catch(e){} });
+  }
   // #65 FIX: no guardar blob URL (inválida en futura sesión) — guardar solo metadata
   var itemSafe = {
     local:    item.local    ? { nombre: item.local.nombre, _pi: item.local._pi, _li: item.local._li } : null,
@@ -1469,7 +1508,10 @@ var PF_TALLER_KEY = "pf_taller";
 function pfGetTaller() {
   try { return JSON.parse(localStorage.getItem(PF_TALLER_KEY) || "[]"); } catch(e) { return []; }
 }
-function pfSaveTaller(arr) { localStorage.setItem(PF_TALLER_KEY, JSON.stringify(arr)); }
+function pfSaveTaller(arr) {
+  try { localStorage.setItem(PF_TALLER_KEY, JSON.stringify(arr)); }
+  catch(e) { if (e.name === "QuotaExceededError") pfModal("⚠️ Almacenamiento lleno. Haz un backup desde Perfil."); }
+} // #097 FIX
 
 // Agregar extintor al taller (desde retiro)
 function pfIngresarAlTaller(local, descripcion, cantidad) {
@@ -1604,7 +1646,7 @@ function pfIngresarManualTaller() {
   var cant = document.getElementById("tal-cant");
   if (!loc || !loc.value.trim()) { pfModal("Ingresa el nombre del cliente."); return; }
   var _cantVal = cant ? parseInt(cant.value)||1 : 1;
-if (_cantVal < 1) _cantVal = 1; // BAJO FIX: cantidad mínima 1
+  if (_cantVal < 1) _cantVal = 1; // #017 FIX: indentación correcta // BAJO FIX: cantidad mínima 1
   pfIngresarAlTaller(loc.value.trim(), desc ? desc.value.trim() : "", _cantVal);
   if (loc) loc.value = ""; if (desc) desc.value = ""; if (cant) cant.value = "1";
   pfRenderTaller();
@@ -1622,18 +1664,18 @@ function pfAbrirAgregarAcc(talId) {
 
 // Vista para técnicos — misma lógica pero en div distinto
 function pfRenderTallerTec() {
-  // MEDIO FIX: eliminado hack de id-swap — copiar HTML del render del admin
   var tec = document.getElementById("pf-taller-lista-tec");
   if (!tec) return;
-  // Renderizar en un div temporal y copiar el HTML
   var tmp = document.createElement("div");
   tmp.id  = "pf-taller-lista";
   tmp.style.display = "none";
   document.body.appendChild(tmp);
-  pfRenderTaller();
-  tec.innerHTML = tmp.innerHTML;
-  document.body.removeChild(tmp);
-  // Re-vincular eventos (los onclick son strings en el HTML, funcionan sin re-binding)
+  try { // #018 FIX: try/finally para garantizar limpieza
+    pfRenderTaller();
+    tec.innerHTML = tmp.innerHTML;
+  } finally {
+    if (tmp.parentNode) document.body.removeChild(tmp);
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1723,7 +1765,7 @@ function pfCrearTarea() {
   var tareas = pfGetTareas();
   var tecNombres = { raul:"Raúl Romero", juan:"Juan Arboleda", fabiola:"Fabiola Mejía", todos:"Todos" };
   tareas.unshift({
-    id: "tar_" + Date.now() + "_" + Math.random().toString(36).substr(2,5) // BAJO FIX: evitar colisión,
+    id: "tar_" + Date.now() + "_" + Math.random().toString(36).substr(2,5), // BAJO FIX: evitar colisión
     desc: desc.trim(),
     tecnico: tec,
     tecNombre: tecNombres[tec] || tec,
@@ -1809,6 +1851,65 @@ function pfRenderTareas() {
 
 
 
+
+// ════════════════════════════════════════════════════════════
+//  NUEVO CLIENTE TEMPORAL (#002 FIX)
+// ════════════════════════════════════════════════════════════
+function pfAbrirFormNuevoCliente() {
+  var ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px";
+  ov.innerHTML =
+    '<div style="background:#fff;border-radius:20px;padding:24px 20px;max-width:340px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18)">' +
+    '<div style="font-size:17px;font-weight:700;margin-bottom:16px">➕ Nuevo cliente</div>' +
+    '<input id="nc-nombre" placeholder="Nombre / Razón social *" style="width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:8px">' +
+    '<input id="nc-ruc" placeholder="RUC / CI" inputmode="numeric" style="width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:8px">' +
+    '<input id="nc-dir" placeholder="Dirección" style="width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:8px">' +
+    '<input id="nc-tel" placeholder="Teléfono" inputmode="tel" style="width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:16px">' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+    '<button style="padding:13px;border-radius:12px;border:1.5px solid var(--bo);background:var(--g1);color:var(--g4);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit" id="nc-cancel">Cancelar</button>' +
+    '<button style="padding:13px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit" id="nc-ok">Guardar</button>' +
+    '</div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector('#nc-cancel').onclick = function(){ document.body.removeChild(ov); };
+  ov.querySelector('#nc-ok').onclick = function(){
+    var nombre = ov.querySelector('#nc-nombre').value.trim();
+    if (!nombre) { pfModal("El nombre es obligatorio."); return; }
+    var cli = {
+      codigo: "TEMP-" + Date.now(),
+      nombre: nombre,
+      razon:  nombre,
+      ruc:    ov.querySelector('#nc-ruc').value.trim(),
+      dir:    ov.querySelector('#nc-dir').value.trim(),
+      tel:    ov.querySelector('#nc-tel').value.trim(),
+      marca:  "Temporal",
+      mes:    "",
+      freqMant: "1 año",
+      freqRec:  "1 año",
+      responsable: ""
+    };
+    try {
+      var custom = JSON.parse(localStorage.getItem("pf_clientes_custom") || "[]");
+      custom.push(cli);
+      localStorage.setItem("pf_clientes_custom", JSON.stringify(custom));
+      document.body.removeChild(ov);
+      pfModal("✅ Cliente "" + nombre + "" agregado temporalmente.");
+    } catch(e) { pfModal("Error al guardar: " + e.message); }
+  };
+}
+
+// ════════════════════════════════════════════════════════════
+//  GUARDAR CONFIG NOTA (#003 FIX)
+// ════════════════════════════════════════════════════════════
+function pfGuardarConfigNota() {
+  var validez = document.getElementById("cfg-validez");
+  var pago    = document.getElementById("cfg-pago");
+  var ciudad  = document.getElementById("cfg-ciudad");
+  if (validez) localStorage.setItem("pf_nota_validez", validez.value.trim() || "30 DÍAS");
+  if (pago)    localStorage.setItem("pf_nota_pago",    pago.value.trim()    || "CRÉDITO");
+  if (ciudad)  localStorage.setItem("pf_ciudad",       ciudad.value.trim()  || "Guayaquil Ecuador");
+  pfModal("✅ Configuración guardada correctamente.");
+}
+
 // ════════════════════════════════════════════════════════════
 //  DEBOUNCE para botones críticos (evitar doble tap)
 // ════════════════════════════════════════════════════════════
@@ -1848,7 +1949,7 @@ function pfSincronizarFichas(callback) {
     return fetch(SCRIPT_URL, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ accion: "get_fichas", dispositivo: dispositivo })
+      body: JSON.stringify({ accion: "get_fichas", dispositivo: dispositivo, token: localStorage.getItem("pf_token") || "" })
     });
   })
   .then(function(r){ return r.json(); })
@@ -1891,8 +1992,10 @@ function pfSincronizarFichas(callback) {
 function pfAutoSync() {
   var ultimaSync = localStorage.getItem("pf_ultima_sync");
   if (ultimaSync) {
+    try {
     var diff = (new Date() - new Date(ultimaSync)) / 60000; // minutos
-    if (diff < 5) return; // no sincronizar si hace menos de 5 minutos
+    if (diff < 5) return;
+    } catch(e) { localStorage.removeItem("pf_ultima_sync"); } // #011 FIX
   }
   pfSincronizarFichas(function(ok, n) {
     if (ok) console.log("Sync OK: " + n + " locales sincronizados");
@@ -1977,7 +2080,10 @@ function pfGuardarPrecios() {
   // Guardar IVA
   var ivaInp = document.getElementById("prc-iva");
   if (ivaInp) {
-    var tasaIVA = (parseFloat(ivaInp.value) || 15) / 100;
+    var ivaRaw = parseFloat(ivaInp.value) || 15;
+    // #015 FIX: si usuario escribe 0.15 en lugar de 15, corregir
+    if (ivaRaw < 1) ivaRaw = ivaRaw * 100;
+    var tasaIVA = Math.min(Math.max(ivaRaw, 0), 100) / 100;
     localStorage.setItem("pf_iva", tasaIVA.toString());
   }
   localStorage.setItem("pf_precios_accs", JSON.stringify(precios));

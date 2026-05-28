@@ -37,14 +37,14 @@ function generarPDF() {
 }
 
 var _jspdfLoading = false;
-function cargarJsPDF(fc) {
-  if (window.jspdf && window.jspdf.jsPDF) { hacerPDF(fc); return; }
-  // BAJO FIX: evitar doble inyección si ya se está cargando
-  if (_jspdfLoading) { setTimeout(function(){ cargarJsPDF(fc); }, 300); return; }
+function cargarJsPDF(fc, callback) {
+  var cb = callback || function(){ hacerPDF(fc); }; // #117 FIX: callback para separar cert de nota
+  if (window.jspdf && window.jspdf.jsPDF) { cb(); return; }
+  if (_jspdfLoading) { setTimeout(function(){ cargarJsPDF(fc, cb); }, 300); return; }
   _jspdfLoading = true;
-  var s   = document.createElement("script");
-  s.src   = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-  s.onload  = function(){ _jspdfLoading = false; hacerPDF(fc); };
+  var s = document.createElement("script");
+  s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+  s.onload  = function(){ _jspdfLoading = false; cb(); };
   s.onerror = function(){ _jspdfLoading = false; mostrarCargando(false); pfModal("Error cargando el generador de PDF. Verifica tu conexión a internet."); };
   document.head.appendChild(s);
 }
@@ -93,9 +93,7 @@ function hacerPDF(fc) {
       }
     } catch(e) {}
 
-    // MEDIO FIX: incrementar CERT_CONTADOR después de validaciones
-    CERT_CONTADOR++;
-    localStorage.setItem("pf_certCount", CERT_CONTADOR);
+    // #114 FIX: CERT_CONTADOR se incrementa DESPUÉS de doc.output() exitoso (al final)
     // Buscar código real del cliente en base de datos
     // #9 FIX: una sola llamada a pfBuscarCliente, reutilizada en todo el PDF
     var _cliDB    = (typeof pfBuscarCliente === "function") ? pfBuscarCliente(LOCAL_ACTUAL.nombre) : null;
@@ -114,12 +112,16 @@ function hacerPDF(fc) {
     function piePagina() {
       fN(); doc.rect(0,PH-10,PW,10,"F");
       doc.setFont("helvetica","bold"); doc.setFontSize(6.8); tW();
-      doc.text("DIR: PORTETE #3007 Y GALLEGOS LARA  |  TEL: 04-2374822 · 0978997247 · 09835883325  |  EMAIL: ventas_previfuego@hotmail.com", PW/2, PH-3.8, {align:"center"});
+      doc.text("DIR: PORTETE #3007 Y GALLEGOS LARA  |  TEL: 04-2374822 · 0978997247 · 0983588325  |  EMAIL: ventas_previfuego@hotmail.com" // #121 FIX: número correcto 10 dígitos, PW/2, PH-3.8, {align:"center"});
     }
 
     function bloqueAutorizacion(yy) {
-      // Verificar que cabe en la página
-      if (yy > PH - 55) return yy;
+      if (yy < 55) { // #115 FIX: si no cabe, agregar nueva página
+        doc.addPage();
+        fondoBase();
+        piePagina();
+        yy = PH - 20;
+      }
       dR(); doc.setLineWidth(0.5); doc.line(ML,yy,ML+CW,yy); yy += 5;
       doc.setFillColor(253,251,251);
       dR(); doc.setLineWidth(0.3); doc.rect(ML,yy,CW,30,"FD");

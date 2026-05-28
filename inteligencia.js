@@ -28,7 +28,7 @@ function pfClasificarClientes() {
 
     // Calcular score de rentabilidad (heurístico)
     // Mantenimiento = alta rentabilidad, cobro = señal de problema de pago
-    var score = (tipos.mantenimiento * 3) + (tipos.entrega * 2) + (tipos.instalacion * 4) + (tipos.retiro * 1) - (tipos.cobro * 2);
+    var score = (tipos.mantenimiento * 3) + (tipos.entrega * 2) + (tipos.instalacion * 3) + (tipos.retiro * 1) + (tipos.cobro * 0); // #080 #086 FIX: cobro neutro, instalacion = mantenimiento
     var frecuencia = visitas.length;
 
     // Clasificar
@@ -117,7 +117,8 @@ function pfCalendarioMes(offsetMes) {
   var fichas = {};
   try { fichas = JSON.parse(localStorage.getItem("pf_fichas") || "{}"); } catch(e) {}
 
-  var hoy      = new Date();
+  var _raw = new Date();
+  var hoy = new Date(_raw.toLocaleString("en-US", {timeZone:"America/Guayaquil"})); // #079 FIX: timezone EC
   var año      = hoy.getFullYear();
   var mes      = hoy.getMonth() + offsetMes;
   while (mes > 11) { mes -= 12; año++; }
@@ -156,7 +157,13 @@ function pfCalendarioMes(offsetMes) {
 var PF_CAL_OFFSET = 0;
 
 function pfRenderCalendario() {
-  if (typeof PF_CLIENTES === "undefined" || !PF_CLIENTES || !PF_CLIENTES.length) return;
+  if (typeof PF_CLIENTES === "undefined" || !PF_CLIENTES || !PF_CLIENTES.length) {
+    // #075 FIX: mostrar mensaje y reintentar
+    var el = document.getElementById("pf-cal-contenido");
+    if (el) el.innerHTML = '<div style="padding:24px 16px;text-align:center;color:var(--g3);font-size:14px">⏳ Cargando base de datos...<br><br><button onclick="pfRenderCalendario()" style="padding:8px 16px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🔄 Reintentar</button></div>';
+    setTimeout(pfRenderCalendario, 1500);
+    return;
+  }
   
   var el = document.getElementById("pf-cal-contenido");
   if (!el) return;
@@ -178,20 +185,15 @@ function pfRenderCalendario() {
       }
     });
   }
-  // Incluir clientes de junio (código J) para junio
-  if (mesActual === "JUNIO" && typeof PF_CLIENTES_JUNIO !== "undefined") {
-    PF_CLIENTES_JUNIO.forEach(function(cli) {
-      if (!localesMes.find(function(x){ return x.codigo === cli.codigo && cli.codigo; })) {
-        localesMes.push(cli);
-      }
-    });
-  }
+  // #084 FIX: PF_CLIENTES_JUNIO eliminado — ya está incluido en PF_CLIENTES con mes JUNIO
 
   h += '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 12px 12px">';
-  h += '<button type="button" onclick="PF_CAL_OFFSET--;pfRenderCalendario()" style="padding:8px 16px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:16px;cursor:pointer">‹</button>';
+  var _canGoBack = PF_CAL_OFFSET > -6;
+  h += '<button type="button" onclick="if(PF_CAL_OFFSET>-6){PF_CAL_OFFSET--;pfRenderCalendario();}" style="padding:8px 16px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:16px;cursor:pointer;opacity:'+(_canGoBack?'1':'0.3')+'">‹</button>'; // #078 FIX
   h += '<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--ng)">'+cal.nombreMes+' '+cal.año+'</div>';
   h += '<div style="font-size:12px;color:var(--g3)">'+localesMes.length+' local(es) programados</div></div>';
-  h += '<button type="button" onclick="PF_CAL_OFFSET++;pfRenderCalendario()" style="padding:8px 16px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:16px;cursor:pointer">›</button>';
+  var _canGoFwd = PF_CAL_OFFSET < 12;
+  h += '<button type="button" onclick="if(PF_CAL_OFFSET<12){PF_CAL_OFFSET++;pfRenderCalendario();}" style="padding:8px 16px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:16px;cursor:pointer;opacity:'+(_canGoFwd?'1':'0.3')+'">›</button>'; // #078 FIX
   h += '</div>';
 
   if (!localesMes.length) {
@@ -206,12 +208,33 @@ function pfRenderCalendario() {
     });
     Object.keys(porMarca).sort().forEach(function(marca) {
       h += '<div class="slbl">' + marca + ' (' + porMarca[marca].length + ')</div>';
-      porMarca[marca].forEach(function(cli) {
-        h += '<div style="margin:0 12px 6px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:10px 14px">';
-        h += '<div style="font-size:13px;font-weight:700">' + cli.nombre + '</div>';
+      // #077 FIX: leer fichas para saber si ya fue visitado este mes
+    var _fichasCal = {};
+    try { _fichasCal = JSON.parse(localStorage.getItem("pf_fichas") || "{}"); } catch(e) {}
+    var _mesIdxStr = String(_mesIdx + 1).padStart(2, "0");
+    var _anioStr   = String(new Date().getFullYear());
+    porMarca[marca].forEach(function(cli) {
+        // Verificar si tiene visita de mantenimiento en el mes actual
+        var _ficha = _fichasCal[cli.nombre] || _fichasCal[cli.razon] || null;
+        var _visitado = false;
+        if (_ficha && _ficha.visitas) {
+          _visitado = _ficha.visitas.some(function(v) {
+            if (v.tipo !== "mantenimiento" && v.tipo !== "entrega") return false;
+            var parts = (v.fecha || "").split("/");
+            return parts.length >= 3 && parts[1] === _mesIdxStr && parts[2] === _anioStr;
+          });
+        }
+        var _bg  = _visitado ? "var(--vc)" : "#fff";
+        var _bor = _visitado ? "var(--v)"  : "var(--bo)";
+        var _ico = _visitado ? "✅" : "⏳";
+        h += '<div style="margin:0 12px 6px;background:'+_bg+';border-radius:12px;border:1.5px solid '+_bor+';padding:10px 14px">';
+        h += '<div style="display:flex;align-items:center;gap:8px">';
+        h += '<div style="font-size:16px">' + _ico + '</div>';
+        h += '<div style="flex:1">';
+        h += '<div style="font-size:13px;font-weight:700;color:' + (_visitado ? 'var(--v)' : 'var(--ng)') + '">' + cli.nombre + '</div>';
         h += '<div style="font-size:11px;color:var(--g4);margin-top:2px">' + cli.razon + ' · ' + (cli.responsable||"") + '</div>';
         h += '<div style="font-size:11px;color:var(--r);margin-top:2px">Mant: ' + cli.freqMant + ' · Recarga: ' + cli.freqRec + '</div>';
-        h += '</div>';
+        h += '</div></div></div>';
       });
     });
     h += '<div style="height:80px"></div>';
@@ -285,6 +308,8 @@ function pfAnalisisIA() {
     "Responde en español, de forma directa y práctica. Máximo 300 palabras.";
 
   PF_IA_CARGANDO = true;
+  // #085 FIX: timeout de seguridad — desbloquear botón si el fetch no responde en 30s
+  var _iaTimeout = setTimeout(function() { PF_IA_CARGANDO = false; if (el) el.innerHTML = '<div style="padding:14px;background:var(--rc);border-radius:12px;color:var(--r);font-size:13px">⏱ Timeout: la IA no respondió. Intenta de nuevo.</div>'; }, 30000);
   el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--g3)"><div style="font-size:32px;margin-bottom:8px">🤖</div><div style="font-size:14px;font-weight:700;margin-bottom:6px">Analizando datos...</div><div style="width:40px;height:40px;border:3px solid var(--g2);border-top-color:var(--r);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto"></div></div>';
 
   // #077 FIX: rutear por Apps Script como proxy — nunca exponer API key en el cliente
@@ -297,8 +322,13 @@ function pfAnalisisIA() {
   })
   .then(function(r){ return r.json(); })
   .then(function(data) {
+    clearTimeout(_iaTimeout); // #085 FIX
     PF_IA_CARGANDO = false;
-    var txt = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : "Sin respuesta de la IA.";
+    // #081 FIX: filtrar todos los bloques text, no solo el primero
+    var txt = "Sin respuesta de la IA.";
+    if (data.content && data.content.length) {
+      txt = data.content.filter(function(b){ return b.type === "text"; }).map(function(b){ return b.text; }).join("\n") || txt;
+    }
     // Formatear respuesta
     var html = txt
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -310,6 +340,7 @@ function pfAnalisisIA() {
       '<p style="margin-bottom:8px">' + html + '</p></div>';
   })
   .catch(function(err) {
+    clearTimeout(_iaTimeout); // #085 FIX
     PF_IA_CARGANDO = false;
     el.innerHTML = '<div style="padding:14px;background:var(--rc);border-radius:12px;color:var(--r);font-size:13px">Error al conectar con la IA: '+err.message+'</div>';
   });

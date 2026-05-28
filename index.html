@@ -1,26 +1,26 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#9E1212">
   <meta property="og:title" content="Previfuego Field">
   <meta property="og:description" content="App de operaciones de campo — Previfuego">
   <meta property="og:type" content="website">
-  <meta name="theme-color" content="#9E1212">
-  <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#9E1212">
+  <meta property="og:image" content="https://alejosl0801.github.io/previfuego-backend/icon-192.png">
   <link rel="manifest" href="manifest.json?v=3.4">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
 <meta name="description" content="Previfuego Field — App de técnicos de campo">
-<title>Previfuego Field v3.4</title>
+<title>Previfuego Field v3.5</title>
 <link rel="stylesheet" href="style.css?v=3.4">
   <link rel="preconnect" href="https://cdnjs.cloudflare.com"> <!-- #102 FIX -->
 </head>
 <body>
 <noscript><div style="padding:40px;text-align:center;font-family:sans-serif"><h2>Previfuego Field requiere JavaScript</h2><p>Activa JavaScript en tu navegador para usar la app.</p></div></noscript> <!-- #98 FIX -->
 <img id="lcd" data-b64="" style="display:none" alt="logo previfuego">
-<div class="lov" id="lov"><div class="lsp"></div><div class="ltx" id="ltx">Cargando...</div><div class="lsb" id="lsb">Por favor espera</div></div>
+<div class="lov" id="lov" role="status" aria-live="polite"><div class="lsp"></div><div class="ltx" id="ltx">Cargando...</div><div class="lsb" id="lsb">Por favor espera</div></div>
 <div class="ov" id="ov" onclick="cerrarSel()"></div>
 <div class="asel" id="asel"><div class="asel-t">Agregar accesorio</div><div id="asel-list"></div></div>
 
@@ -165,15 +165,16 @@
   <div class="sc">
     <div style="padding:20px;text-align:center"><div style="width:64px;height:64px;border-radius:20px;background:var(--r);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:32px">&#128119;</div><div class="sperf-nom" style="font-size:20px;font-weight:700">Raúl Romero</div><div class="sperf-rol" style="font-size:14px;color:var(--g4);margin-top:4px">Técnico Operativo y Logístico</div></div>
     <div id="sperf-stats" style="margin:0 12px 8px"></div>
-    <div class="cd" style="margin-bottom:12px"><div style="padding:14px;border-bottom:1px solid var(--bo)"><div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Empresa</div><div style="font-size:15px;font-weight:700">Previfuego / Pyroshield</div></div><div style="padding:14px"><div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Versión</div><div id="sperf-ver" style="font-size:15px;font-weight:700">Previfuego Field v3.3</div></div></div>
+    <div class="cd" style="margin-bottom:12px"><div style="padding:14px;border-bottom:1px solid var(--bo)"><div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Empresa</div><div style="font-size:15px;font-weight:700">Previfuego / Pyroshield</div></div><div style="padding:14px"><div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Versión</div><div id="sperf-ver" style="font-size:15px;font-weight:700">Previfuego Field v3.5</div></div></div>
     <div class="bw" style="margin-bottom:80px"><button type="button" class="btn btn-g" onclick="cerrarSesion()">&#8592; Cambiar usuario</button></div>
   </div>
   <div class="nav">
     <div class="ni" onclick="ir('s1')"><div class="nii">&#128506;</div><div class="nil">Recorrido</div></div>
     <div class="ni" onclick="ir('shist');renderHistorial()"><div class="nii">&#128203;</div><div class="nil">Historial</div></div>
     <div class="ni on" onclick="ir('sperf');renderPerfil()"><div class="nii">&#128100;</div><div class="nil">Perfil</div></div>
+    <div class="ni" onclick="ir('staller');pfRenderTallerTec()"><div class="nii">&#128295;</div><div class="nil">Taller</div></div>
   </div>
-</div>
+</div><!-- #P10 FIX: botón Taller en nav perfil -->
 
 <!-- ═══ ADMIN — ALEJANDRO ═══ -->
 <div class="screen" id="sadmin">
@@ -195,7 +196,7 @@
   <div class="adm-panel on" id="adm-p1">
     <div class="slbl">Recorrido del día</div>
     <div style="margin:0 12px 10px">
-      <textarea class="admin-txt" id="admin-txt" placeholder="Pega aquí el recorrido del día...&#10;&#10;RECORRIDO – JORNADA MAÑANA&#10;Punto 1 – Mall del Sol&#10;American Deli&#10;Misión: Realizar mantenimiento...&#10;&#10;RECORRIDO – JORNADA TARDE&#10;Punto 1 – Terminal Terrestre&#10;KFC Terminal&#10;Misión: Entregar extintor..." oninput="previsualizarRecorrido()"></textarea>
+      <textarea class="admin-txt" id="admin-txt" maxlength="45000" placeholder="Pega aquí el recorrido del día...&#10;&#10;RECORRIDO – JORNADA MAÑANA&#10;Punto 1 – Mall del Sol&#10;American Deli&#10;Misión: Realizar mantenimiento...&#10;&#10;RECORRIDO – JORNADA TARDE&#10;Punto 1 – Terminal Terrestre&#10;KFC Terminal&#10;Misión: Entregar extintor..." oninput="previsualizarRecorrido()"></textarea>
     </div>
     <div class="pub-ok" id="admin-pub-ok">✅ Recorrido publicado — el técnico ya puede verlo</div>
     <div class="bw" style="padding-top:0;display:flex;gap:8px">
@@ -255,23 +256,7 @@
     </div>
   </div>
 
-</div><!-- fin sadmin -->
-
-<!-- ═══ TALLER (técnicos) ═══ -->
-<div class="screen" id="staller">
-  <div class="tb">
-    <div class="bk" onclick="ir('s1')">&#8249;</div>
-    <div class="ti" style="margin-left:4px"><div class="tt">Taller</div><div class="ts ts-nombre">Raúl Romero</div></div>
-  </div>
-  <div class="sc">
-    <div id="pf-taller-lista-tec"></div>
-    <div style="height:80px"></div>
-  </div>
-  <div class="nav">
-    <div class="ni" onclick="ir('s1')"><div class="nii">&#128506;</div><div class="nil">Recorrido</div></div>
-    <div class="ni" onclick="ir('shist');renderHistorial()"><div class="nii">&#128203;</div><div class="nil">Historial</div></div>
-    <div class="ni on" onclick="ir('staller');pfRenderTallerTec()"><div class="nii">&#128295;</div><div class="nil">Taller</div></div>
-  </div>
+  <!-- TAB 12: Tareas — #P1 #P5 FIX: movido a sadmin -->
   <div class="adm-panel" id="adm-p12">
     <div style="padding:12px 0">
       <div class="slbl">Tareas independientes</div>
@@ -294,6 +279,24 @@
       <div id="pf-tareas-lista"></div>
       <div style="height:80px"></div>
     </div>
+  </div>
+
+</div><!-- fin sadmin -->
+
+<!-- ═══ TALLER (técnicos) ═══ -->
+<div class="screen" id="staller">
+  <div class="tb">
+    <div class="bk" onclick="ir('s1')">&#8249;</div>
+    <div class="ti" style="margin-left:4px"><div class="tt">Taller</div><div class="ts ts-nombre">Raúl Romero</div></div>
+  </div>
+  <div class="sc">
+    <div id="pf-taller-lista-tec"></div>
+    <div style="height:80px"></div>
+  </div>
+  <div class="nav">
+    <div class="ni" onclick="ir('s1')"><div class="nii">&#128506;</div><div class="nil">Recorrido</div></div>
+    <div class="ni" onclick="ir('shist');renderHistorial()"><div class="nii">&#128203;</div><div class="nil">Historial</div></div>
+    <div class="ni on" onclick="ir('staller');pfRenderTallerTec()"><div class="nii">&#128295;</div><div class="nil">Taller</div></div>
   </div>
 </div>
 
@@ -388,18 +391,19 @@
   </div>
 </div>
 
+<!-- Scripts: clientes primero (datos), luego app core, luego módulos, coordinator al final con defer -->
+<script src="clientes.js?v=2.0" defer></script>
 <script src="logo.js?v=3.4" defer></script>
-<script src="clientes.js?v=2.0"></script>
-<script src="app.js?v=3.4"></script>
-<script src="pdf.js?v=3.4"></script>
-<script src="nota.js?v=3.4"></script>
-<script src="retiros.js?v=3.4"></script>
+<script src="app.js?v=3.4" defer></script>
+<script src="pdf.js?v=3.4" defer></script>
+<script src="nota.js?v=3.4" defer></script>
+<script src="retiros.js?v=3.4" defer></script>
 <script src="dashboard.js?v=3.4" defer></script>
 <script src="extras.js?v=3.4" defer></script>
-<script src="mejoras2.js?v=3.4"></script>
-<script src="crm.js?v=3.4"></script>
+<script src="mejoras2.js?v=3.4" defer></script>
+<script src="crm.js?v=3.4" defer></script>
 <script src="inteligencia.js?v=3.4" defer></script>
-<script src="coordinator.js?v=3.4"></script>
+<script src="coordinator.js?v=3.5" defer></script><!-- #P2 FIX: todos con defer, coordinator al final -->
 
 <script>
 // #011 FIX: Registrar Service Worker para soporte offline

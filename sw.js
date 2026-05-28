@@ -1,6 +1,6 @@
 // PREVIFUEGO FIELD — Service Worker v1.0
 // #011 FIX: soporte offline básico
-const CACHE_VERSION = '3.4'; // Actualizar al subir nueva versión
+const CACHE_VERSION = '3.5'; // #165 FIX: incrementar en cada deploy
 const CACHE_NAME = 'previfuego-v' + CACHE_VERSION;
 // #11 #12 FIX: no cachear script.google.com, no incluir iconos que no existen
 const ASSETS = [
@@ -18,6 +18,8 @@ const ASSETS = [
   '/previfuego-backend/coordinator.js',
   '/previfuego-backend/logo.js',
   '/previfuego-backend/style.css',
+  '/previfuego-backend/inteligencia.js',
+  '/previfuego-backend/logo.js',
   '/previfuego-backend/manifest.json'
   // Nota: icon-192.png e icon-512.png deben existir para incluirlos aquí
   // Nota: script.google.com NUNCA debe cachearse (es la API de Apps Script)
@@ -74,7 +76,9 @@ self.addEventListener('fetch', function(event) {
         }
         return response;
       }).catch(function() {
-        return caches.match('/previfuego-backend/index.html');
+        // #167 FIX: solo usar fallback HTML para requests de navegación, no para API
+      if (event.request.mode === "navigate") return caches.match('/previfuego-backend/index.html');
+      return new Response("", { status: 503 });
       });
       // Para JS/CSS: servir caché inmediatamente y actualizar en background
       return (cached && isJSorCSS) ? cached : (fetchPromise.catch(function(){ return cached; }));

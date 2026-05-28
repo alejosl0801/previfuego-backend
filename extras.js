@@ -134,7 +134,7 @@ function pfCapturarGPS() {
       };
     },
     function() { PF_FIRMA_GEO = null; }, // si niega permiso, sin GPS
-    { timeout: 4000, maximumAge: 60000 } // BAJO FIX: 4s suficiente, maximumAge más alto para reusar pos
+    { timeout: 4000, maximumAge: 30000 } // #129 FIX: 30s máximo de antigüedad GPS
   );
 }
 
@@ -162,7 +162,8 @@ function pfInyectarTimestampFirma() {
 
   // Insertar antes del botón de firmar / al inicio del sc
   var sc = sfir.querySelector(".sc") || sfir.querySelector(".bw");
-  if (sc) sc.insertBefore(div, sc.firstChild);
+  if (sc && sc.firstChild) sc.insertBefore(div, sc.firstChild); // #131 FIX: guard firstChild null
+  else if (sc) sc.appendChild(div);
   else sfir.appendChild(div);
 }
 
@@ -209,7 +210,8 @@ function pfHacerBackup() {
     "pf_hist_data", "pf_hist_fecha",
     "pf_recorrido_texto", "pf_recorrido_data", "pf_recorrido_jornadas",
     "pf_certCount", "pyro_ordenes", "pyro_oe_nro", "pf_usuario",
-    "pf_clientes_custom", "pf_correos_clientes", "pf_facturas_emitidas", "pf_precios_accs", "pf_iva" // BAJO FIX
+    "pf_clientes_custom", "pf_correos_clientes", "pf_facturas_emitidas", "pf_precios_accs", "pf_iva",
+    "pf_taller", "pf_tareas", "pf_crm" // #125 FIX: incluir taller, tareas y CRM en backup
   ];
   var backup = { version: "1.0", fecha: new Date().toISOString(), datos: {} };
   claves.forEach(function(k) {
@@ -243,6 +245,7 @@ function pfRestaurarBackup(file) {
     try {
       var backup = JSON.parse(e.target.result);
       if (!backup.datos) { pfModal("Archivo de backup inválido."); return; }
+      if (backup.version && backup.version < "1.0") { pfModal("⚠️ Backup muy antiguo (v" + backup.version + "). Puede haber incompatibilidades."); } // #128 FIX
       pfConfirm("¿Restaurar backup del " + backup.fecha + "?\nEsto reemplazará los datos actuales.", function() {
         Object.keys(backup.datos).forEach(function(k) {
           localStorage.setItem(k, JSON.stringify(backup.datos[k]));

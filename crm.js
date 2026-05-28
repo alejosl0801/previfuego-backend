@@ -134,7 +134,7 @@ function pfAbrirCRM(nombreLocal) {
   if (!modal) {
     modal = document.createElement("div");
     modal.id = "pf-crm-modal";
-    modal.style.cssText = "position:fixed;inset:0;background:var(--g1);z-index:350;overflow-y:auto;display:none;padding-bottom:80px";
+    modal.style.cssText = "position:fixed;inset:0;background:var(--g1);z-index:510;overflow-y:auto;display:none;padding-bottom:80px"; // #067 FIX: z-index > modal Azur (500)
     document.body.appendChild(modal);
   }
   modal.innerHTML = h;
@@ -145,7 +145,7 @@ function pfAbrirCRM(nombreLocal) {
 function pfEnviarNota(nombreLocal) {
   var txt  = document.getElementById("crm-nota-txt");
   var tipo = document.getElementById("crm-tipo");
-  if (!txt || !txt.value.trim()) { pfModal("Escribe una nota primero."); return; }
+  if (!txt || !txt.value.trim() || txt.value.trim().length < 3) { pfModal("La nota debe tener al menos 3 caracteres."); return; } // #069 FIX
   pfGuardarNota(nombreLocal, txt.value.trim(), tipo ? tipo.value : "nota");
   txt.value = "";
   pfAbrirCRM(nombreLocal); // refrescar
@@ -156,7 +156,7 @@ function pfGuardarContactoUI(nombreLocal) {
   var cargo = document.getElementById("crm-cont-cargo");
   var tel   = document.getElementById("crm-cont-tel");
   var email = document.getElementById("crm-cont-email");
-  if (!nom || !nom.value.trim()) { pfModal("Ingresa el nombre del contacto."); return; }
+  if (!nom || !nom.value.trim() || nom.value.trim().length < 2) { pfModal("Ingresa el nombre del contacto (mínimo 2 caracteres)."); return; } // #070 FIX
   pfGuardarContacto(nombreLocal, {
     nombre:   nom.value.trim(),
     cargo:    cargo ? cargo.value.trim() : "",
@@ -242,7 +242,7 @@ function pfRenderProductividad() {
     });
 
     // Últimas visitas
-    var ultimas = data.visitas.slice(0,3);
+    var ultimas = data.visitas.slice().sort(function(a,b){ return (b.fecha+b.hora).localeCompare(a.fecha+a.hora); }).slice(0,3); // #068 FIX: ordenar por fecha desc
     h += '<div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin:10px 0 6px">Últimas visitas</div>';
     ultimas.forEach(function(v) {
       h += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid var(--bo)">';
@@ -302,10 +302,10 @@ function pfRenderNotasCRM(nombreLocal, el) {
     data.notas.slice(0, 20).forEach(function(n, idx_nota) {
       h += '<div style="background:var(--g1);border-radius:10px;padding:10px 12px;margin-bottom:6px">';
       h += '<div style="font-size:13px;color:var(--ng);line-height:1.5">'+n.texto+'</div>';
-      var ni = data.notas.indexOf(n);
+      // #064 FIX: usar idx_nota (parámetro del forEach) en lugar de indexOf
       h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">';
-      h += '<div style="font-size:11px;color:var(--g3)">'+n.fecha+' · '+n.usuario+'</div>' // FIX: campo correcto es 'usuario';
-      h += '<button onclick="pfEliminarNotaCRM(\''+pfEscNom(nombreLocal)+'\','+ni+')" style="font-size:10px;color:var(--r);background:none;border:none;cursor:pointer;padding:2px 6px">🗑</button>';
+      h += '<div style="font-size:11px;color:var(--g3)">'+n.fecha+' · '+n.usuario+'</div>';
+      h += '<button data-idx="'+idx_nota+'" data-local="' + (nombreLocal||"").replace(/"/g,"&quot;") + '" onclick="pfEliminarNotaCRM(this.getAttribute('+"'data-local'"+"'"+"),parseInt(this.getAttribute('+"'data-idx'"+"'"+")))" style="font-size:10px;color:var(--r);background:none;border:none;cursor:pointer;padding:2px 6px">🗑</button>';
       h += '</div></div>';
     });
   }

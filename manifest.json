@@ -1,14 +1,29 @@
 {
   "name": "Previfuego Field",
   "short_name": "Previfuego",
-  "description": "App de operaciones de campo para Previfuego",
+  "description": "App de operaciones de campo para Previfuego / Pyroshield",
   "start_url": "/previfuego-backend/",
   "display": "standalone",
   "background_color": "#F5F5F3",
   "theme_color": "#9E1212",
   "orientation": "portrait",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": [
+    "business",
+    "productivity"
   ]
 }

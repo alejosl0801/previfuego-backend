@@ -14,11 +14,9 @@ window.addEventListener("load", function() {
   // Guardar el admTab original de app.js y extenderlo con handlers de módulos
   var _admTabBase = window.admTab;
   window.admTab = function(n) {
-    // app.js ya desactiva/activa hasta MAX_TABS — llamarlo directamente
-    if (typeof _admTabBase === "function") _admTabBase(n);
-    // Ejecutar handler del módulo si existe (evitar re-ejecutar tab 1,2,3 que app.js ya maneja)
+    try { if (typeof _admTabBase === "function") _admTabBase(n); } catch(e) { console.warn("admTab base error:", e); } // #046 FIX
     if (window.PF_TAB_HANDLERS[n] && n > 3) {
-      window.PF_TAB_HANDLERS[n]();
+      try { window.PF_TAB_HANDLERS[n](); } catch(e) { console.warn("Tab handler error tab", n, e); } // #046 FIX
     }
   };
 
@@ -81,16 +79,17 @@ window.addEventListener("load", function() {
       if (typeof pfActualizarTimestampUI  === "function") pfActualizarTimestampUI();
       if (typeof pfInyectarCampoEmail     === "function") pfInyectarCampoEmail();
       if (typeof pfCapturarGPS            === "function") pfCapturarGPS();
-    }, 300);
+    }, 500); // #047 FIX: 500ms más seguro en dispositivos lentos
   };
 
   // ── Coordinador de confirmarSin ───────────────────────────
   var _confirmarSinBase = window.confirmarSin;
   window.confirmarSin = function() {
-    var localSnap = (typeof LOCAL_ACTUAL !== "undefined" && LOCAL_ACTUAL)
-      ? JSON.parse(JSON.stringify(LOCAL_ACTUAL)) : null;
-    var puntoSnap = (typeof PUNTO_ACTUAL !== "undefined" && PUNTO_ACTUAL)
-      ? JSON.parse(JSON.stringify(PUNTO_ACTUAL)) : null;
+    var localSnap = null, puntoSnap = null;
+    try { // #044 FIX: guard referencias circulares
+      localSnap = (typeof LOCAL_ACTUAL !== "undefined" && LOCAL_ACTUAL) ? JSON.parse(JSON.stringify(LOCAL_ACTUAL)) : null;
+      puntoSnap = (typeof PUNTO_ACTUAL !== "undefined" && PUNTO_ACTUAL) ? JSON.parse(JSON.stringify(PUNTO_ACTUAL)) : null;
+    } catch(e) { console.warn("confirmarSin snapshot error:", e); }
     var tipoSnap  = typeof TIPO_TRABAJO   !== "undefined" ? TIPO_TRABAJO   : null;
     var tecSnap   = typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "Raúl Romero";
 
@@ -158,7 +157,9 @@ window.addEventListener("load", function() {
           var btn = document.createElement("div");
           btn.id = "pf-ficha-crm-btn";
           btn.style.cssText = "padding:0 12px 12px";
-          btn.innerHTML = '<button onclick="pfCerrarFicha();pfAbrirCRM(\'' + nombre.replace(/'/g, "") + '\')" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--a);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">📋 Abrir CRM de este local</button>';
+          btn.innerHTML = '<button data-localcrm="" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--a);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">📋 Abrir CRM de este local</button>';
+          btn.querySelector('button').setAttribute('data-localcrm', nombre);
+          btn.querySelector('button').onclick = function(){ pfCerrarFicha(); pfAbrirCRM(this.getAttribute('data-localcrm')); }; // #042 FIX: apóstrofes
           var cont = modal.querySelector("div");
           if (cont) cont.appendChild(btn);
         }, 150);
@@ -253,7 +254,7 @@ window.addEventListener("load", function() {
       fetch(SCRIPT_URL, {
         method:  "POST",
         headers: { "Content-Type": "application/json" }, // BAJO FIX
-        body: JSON.stringify({ accion: "guardar_azur_key", azur_key: key })
+        body: JSON.stringify({ accion: "guardar_azur_key", azur_key: key, token: localStorage.getItem("pf_token") || "" })
       })
       .then(function(r){ return r.json(); })
       .then(function(d){
@@ -307,7 +308,7 @@ window.addEventListener("load", function() {
     fetch(SCRIPT_URL, {
       method:  "POST",
       headers: { "Content-Type": "application/json" }, // BAJO FIX
-      body: JSON.stringify({ accion: "consultar_comprobante", claveAcceso: claveAcceso })
+      body: JSON.stringify({ accion: "consultar_comprobante", claveAcceso: claveAcceso, token: localStorage.getItem("pf_token") || "" })
     })
     .then(function(r){ return r.json(); })
     .then(function(d){
