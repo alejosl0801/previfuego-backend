@@ -317,7 +317,6 @@ function pfAnalisisIA() {
   if (!iaUrl) { el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--r)">Error: SCRIPT_URL no configurado.</div>'; return; }
   fetch(iaUrl + "?accion=analisis_ia", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ accion: "analisis_ia", prompt: prompt })
   })
   .then(function(r){ return r.json(); })

@@ -40,7 +40,6 @@ function pfGuardarNota(nombreLocal, nota, tipo) {
   if (typeof SCRIPT_URL !== "undefined") {
     fetch(SCRIPT_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         accion:"guardar_crm", local:nombreLocal, tipo:tipo||"nota",
         nota:nota, usuario: typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "—"
