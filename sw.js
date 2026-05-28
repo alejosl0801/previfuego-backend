@@ -1,6 +1,6 @@
 // PREVIFUEGO FIELD — Service Worker v1.0
 // #011 FIX: soporte offline básico
-const CACHE_VERSION = '3.5'; // #165 FIX: incrementar en cada deploy
+const CACHE_VERSION = '3.6'; // #165 FIX: incrementar en cada deploy
 const CACHE_NAME = 'previfuego-v' + CACHE_VERSION;
 // #11 #12 FIX: no cachear script.google.com, no incluir iconos que no existen
 const ASSETS = [

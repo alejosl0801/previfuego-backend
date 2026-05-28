@@ -337,8 +337,8 @@ function pfRenderNotasCRM(nombreLocal, el) {
       if (n._editando) {
         h += '<textarea id="crm-edit-'+idx_nota+'" style="width:100%;height:60px;padding:6px 8px;border:1.5px solid var(--a);border-radius:8px;font-family:inherit;font-size:13px;resize:none;margin-bottom:6px">'+n.texto+'</textarea>';
         h += '<div style="display:flex;gap:6px">';
-        h += '<button data-idx="'+idx_nota+'" data-local="'+(nombreLocal||"").replace(/"/g,"&quot;")+'" onclick="pfGuardarEdicionNota(this.getAttribute('data-local'),parseInt(this.getAttribute('data-idx')))" style="flex:1;padding:6px;border-radius:8px;border:none;background:var(--a);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">💾 Guardar</button>';
-        h += '<button data-idx="'+idx_nota+'" data-local="'+(nombreLocal||"").replace(/"/g,"&quot;")+'" onclick="pfCancelarEdicionNota(this.getAttribute('data-local'),parseInt(this.getAttribute('data-idx')))" style="flex:1;padding:6px;border-radius:8px;border:1.5px solid var(--bo);background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Cancelar</button>';
+        h += '<button data-idx="'+idx_nota+'" data-local="'+(nombreLocal||"").replace(/"/g,"&quot;")+'" onclick="pfGuardarEdicionNota(this.dataset.local,parseInt(this.dataset.idx))" style="flex:1;padding:6px;border-radius:8px;border:none;background:var(--a);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">💾 Guardar</button>';
+        h += '<button data-idx="'+idx_nota+'" data-local="'+(nombreLocal||"").replace(/"/g,"&quot;")+'" onclick="pfCancelarEdicionNota(this.dataset.local,parseInt(this.dataset.idx))" style="flex:1;padding:6px;border-radius:8px;border:1.5px solid var(--bo);background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Cancelar</button>';
         h += '</div>';
       } else {
         h += '<div style="font-size:13px;color:var(--ng);line-height:1.5">'+n.texto+'</div>';
@@ -346,8 +346,8 @@ function pfRenderNotasCRM(nombreLocal, el) {
         h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">';
         h += '<div style="font-size:11px;color:var(--g3)">'+n.fecha+' · '+n.usuario+'</div>';
         h += '<div style="display:flex;gap:4px">';
-        h += '<button data-idx="'+idx_nota+'" data-local="'+(nombreLocal||"").replace(/"/g,"&quot;")+'" onclick="pfIniciarEdicionNota(this.getAttribute(\'data-local\'),parseInt(this.getAttribute(\'data-idx\')))" style="font-size:10px;color:var(--a);background:none;border:none;cursor:pointer;padding:2px 6px">✏️</button>';
-        h += '<button data-idx="'+idx_nota+'" data-local="'+(nombreLocal||"").replace(/"/g,"&quot;")+'" onclick="pfEliminarNotaCRM(this.getAttribute(\'data-local\'),parseInt(this.getAttribute(\'data-idx\')))" style="font-size:10px;color:var(--r);background:none;border:none;cursor:pointer;padding:2px 6px">🗑</button>';
+        h += '<button data-idx="'+idx_nota+'" data-local="'+(nombreLocal||"").replace(/"/g,"&quot;")+'" onclick="pfIniciarEdicionNota(this.dataset.local,parseInt(this.dataset.idx))" style="font-size:10px;color:var(--a);background:none;border:none;cursor:pointer;padding:2px 6px">✏️</button>';
+        h += '<button data-idx="'+idx_nota+'" data-local="'+(nombreLocal||"").replace(/"/g,"&quot;")+'" onclick="pfEliminarNotaCRM(this.dataset.local,parseInt(this.dataset.idx))" style="font-size:10px;color:var(--r);background:none;border:none;cursor:pointer;padding:2px 6px">🗑</button>';
         h += '</div></div>';
       }
       h += '</div>';

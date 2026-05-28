@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════
 
 var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyLW3EksB1zZDfOalqSpTPwgko8Fu2dxJfxgoSZaWAJzHQ95CJDpK-BPL0v2MnDMmRS/exec";
-var VERSION    = "3.4";
+var VERSION    = "3.6";
 
 // ── ACCESORIOS ───────────────────────────────────────────────
 var ACCESORIOS = [
@@ -1901,7 +1901,7 @@ function pfAbrirFormNuevoCliente() {
       custom.push(cli);
       localStorage.setItem("pf_clientes_custom", JSON.stringify(custom));
       document.body.removeChild(ov);
-      pfModal("✅ Cliente "" + nombre + "" agregado temporalmente.");
+      pfModal("✅ Cliente " + nombre + " agregado temporalmente.");
     } catch(e) { pfModal("Error al guardar: " + e.message); }
   };
 }
