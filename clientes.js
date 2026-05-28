@@ -873,7 +873,7 @@ var PF_CLIENTES = [
     "codigo": "G042",
     "grupo": "Grupo KFC",
     "marca": "GUS",
-    "nombre": "G042 - QUITO AQUIRRE CERRADO",
+    "nombre": "G042 - QUITO AQUIRRE CERRADO", "inactivo": true, "motivo": "Local cerrado",
     "razon": "INT FOOD SERVICES CORP S.A.",
     "ruc": "1791415132001",
     "responsable": "RUSBELIS FARIAS",
@@ -2529,7 +2529,7 @@ var PF_CLIENTES = [
     "codigo": "IND-011",
     "grupo": "Independiente",
     "marca": "MUNDICABLES",
-    "nombre": "MUNDICABLES",
+    "nombre": "MUNDICABLES", "inactivo": true, "motivo": "Se fue con otro proveedor",
     "razon": "MUNDICABLES S.A.",
     "ruc": "992923172001",
     "responsable": "",
@@ -2785,7 +2785,7 @@ var PF_CLIENTES = [
     "razon": "IMPORTADORA ROLORTIZ CIA. LTDA.",
     "ruc": "190157075001",
     "responsable": "",
-    "mes": "FEBRERO",
+    "mes": "MAYO",
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
@@ -2805,7 +2805,7 @@ var PF_CLIENTES = [
     "codigo": "IND-034",
     "grupo": "Independiente",
     "marca": "SOCELEC",
-    "nombre": "SOCELEC",
+    "nombre": "SOCELEC", "inactivo": true, "motivo": "Sin continuidad",
     "razon": "SOCIEDAD ELECTRONICA S.A. SOCELEC",
     "ruc": "190370585001",
     "responsable": "",
@@ -2877,7 +2877,7 @@ var PF_CLIENTES = [
     "codigo": "IND-040",
     "grupo": "Independiente",
     "marca": "TORO ASADO",
-    "nombre": "TORO RIOC EL DORADO",
+    "nombre": "TORO RIOC EL DORADO", "inactivo": true, "motivo": "Local cerrado",
     "razon": "BAZFEX S.A.",
     "ruc": "1792510457001",
     "responsable": "",
@@ -4097,7 +4097,90 @@ var PF_CLIENTES = [
     "freqMant": "1 año",
     "freqRec": "1 año"
   }
+,
+  {
+    "codigo": "TORO-9OCT",
+    "nombre": "TORO ASADO 9 DE OCTUBRE",
+    "razon": "TORO ASADO 9 DE OCTUBRE",
+    "ruc": "",
+    "dir": "9 DE OCTUBRE, GUAYAQUIL",
+    "tel": "",
+    "marca": "Toro Asado",
+    "mes": "MAYO",
+    "freqMant": "1 año",
+    "freqRec": "1 año",
+    "responsable": "",
+    "email": ""
+  },
+  {
+    "codigo": "ICHIGO-ALH",
+    "nombre": "ICHIGO ALHAMBRA",
+    "razon": "ICHIGO ALHAMBRA",
+    "ruc": "",
+    "dir": "ALHAMBRA, GUAYAQUIL",
+    "tel": "",
+    "marca": "Independiente",
+    "mes": "MAYO",
+    "freqMant": "1 año",
+    "freqRec": "1 año",
+    "responsable": "",
+    "email": "",
+    "extintores": [{"tipo": "CO2", "capacidad": "50 LBS", "ubicacion": ""}, {"tipo": "PQS", "capacidad": "10 LBS", "ubicacion": ""}, {"tipo": "PQS", "capacidad": "10 LBS", "ubicacion": ""}, {"tipo": "PQS", "capacidad": "10 LBS", "ubicacion": ""}]
+  },
+  {
+    "codigo": "IKURA-BV",
+    "nombre": "IKURA BUENA VISTA",
+    "razon": "IKURA BUENA VISTA",
+    "ruc": "",
+    "dir": "BUENA VISTA, GUAYAQUIL",
+    "tel": "",
+    "marca": "Independiente",
+    "mes": "MAYO",
+    "freqMant": "1 año",
+    "freqRec": "1 año",
+    "responsable": "",
+    "email": ""
+  },
+  {
+    "codigo": "YATAI-DORADO",
+    "nombre": "YATAI RIOCENTRO EL DORADO",
+    "razon": "YATAI RIOCENTRO EL DORADO",
+    "ruc": "",
+    "dir": "RIOCENTRO EL DORADO, GUAYAQUIL",
+    "tel": "",
+    "marca": "Independiente",
+    "mes": "MAYO",
+    "freqMant": "1 año",
+    "freqRec": "1 año",
+    "responsable": "",
+    "email": "",
+    "extintores": [{"tipo": "CO2", "capacidad": "50 LBS", "ubicacion": ""}, {"tipo": "PQS", "capacidad": "10 LBS", "ubicacion": ""}]
+  }
 ];
+
+// Sobrescribir pfBuscarCliente con versión optimizada usando índice
+var _pfBuscarOriginal = pfBuscarCliente;
+pfBuscarCliente = function(nombreLocal) {
+  // Construir índice si no existe
+  if (!_PF_IDX_CODIGO) pfBuildIndex();
+  if (!nombreLocal) return null;
+  var q = nombreLocal.trim().toUpperCase();
+
+  // 1. Índice por código O(1)
+  if (_PF_IDX_CODIGO[q]) return _PF_IDX_CODIGO[q];
+  // 2. Índice por nombre exacto O(1)
+  if (_PF_IDX_NOMBRE[q]) return _PF_IDX_NOMBRE[q];
+  // 3. Fallback al original (búsqueda lineal para casos complejos)
+  var res = _pfBuscarOriginal(nombreLocal);
+  if (res) return res;
+  // 4. Buscar en clientes custom
+  var custom = pfGetClientesCustom();
+  for (var i = 0; i < custom.length; i++) {
+    if (custom[i].nombre.toUpperCase() === q) return custom[i];
+    if (custom[i].codigo && custom[i].codigo.toUpperCase() === q) return custom[i];
+  }
+  return null;
+};
 
 // ── BÚSQUEDA DE CLIENTE ──────────────────────────────────────
 // Una sola definición global — no sobreescribir con window.pfBuscarCliente
@@ -4227,27 +4310,3 @@ function pfBuildIndex() {
     _PF_IDX_NOMBRE[c.nombre.toUpperCase()] = c;
   }
 }
-
-// Sobrescribir pfBuscarCliente con versión optimizada usando índice
-var _pfBuscarOriginal = pfBuscarCliente;
-pfBuscarCliente = function(nombreLocal) {
-  // Construir índice si no existe
-  if (!_PF_IDX_CODIGO) pfBuildIndex();
-  if (!nombreLocal) return null;
-  var q = nombreLocal.trim().toUpperCase();
-
-  // 1. Índice por código O(1)
-  if (_PF_IDX_CODIGO[q]) return _PF_IDX_CODIGO[q];
-  // 2. Índice por nombre exacto O(1)
-  if (_PF_IDX_NOMBRE[q]) return _PF_IDX_NOMBRE[q];
-  // 3. Fallback al original (búsqueda lineal para casos complejos)
-  var res = _pfBuscarOriginal(nombreLocal);
-  if (res) return res;
-  // 4. Buscar en clientes custom
-  var custom = pfGetClientesCustom();
-  for (var i = 0; i < custom.length; i++) {
-    if (custom[i].nombre.toUpperCase() === q) return custom[i];
-    if (custom[i].codigo && custom[i].codigo.toUpperCase() === q) return custom[i];
-  }
-  return null;
-};

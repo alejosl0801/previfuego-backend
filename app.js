@@ -2213,3 +2213,84 @@ function pfMarcarNoDisponible() {
     renderPuntos(); ir("s1");
   });
 }
+
+// ════════════════════════════════════════════════════════════
+//  ADMIN — MARCAR VISITA MANUALMENTE (#NUEVA FUNCIONALIDAD)
+//  Alejandro puede registrar visitas sin depender del técnico
+// ════════════════════════════════════════════════════════════
+function pfAdminMarcarVisita() {
+  if (typeof PF_CLIENTES === "undefined") { pfModal("Cargando clientes..."); return; }
+  var ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:600;display:flex;align-items:flex-end;justify-content:center";
+  var mesesOpts = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"]
+    .map(function(m,i){ return '<option value="'+(i+1)+'"'+(i+1===new Date().getMonth()+1?' selected':'')+'>'+m+'</option>'; }).join('');
+  var hoy = fechaHoy();
+  ov.innerHTML =
+    '<div style="background:#fff;border-radius:20px 20px 0 0;padding:0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto">' +
+    '<div style="background:var(--r);padding:16px 18px;border-radius:20px 20px 0 0;display:flex;align-items:center;justify-content:space-between">' +
+    '<div style="font-size:17px;font-weight:700;color:#fff">📋 Registrar visita manualmente</div>' +
+    '<button id="mv-close" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:22px;width:36px;height:36px;border-radius:10px;cursor:pointer">✕</button>' +
+    '</div>' +
+    '<div style="padding:16px">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--g3);margin-bottom:4px">CLIENTE / LOCAL *</div>' +
+    '<input id="mv-local" placeholder="Nombre del local" style="width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:10px">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--g3);margin-bottom:4px">TIPO DE VISITA</div>' +
+    '<select id="mv-tipo" style="width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:10px">' +
+    '<option value="mantenimiento">🔧 Mantenimiento</option>' +
+    '<option value="instalacion">🔩 Instalación</option>' +
+    '<option value="entrega">🚚 Entrega</option>' +
+    '<option value="cobro">💰 Cobro</option>' +
+    '<option value="retiro">📦 Retiro</option>' +
+    '</select>' +
+    '<div style="font-size:11px;font-weight:700;color:var(--g3);margin-bottom:4px">TÉCNICO</div>' +
+    '<select id="mv-tec" style="width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:10px">' +
+    '<option value="Raúl Romero">Raúl Romero</option>' +
+    '<option value="Juan Arboleda">Juan Arboleda</option>' +
+    '<option value="Alejandro">Alejandro</option>' +
+    '</select>' +
+    '<div style="font-size:11px;font-weight:700;color:var(--g3);margin-bottom:4px">FECHA (DD/MM/AAAA)</div>' +
+    '<input id="mv-fecha" value="'+hoy+'" placeholder="DD/MM/AAAA" style="width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:10px">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--g3);margin-bottom:4px">NOTA (opcional)</div>' +
+    '<textarea id="mv-nota" placeholder="Observaciones del servicio..." style="width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;height:70px;resize:none;margin-bottom:14px"></textarea>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+    '<button id="mv-cancel" style="padding:14px;border-radius:12px;border:1.5px solid var(--bo);background:#fff;color:var(--g4);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Cancelar</button>' +
+    '<button id="mv-ok" style="padding:14px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">✅ Registrar</button>' +
+    '</div></div></div>';
+  document.body.appendChild(ov);
+  document.body.style.overflow = "hidden";
+  var _cerrar = function(){ document.body.style.overflow=""; document.body.removeChild(ov); };
+  ov.querySelector("#mv-close").onclick = _cerrar;
+  ov.querySelector("#mv-cancel").onclick = _cerrar;
+  // Autocompletar local al escribir
+  var mvLocal = ov.querySelector("#mv-local");
+  mvLocal.addEventListener("input", function() {
+    var q = this.value.trim().toUpperCase();
+    if (q.length < 2) return;
+    if (typeof pfBuscarCliente === "function") {
+      var cli = pfBuscarCliente(q);
+      if (cli && cli.nombre && cli.nombre !== q) {
+        // no sobreescribir — solo sugerir
+      }
+    }
+  });
+  ov.querySelector("#mv-ok").onclick = function() {
+    var local = (ov.querySelector("#mv-local").value || "").trim();
+    var tipo  = ov.querySelector("#mv-tipo").value;
+    var tec   = ov.querySelector("#mv-tec").value;
+    var fecha = (ov.querySelector("#mv-fecha").value || "").trim();
+    var nota  = (ov.querySelector("#mv-nota").value || "").trim();
+    if (!local) { pfModal("El nombre del local es obligatorio."); return; }
+    if (!fecha || !/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) { pfModal("Fecha inválida. Usa DD/MM/AAAA."); return; }
+    if (typeof pfRegistrarVisitaEnFicha !== "function") { pfModal("Error: módulo de fichas no disponible."); return; }
+    pfRegistrarVisitaEnFicha(local, {
+      fecha:   fecha,
+      hora:    new Date().toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"}),
+      tipo:    tipo,
+      tecnico: tec,
+      nota:    nota || "Visita registrada manualmente por Alejandro",
+      punto:   "Manual"
+    });
+    _cerrar();
+    pfModal("✅ Visita de " + tipo + " registrada para " + local + " (" + fecha + ")");
+  };
+}

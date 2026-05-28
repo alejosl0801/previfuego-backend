@@ -1390,7 +1390,6 @@ function pfConvertirAFactura(id) {
 
     fetch(SCRIPT_URL, {
       method:  "POST",
-      headers: {"Content-Type":"application/json"},
       body:    JSON.stringify(payload)
     })
     .then(function(r){ return r.json(); })
@@ -1519,7 +1518,6 @@ function pfSincronizarProforma(id) {
   if (!prof) return;
   fetch(SCRIPT_URL, {
     method:  "POST",
-    headers: {"Content-Type":"application/json"},
     body: JSON.stringify({
       accion:  "guardar_proforma",
       token:   localStorage.getItem("pf_token") || "",

@@ -180,6 +180,7 @@ function pfRenderCalendario() {
   var mesActual = mesesNombres[_mesIdx];
   if (typeof PF_CLIENTES !== "undefined") {
     PF_CLIENTES.forEach(function(cli) {
+      if (cli.inactivo) return; // #MEJORA: ignorar clientes inactivos/cerrados
       if (cli.mes && cli.mes.toUpperCase() === mesActual.toUpperCase()) {
         localesMes.push(cli);
       }
@@ -195,6 +196,8 @@ function pfRenderCalendario() {
   var _canGoFwd = PF_CAL_OFFSET < 12;
   h += '<button type="button" onclick="if(PF_CAL_OFFSET<12){PF_CAL_OFFSET++;pfRenderCalendario();}" style="padding:8px 16px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:16px;cursor:pointer;opacity:'+(_canGoFwd?'1':'0.3')+'">›</button>'; // #078 FIX
   h += '</div>';
+  // Botón registrar visita manual (solo para admin)
+  h += '<div style="padding:0 12px 8px"><button onclick="pfAdminMarcarVisita()" style="width:100%;padding:10px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📋 Registrar visita manualmente</button></div>';
 
   if (!localesMes.length) {
     h += '<div style="padding:24px 16px;text-align:center;color:var(--g3);font-size:14px">No hay locales programados para '+cal.nombreMes+'.</div>';

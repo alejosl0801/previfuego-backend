@@ -115,6 +115,11 @@ function pfRenderSemaforo() {
   // Calcular días para cada local
   var items = locales.map(function(nombre) {
     var ficha = fichas[nombre];
+    // #MEJORA: verificar si el cliente está inactivo/cerrado
+    if (typeof pfBuscarCliente === "function") {
+      var _cli = pfBuscarCliente(nombre);
+      if (_cli && _cli.inactivo) return null; // filtrar inactivos
+    }
     // Buscar última visita de mantenimiento o entrega
     var ultVisita = null;
     var visitas = (ficha.visitas || []).filter(function(v){ return v.tipo === "mantenimiento" || v.tipo === "entrega"; });
@@ -123,6 +128,9 @@ function pfRenderSemaforo() {
     var dias      = pfDiasParaVencer(proxFecha);
     return { nombre:nombre, ultVisita:ultVisita, proxFecha:proxFecha, dias:dias };
   });
+
+  // Filtrar clientes inactivos (null)
+  items = items.filter(function(i){ return i !== null; });
 
   // Ordenar: vencidos primero, luego por días asc
   items.sort(function(a,b) {
@@ -269,7 +277,7 @@ function pfEnviarEmailCertificado(certNum, localNombre, emailEncargado) {
     tecnico:   typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "Técnico"
   };
 
-  fetch(SCRIPT_URL, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload) }) // #061 FIX
+  fetch(SCRIPT_URL, { method:"POST", body: JSON.stringify(payload) }) // #061 FIX
     .then(function(r){ return r.json(); })
     .then(function(d){ if (d.ok) console.log("Email enviado a "+emailEncargado); })
     .catch(function(){});
