@@ -1473,7 +1473,7 @@ window.addEventListener("load", function() {
 // ── TABS ADMIN ───────────────────────────────────────────────
 // Soporta tabs 1-12 (coordinator.js extiende los handlers)
 function admTab(n) {
-  var MAX_TABS = 15;
+  var MAX_TABS = 16;
   for (var i = 1; i <= MAX_TABS; i++) {
     var btn = document.getElementById("adm-t"+i);
     var pan = document.getElementById("adm-p"+i);
