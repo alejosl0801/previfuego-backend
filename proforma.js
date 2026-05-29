@@ -709,8 +709,7 @@ function pfBuscarProductoDist(q) {
   var res = document.getElementById("prof-prod-results");
   if (!res) return;
   if (!q || q.length < 1) { res.innerHTML = pfRenderCatalogoCompleto(); return; }
-  var q2 = q.toLowerCase();
-  var matches = PF_PRODUCTOS_DIST.filter(function(p){
+    var q2 = q.toLowerCase().trim().replace(/[áàâä]/g,"a").replace(/[éèêë]/g,"e").replace(/[íìîï]/g,"i").replace(/[óòôö]/g,"o").replace(/[úùûü]/g,"u").replace(/ñ/g,"n");
     return (p.nombre||"").toLowerCase().indexOf(q2) !== -1 ||
            (p.id||"").toLowerCase().indexOf(q2) !== -1 ||
            (p.desc||"").toLowerCase().indexOf(q2) !== -1;
