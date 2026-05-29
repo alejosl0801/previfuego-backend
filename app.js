@@ -373,7 +373,7 @@ function renderPizarraSeccion(seccion, elId) {
   try { _histPersist = JSON.parse(localStorage.getItem("pf_pizarra_hist") || "{}"); } catch(e) {}
   var _histHTML = "";
   _secs.forEach(function(sec) {
-    var comp = (pizData[sec]||[]).filter(function(it){return it.estado==="done";});
+    var comp = (PIZARRA[sec]||[]).filter(function(it){return it.estado==="done";});
     var histSec = (_histPersist[sec]||[]).filter(function(h){
       // Evitar duplicados con los done actuales
       return !comp.some(function(c){ return c.texto === h.texto && c.fecha === h.fecha; });
@@ -2563,6 +2563,50 @@ function pfRenderTareasPerfil() {
     h += '<button onclick="pfEditarTarea(\''+t.id+'\');setTimeout(pfRenderTareasPerfil,300)" style="padding:6px 10px;border-radius:8px;border:1.5px solid var(--bo);background:#fff;font-size:12px;color:var(--a);cursor:pointer;font-family:inherit;margin-left:4px">✏️</button>';
     h += '</div></div>';
   });
+  el.innerHTML = h;
+}
+
+// Render de tareas en la PANTALLA dedicada del técnico (botón nav "Tareas")
+function pfRenderTareasTec() {
+  var el = document.getElementById("stareas-lista");
+  if (!el || !USUARIO_ACTUAL) return;
+  var tareas = pfGetTareas();
+  var misKey = USUARIO_ACTUAL;
+  var misTareas = tareas.filter(function(t) {
+    return t.tecnico === misKey || t.tecnico === "todos";
+  });
+  var pendientes = misTareas.filter(function(t){ return !t.completada; });
+  var completadas = misTareas.filter(function(t){ return t.completada; });
+  var prioIco = { urgente:"🔴", normal:"🔵", baja:"⬜" };
+
+  if (pendientes.length === 0 && completadas.length === 0) {
+    el.innerHTML = '<div style="font-size:14px;color:var(--g3);padding:24px 16px;text-align:center">No tienes tareas asignadas.</div>';
+    return;
+  }
+
+  var h = "";
+  if (pendientes.length > 0) {
+    h += '<div class="slbl">Pendientes ('+pendientes.length+')</div>';
+    pendientes.forEach(function(t) {
+      var _dl = t.deadline ? '<span style="color:var(--r);font-weight:700"> · Límite: '+t.deadline+'</span>' : '';
+      h += '<div style="margin:0 12px 8px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:12px 14px">';
+      h += '<div style="display:flex;align-items:center;gap:8px">';
+      h += '<div style="font-size:18px">'+(prioIco[t.prioridad]||"📋")+'</div>';
+      h += '<div style="flex:1"><div style="font-size:14px;font-weight:700">'+String(t.desc||"").replace(/</g,"&lt;").replace(/>/g,"&gt;")+'</div>';
+      h += '<div style="font-size:11px;color:var(--g3);margin-top:2px">'+t.fecha+_dl+'</div></div>';
+      h += '<button onclick="pfCompletarTarea(\''+t.id+'\');pfRenderTareasTec()" style="padding:8px 14px;border-radius:8px;border:none;background:var(--v);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✓ Listo</button>';
+      h += '</div></div>';
+    });
+  }
+  if (completadas.length > 0) {
+    h += '<div class="slbl" style="margin-top:12px">Completadas ('+completadas.length+')</div>';
+    completadas.slice(0,20).forEach(function(t) {
+      h += '<div style="margin:0 12px 6px;background:var(--vc);border-radius:12px;border:1.5px solid var(--bo);padding:10px 14px;opacity:0.75">';
+      h += '<div style="font-size:13px;font-weight:600;color:var(--g4);text-decoration:line-through">'+String(t.desc||"").replace(/</g,"&lt;").replace(/>/g,"&gt;")+'</div>';
+      h += '<div style="font-size:11px;color:var(--g3);margin-top:2px">Completada'+(t.completadaPor?(" por "+t.completadaPor):"")+'</div>';
+      h += '</div>';
+    });
+  }
   el.innerHTML = h;
 }
 

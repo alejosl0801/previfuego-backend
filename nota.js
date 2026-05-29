@@ -239,6 +239,7 @@ function generarNotaPDF(tipo) {
   var direccion= (document.getElementById("nota-dir")     || {}).value || NOTA_ACTUAL.direccion;
   var ruc      = (document.getElementById("nota-ruc")     || {}).value || NOTA_ACTUAL.ruc;
   var telefono = (document.getElementById("nota-tel")     || {}).value || NOTA_ACTUAL.telefono;
+  var contacto = (document.getElementById("nota-contacto") || {}).value || NOTA_ACTUAL.contacto || "";
   var fecha    = (document.getElementById("nota-fecha")   || {}).value || NOTA_ACTUAL.fecha;
   var local    = (document.getElementById("nota-local")   || {}).value || NOTA_ACTUAL.local;
 
@@ -246,17 +247,17 @@ function generarNotaPDF(tipo) {
     if (!window.jspdf || !window.jspdf.jsPDF) {
       var s = document.createElement("script");
       s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-      s.onload  = function(){ hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, items, tipo); clearTimeout(_notaTimeout); };
+      s.onload  = function(){ hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, items, tipo, contacto); clearTimeout(_notaTimeout); };
       s.onerror = function(){ mostrarCargando(false); _notaGenerando = false; clearTimeout(_notaTimeout); pfModal("Error cargando PDF. Verifica conexión."); };
       document.head.appendChild(s);
     } else {
-      hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, items, tipo);
+      hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, items, tipo, contacto);
       clearTimeout(_notaTimeout);
     }
   }, 200);
 }
 
-function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, items, tipo) {
+function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, items, tipo, contacto) {
   try {
     var J   = window.jspdf.jsPDF;
     var doc = new J({ orientation:"portrait", unit:"mm", format:"a4" });
