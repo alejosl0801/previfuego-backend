@@ -207,6 +207,10 @@ window.addEventListener("load", function() {
 //  Guarda todo localStorage de Previfuego en un archivo .json
 // ════════════════════════════════════════════════════════════
 function pfHacerBackup() {
+  if (typeof USUARIO_ACTUAL !== "undefined" && USUARIO_ACTUAL !== "alejandro") {
+    pfModal("⛔ Solo Alejandro puede descargar el backup.");
+    return;
+  }
   var claves = [
     "pf_retiros", "pf_fichas", "pf_pizarra",
     "pf_hist_data", "pf_hist_fecha",
@@ -264,6 +268,8 @@ function pfInyectarBackupEnPerfil() {
   var sperf = document.getElementById("sperf");
   if (!sperf) return;
   if (document.getElementById("pf-backup-btn")) return;
+  // FIX: backup solo para Alejandro
+  if (typeof USUARIO_ACTUAL!=="undefined" && USUARIO_ACTUAL!=="alejandro") return;
 
   var bw = sperf.querySelector(".bw");
   if (!bw) return;

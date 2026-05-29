@@ -45,18 +45,17 @@ function pfProximoMantenimiento(nombreLocal, ultimaVisita) {
       var cli = pfBuscarCliente(nombreLocal);
       if (cli && cli.freqMant) {
         var fm = cli.freqMant.toLowerCase();
-        if (fm.indexOf("3") !== -1)      freq = 365 * 3;
-        else if (fm.indexOf("2") !== -1) freq = 365 * 2;
-        else                             freq = PF_FREQ.independiente;
+        if (fm.indexOf("3")!==-1){freq=365*3;}
+        else if (fm.indexOf("2")!==-1){freq=365*2;}
+        else {freq=PF_FREQ.independiente;}
+      } else if (typeof pfEsGrupoKFC==="function" && pfEsGrupoKFC(nombreLocal)) {
+        freq = 365*3; // KFC = 3 años
       }
+    } else if (typeof pfEsGrupoKFC==="function" && pfEsGrupoKFC(nombreLocal)) {
+      freq = 365*3;
     }
-    // #83 FIX: usar setFullYear en vez de sumar días para manejar bisiestos
-    if (freq === 365 || freq === 365 * 3) {
-      var anios = Math.round(freq / 365);
-      d.setFullYear(d.getFullYear() + anios);
-    } else {
-      d.setDate(d.getDate() + freq);
-    }
+    var anios = Math.round(freq/365)||1;
+    d.setFullYear(d.getFullYear()+anios);
     return d;
   } catch(e) { return null; }
 }
@@ -68,10 +67,10 @@ function pfDiasParaVencer(fechaProx) {
 
 function pfSemaforoColor(dias) {
   if (dias === null) return { bg:"var(--g2)", tx:"var(--g4)", ico:"⬜", label:"Sin datos" };
-  if (dias < 0)     return { bg:"var(--rc)", tx:"var(--r)", ico:"🔴", label:"VENCIDO "+(Math.abs(dias))+"d" };
-  if (dias < 30)    return { bg:"var(--rc)", tx:"var(--r)", ico:"🔴", label:dias+"d" };
-  if (dias < 90)    return { bg:"var(--nc)", tx:"var(--n)", ico:"🟡", label:dias+"d" };
-  return              { bg:"var(--vc)", tx:"var(--v)", ico:"🟢", label:dias+"d" };
+  if (dias < 0)     return { bg:"var(--rc)", tx:"var(--r)", ico:"🔴", label:"VENCIDO hace "+(Math.abs(dias))+" días" };
+  if (dias < 30)    return { bg:"var(--rc)", tx:"var(--r)", ico:"🔴", label:dias+" días" };
+  if (dias < 60)    return { bg:"var(--nc)", tx:"var(--n)", ico:"🟡", label:dias+" días" };
+  return              { bg:"var(--vc)", tx:"var(--v)", ico:"🟢", label:dias+" días" };
 }
 
 // Filtro activo del semáforo: "todos" | "vencidos" | "proximos" | mes
@@ -106,7 +105,13 @@ function pfRenderSemaforo() {
   var fichas = {};
   try { fichas = JSON.parse(localStorage.getItem("pf_fichas") || "{}"); } catch(e) {}
 
-  var locales = Object.keys(fichas);
+  // FIX: combinar fichas + clientes.js para mostrar 341, no solo los con ficha
+  var _nomSet = {};
+  Object.keys(fichas).forEach(function(n){_nomSet[n]=true;});
+  if (typeof PF_CLIENTES!=="undefined" && Array.isArray(PF_CLIENTES)) {
+    PF_CLIENTES.forEach(function(cl){var n=cl.nombre||cl.local;if(n&&!_nomSet[n])_nomSet[n]=true;});
+  }
+  var locales = Object.keys(_nomSet);
   if (!locales.length) {
     el.innerHTML = '<div style="padding:24px 16px;text-align:center;color:var(--g3);font-size:14px">Sin locales registrados aún.</div>';
     return;
@@ -122,8 +127,8 @@ function pfRenderSemaforo() {
     }
     // Buscar última visita de mantenimiento o entrega
     var ultVisita = null;
-    var visitas = (ficha.visitas || []).filter(function(v){ return v.tipo === "mantenimiento" || v.tipo === "entrega"; });
-    if (visitas.length > 0) ultVisita = visitas[0].fecha; // ya vienen ordenadas desc
+    var visitas = ficha ? (ficha.visitas || []).filter(function(v){ return v.tipo === "mantenimiento" || v.tipo === "entrega"; }) : [];
+    if (visitas.length > 0) ultVisita = visitas[0].fecha;
     var proxFecha = pfProximoMantenimiento(nombre, ultVisita);
     var dias      = pfDiasParaVencer(proxFecha);
     return { nombre:nombre, ultVisita:ultVisita, proxFecha:proxFecha, dias:dias };
@@ -141,7 +146,7 @@ function pfRenderSemaforo() {
 
   // Contadores para resumen
   var vencidos = items.filter(function(i){ return i.dias !== null && i.dias < 0; }).length;
-  var proximos = items.filter(function(i){ return i.dias !== null && i.dias >= 0 && i.dias < 90; }).length;
+  var proximos = items.filter(function(i){ return i.dias !== null && i.dias >= 0 && i.dias < 60; }).length;
 
   var h = "";
 
@@ -155,7 +160,7 @@ function pfRenderSemaforo() {
   // Aplicar filtro activo
   var itemsFiltrados = items.filter(function(item) {
     if (PF_SEM_FILTRO === "vencidos") return item.dias !== null && item.dias < 0;
-    if (PF_SEM_FILTRO === "proximos") return item.dias !== null && item.dias >= 0 && item.dias < 90;
+    if (PF_SEM_FILTRO === "proximos") return item.dias !== null && item.dias >= 0 && item.dias < 60;
     if (PF_SEM_FILTRO === "sin_datos") return item.dias === null;
     // #35 FIX: filtros de mes dinámicos
     var _mesIdx = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"].indexOf(PF_SEM_FILTRO);
@@ -163,6 +168,8 @@ function pfRenderSemaforo() {
     return true;
   });
 
+  // Campo búsqueda
+  h += '<div style="padding:0 12px 8px"><input id="pf-sem-search" type="text" placeholder="🔍 Buscar local..." oninput="pfFiltrarSemaforoBusqueda(this.value)" style="width:100%;padding:9px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;box-sizing:border-box"></div>';
   // Barra de filtros
   h += '<div style="display:flex;gap:6px;padding:0 12px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch">';
   // #35 FIX: filtros de mes dinámicos — próximos 3 meses desde hoy
@@ -196,39 +203,64 @@ function pfRenderSemaforo() {
   if (!window.PF_SEM) window.PF_SEM = {};
   window.PF_SEM.items = itemsFiltrados;
 
-  // Lista
-  itemsFiltrados.forEach(function(item) {
+  // Leyenda colores
+  h += '<div style="display:flex;gap:12px;padding:0 12px 8px;flex-wrap:wrap;font-size:11px;font-weight:700">';
+  h += '<span style="color:var(--r)">🔴 Vencido/&lt;30d</span>&nbsp;<span style="color:var(--n)">🟡 30-60d</span>&nbsp;<span style="color:var(--v)">🟢 +60d</span>&nbsp;<span style="color:var(--g3)">⬜ Sin datos</span>';
+  h += '</div>';
+
+  // Renderizar header inmediatamente, luego items en batches para no congelar UI
+  el.innerHTML = h;
+
+  // Función para generar HTML de un ítem
+  function _semItemHTML(item) {
     var sem   = pfSemaforoColor(item.dias);
     var esKFC = pfEsGrupoKFC(item.nombre);
-    h += '<div style="margin:0 12px 6px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:10px 14px;display:flex;align-items:center;gap:10px">';
-    h += '<div style="font-size:20px;flex-shrink:0">'+sem.ico+'</div>';
-    h += '<div style="flex:1;min-width:0">';
-    h += '<div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+item.nombre+'</div>';
     var freqLabel = esKFC ? "KFC · mant. anual · recarga 3 años" : "Independiente · mant. anual";
-    // #066 FIX: mostrar extintores del local si están en BD
-    var extInfo = "";
-    if (typeof pfBuscarCliente === "function") {
-      var _cli = pfBuscarCliente(item.nombre);
-      // extintores se leen de localStorage extintores si existen
-      try {
-        var _exts = JSON.parse(localStorage.getItem("pf_ext_"+item.nombre.replace(/[^a-z0-9]/gi,"_")) || "null");
-        if (_exts && _exts.length) extInfo = " · " + _exts.length + " ext.";
-      } catch(e) {}
-    }
-    h += '<div style="font-size:11px;color:var(--g4);margin-top:1px">'+freqLabel+extInfo+(item.ultVisita?" · último: "+item.ultVisita:" · sin visitas")+'</div>';
-    h += '</div>';
-    h += '<div style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:'+sem.bg+';color:'+sem.tx+';flex-shrink:0">'+sem.label+'</div>';
-    h += '</div>';
-  });
+    return '<div class="pf-sem-item" data-nombre="'+item.nombre+'" style="margin:0 12px 6px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:10px 14px;display:flex;align-items:center;gap:10px">' +
+      '<div style="font-size:20px;flex-shrink:0">'+sem.ico+'</div>' +
+      '<div style="flex:1;min-width:0">' +
+      '<div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+item.nombre+'</div>' +
+      '<div style="font-size:11px;color:var(--g4);margin-top:1px">'+freqLabel+(item.ultVisita?" · último: "+item.ultVisita:" · sin visitas")+'</div>' +
+      '</div>' +
+      '<div style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:'+sem.bg+';color:'+sem.tx+';flex-shrink:0">'+sem.label+'</div>' +
+      '</div>';
+  }
 
-  // #052 FIX: renderizar en chunks para no congelar UI
-  el.innerHTML = h;
-  // Si hay más de 50 items, el HTML ya se renderizó pero añadir nota de carga diferida
-  if (itemsFiltrados.length > 50) {
-    var nota = document.createElement("div");
-    nota.style.cssText = "padding:8px 12px;font-size:12px;color:var(--g3);text-align:center";
-    nota.textContent = "Mostrando " + itemsFiltrados.length + " locales";
-    el.appendChild(nota);
+  // Primeros 40 ítems inmediatos (lo que ve el usuario sin scroll)
+  var LOTE1 = 40, LOTE_N = 30;
+  var hItems = "";
+  var primo40 = itemsFiltrados.slice(0, LOTE1);
+  primo40.forEach(function(item){ hItems += _semItemHTML(item); });
+  var contenedor = document.createElement("div");
+  contenedor.id = "pf-sem-lista-items";
+  contenedor.innerHTML = hItems;
+  el.appendChild(contenedor);
+
+  // Resto en batches de 30 con requestAnimationFrame
+  if (itemsFiltrados.length > LOTE1) {
+    var resto = itemsFiltrados.slice(LOTE1);
+    var _semBatchIdx = 0;
+    function _renderBatch() {
+      if (_semBatchIdx >= resto.length) {
+        // Quitar indicador de carga
+        var ind = document.getElementById("pf-sem-loading");
+        if (ind) ind.remove();
+        return;
+      }
+      var batch = resto.slice(_semBatchIdx, _semBatchIdx + LOTE_N);
+      var frag = document.createElement("div");
+      frag.innerHTML = batch.map(_semItemHTML).join("");
+      while (frag.firstChild) contenedor.appendChild(frag.firstChild);
+      _semBatchIdx += LOTE_N;
+      requestAnimationFrame(_renderBatch);
+    }
+    // Mostrar indicador de carga
+    var ind = document.createElement("div");
+    ind.id = "pf-sem-loading";
+    ind.style.cssText = "padding:8px 12px;font-size:12px;color:var(--g3);text-align:center";
+    ind.textContent = "Cargando " + (itemsFiltrados.length - LOTE1) + " locales más...";
+    el.appendChild(ind);
+    requestAnimationFrame(_renderBatch);
   }
 }
 
@@ -314,3 +346,31 @@ window.addEventListener("load", function() {
 
   // Tab 6 registrado en coordinator.js
 });
+
+// ── BÚSQUEDA EN SEMÁFORO ────────────────────────────────────
+function pfFiltrarSemaforoBusqueda(q) {
+  var items = document.querySelectorAll(".pf-sem-item");
+  var qLow  = (q || "").toLowerCase().trim();
+  var count = 0;
+  items.forEach(function(el) {
+    var nombre = (el.getAttribute("data-nombre") || "").toLowerCase();
+    var mostrar = !qLow || nombre.indexOf(qLow) !== -1;
+    el.style.display = mostrar ? "" : "none";
+    if (mostrar) count++;
+  });
+  // Mostrar indicador de resultados
+  var ind = document.getElementById("pf-sem-search-count");
+  if (!ind) {
+    ind = document.createElement("div");
+    ind.id = "pf-sem-search-count";
+    ind.style.cssText = "padding:2px 12px 6px;font-size:11px;color:var(--g3)";
+    var srchEl = document.getElementById("pf-sem-search");
+    if (srchEl && srchEl.parentNode) srchEl.parentNode.insertAdjacentElement("afterend", ind);
+  }
+  if (qLow) {
+    ind.textContent = count + " resultado(s) para \"" + q + "\"";
+    ind.style.display = "";
+  } else {
+    ind.style.display = "none";
+  }
+}

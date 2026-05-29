@@ -21,9 +21,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
 .dn .pn{background:var(--vc);color:var(--v);}
 .pi{flex:1;min-width:0;}.pnm{font-size:16px;font-weight:700;color:var(--ng);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .dn .pnm{color:var(--g3);}.psb{font-size:13px;color:var(--g4);margin-top:2px;}
-.pch{font-size:22px;color:var(--g2);}.dn .pch{color:var(--v);}
+.pch{font-size:22px;color:var(--g3);}.dn .pch{color:var(--v);}
 .nav{background:#fff;border-top:1.5px solid var(--bo);display:flex;padding:8px 0 12px;flex-shrink:0;position:fixed;bottom:0;left:0;right:0;z-index:20;padding-bottom:max(12px,env(safe-area-inset-bottom));}
-.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;cursor:pointer;}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;cursor:pointer;position:relative;}
+.ni-badge{position:absolute;top:0;right:50%;transform:translateX(14px);min-width:16px;height:16px;border-radius:8px;background:var(--r);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;display:none;}
 .nii{font-size:22px;color:var(--g3);}.nil{font-size:10px;color:var(--g3);font-weight:500;}
 .ni.on .nii,.ni.on .nil{color:var(--r);}.ni.on .nil{font-weight:700;}
 .ban{background:var(--r);padding:14px 16px;}
@@ -121,8 +122,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
 /* PIZARRA */
 .piz-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--bo);margin-bottom:7px;}
 .piz-btn{width:36px;height:36px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;}
-.piz-ok{background:var(--vc);color:var(--v);}
-.piz-del{background:var(--rc);color:var(--r);}
+.piz-ok{background:var(--v);color:#fff;font-weight:700;}
+.piz-del{background:var(--r);color:#fff;font-weight:700;}
 .piz-undo{background:var(--g2);color:var(--g4);}
 .piz-inp{width:100%;padding:10px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:6px;}
 .piz-inp:focus{outline:none;border-color:var(--r);}
@@ -239,3 +240,24 @@ button:disabled, .btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-even
   .lov, .ov, .asel, .nav, .tb { display: none !important; }
   .screen { display: block !important; }
 }
+
+.pf-readonly { pointer-events:none; opacity:0.85; }
+
+/* Safe area para contenido principal */
+.sc { padding-bottom: max(80px, calc(80px + env(safe-area-inset-bottom))); }
+
+/* Touch targets mínimos 44px para botones de acción */
+.piz-btn, .piz-ok, .piz-del, .piz-undo { min-height:44px; min-width:44px; }
+
+/* Landscape básico */
+@media (orientation:landscape) and (max-height:500px) {
+  .nav { padding:4px 0 max(4px,env(safe-area-inset-bottom)); }
+  .nii { font-size:18px; }
+  .nil { display:none; }
+  .tb  { padding:6px 12px; }
+}
+
+/* Input type=number: forzar punto decimal en iOS */
+input[type=number] { -moz-appearance:textfield; }
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { opacity:1; }

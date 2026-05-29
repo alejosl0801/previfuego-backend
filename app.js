@@ -55,8 +55,9 @@ var TIPOS_TRABAJO = {
   RETIRO:        "retiro",        // foto de lo retirado + recibo
   ENTREGA:       "entrega",       // foto de entrega + certificado + nota entrega
   INSTALACION:   "instalacion",   // fotos libres (N fotos) + firma, sin certificado
-  COBRO:         "cobro",         // sin fotos, sin certificado
-  OTRO:          "otro"           // foto libre opcional
+  COBRO:         "cobro",
+  DISTRIBUIDOR:  "distribuidor",
+  OTRO:          "otro"
 };
 
 function detectarTipoTrabajo(mision) {
@@ -65,8 +66,9 @@ function detectarTipoTrabajo(mision) {
   var m = mision.toLowerCase()
     .replace(/[áà]/g,"a").replace(/[éè]/g,"e").replace(/[íì]/g,"i")
     .replace(/[óò]/g,"o").replace(/[úù]/g,"u").replace(/ñ/g,"n");
+  if (/distribui[dr]or?/.test(m))                                       return TIPOS_TRABAJO.DISTRIBUIDOR;
   if (/entregar|entrega|devolver|devolu/.test(m))                       return TIPOS_TRABAJO.ENTREGA;
-  if (/cobro|cheque|pago|retirar cheque|retirar pago/.test(m))          return TIPOS_TRABAJO.COBRO;
+  if (/cobro|cheque|pago|retirar cheque|retirar pago|recoger pago|recoger cobro/.test(m)) return TIPOS_TRABAJO.COBRO;
   if (/instalar|instalaci|colocar|etiqueta/.test(m))                    return TIPOS_TRABAJO.INSTALACION;
   if (/retir(ar|o|a|ando)|llevar al taller|llevar a taller/.test(m)) return TIPOS_TRABAJO.RETIRO;
   if (/mantenimiento|mant|recarga|revisar|inspeccionar/.test(m))        return TIPOS_TRABAJO.MANTENIMIENTO;
@@ -207,6 +209,9 @@ function parsearJornadas(texto) {
     var puntos = parsearRecorrido(texto);
     if (puntos.length > 0) jornadas.push({ jornada:"DIA", label:"Jornada del día", puntos:puntos });
   }
+  // FIX: MAÑANA siempre índice 0 → click mañana no abre tarde
+  var _jo={"MAÑANA":0,"DIA":1,"TARDE":2,"NOCHE":3};
+  jornadas.sort(function(a,b){return (_jo[a.jornada]||9)-(_jo[b.jornada]||9);});
   return jornadas;
 }
 
@@ -247,7 +252,7 @@ function parsearRecorrido(texto) {
     var mPunto = l.match(rePunto);
     if (mPunto) {
       guardarPunto();
-      puntoActual = { num: parseInt(mPunto[1]), nombre: mPunto[2].trim(), locales: [] };
+      puntoActual = { num: parseInt(mPunto[1]), nombre: mPunto[2].trim(), locales: [], _nomPunto: mPunto[2].trim() };
       localIdCounter++;
       localActual  = { id: localIdCounter, nombre: mPunto[2].trim(), mision: "", tipo: TIPOS_TRABAJO.MANTENIMIENTO, done: false, ext: [] };
       misionBuffer = [];
@@ -261,7 +266,8 @@ function parsearRecorrido(texto) {
     if (reBullet.test(l)) { misionBuffer.push(l); continue; }
     var sigLinea = (i+1 < lineas.length) ? lineas[i+1] : "";
     var esSubLocal = puntoActual && !reMision.test(l) && !reBullet.test(l) && !rePunto.test(l) &&
-                     (reMision.test(sigLinea) || sigLinea === "") && localActual && localActual.nombre !== l;
+                     (reMision.test(sigLinea) || sigLinea === "") && localActual && localActual.nombre !== l &&
+                     l !== (puntoActual._nomPunto || puntoActual.nombre);
     if (esSubLocal) {
       guardarLocal();
       localIdCounter++;
@@ -325,6 +331,31 @@ function renderPizarraSeccion(seccion, elId) {
     h += '</div></div>';
   }
   if (items.length === 0) h = '<div style="font-size:13px;color:var(--g3);padding:8px 0">Sin tareas</div>';
+  // FIX: historial de tareas completadas por sección — combina done actuales + historial persistente
+  var _secs = ["operativa","logistica","pendientes"];
+  var _secNom = {operativa:"Operativa",logistica:"Logística",pendientes:"Pendientes"};
+  var _histPersist = {};
+  try { _histPersist = JSON.parse(localStorage.getItem("pf_pizarra_hist") || "{}"); } catch(e) {}
+  var _histHTML = "";
+  _secs.forEach(function(sec) {
+    var comp = (pizData[sec]||[]).filter(function(it){return it.estado==="done";});
+    var histSec = (_histPersist[sec]||[]).filter(function(h){
+      // Evitar duplicados con los done actuales
+      return !comp.some(function(c){ return c.texto === h.texto && c.fecha === h.fecha; });
+    });
+    var todos = comp.concat(histSec).slice(0,8);
+    if (todos.length === 0) return;
+    _histHTML += '<div class="slbl" style="color:var(--v)">✅ Completadas — '+_secNom[sec]+' ('+todos.length+')</div>';
+    todos.forEach(function(it) {
+      _histHTML += '<div style="margin:0 12px 6px;background:var(--vc);border-radius:10px;padding:10px 14px;border:1px solid var(--v)">';
+      _histHTML += '<div style="font-size:13px;font-weight:700;color:var(--v)">✅ '+String(it.texto||"").replace(/</g,"&lt;")+'</div>';
+      if (it.nota) _histHTML += '<div style="font-size:11px;color:var(--g4);margin-top:2px">'+it.nota+'</div>';
+      if (it.doneEn) _histHTML += '<div style="font-size:10px;color:var(--g3);margin-top:2px">'+it.doneEn+'</div>';
+      _histHTML += '</div>';
+    });
+  });
+  if (_histHTML) h += _histHTML;
+
   el.innerHTML = h;
 }
 
@@ -343,10 +374,22 @@ function pizarraAgregar(seccion) {
 }
 
 function pizarraAccion(seccion, idx, accion) {
-  if (accion === "done")   PIZARRA[seccion][idx].estado = "done";
-  if (accion === "undo")   PIZARRA[seccion][idx].estado = "pendiente";
+  if (accion === "done") {
+    var item = PIZARRA[seccion][idx];
+    item.estado = "done";
+    item.doneEn = fechaHoy() + " " + new Date().toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"});
+    // Guardar en historial persistente
+    try {
+      var _hist = JSON.parse(localStorage.getItem("pf_pizarra_hist") || "{}");
+      if (!_hist[seccion]) _hist[seccion] = [];
+      _hist[seccion].unshift({ texto:item.texto, nota:item.nota||"", fecha:item.fecha||"", doneEn:item.doneEn });
+      if (_hist[seccion].length > 30) _hist[seccion] = _hist[seccion].slice(0,30); // max 30 por sección
+      localStorage.setItem("pf_pizarra_hist", JSON.stringify(_hist));
+    } catch(e) {}
+  }
+  if (accion === "undo")    PIZARRA[seccion][idx].estado = "pendiente";
   if (accion === "urgente") PIZARRA[seccion][idx].estado = "urgente";
-  if (accion === "del")    PIZARRA[seccion].splice(idx, 1);
+  if (accion === "del")     PIZARRA[seccion].splice(idx, 1);
   guardarPizarra();
   renderPizarraSeccion(seccion, "piz-"+seccion);
 }
@@ -447,6 +490,48 @@ function limpiarRecorrido() {
     localStorage.removeItem("pf_recorrido_texto");
     localStorage.removeItem("pf_recorrido_data");
   });
+}
+
+function pfInsertarPlantillaRecorrido() {
+  var txt = document.getElementById("admin-txt");
+  if (!txt) return;
+  if (txt.value.trim()) {
+    pfConfirm("¿Reemplazar el recorrido actual con la plantilla?", function() {
+      txt.value = pfPlantillaRecorrido();
+      previsualizarRecorrido();
+    });
+  } else {
+    txt.value = pfPlantillaRecorrido();
+    previsualizarRecorrido();
+  }
+}
+
+function pfPlantillaRecorrido() {
+  var fecha = fechaHoy();
+  return "RECORRIDO – JORNADA MAÑANA\n" +
+    "Punto 1 – \n" +
+    "Nombre del local\n" +
+    "Misión: Realizar mantenimiento de extintores\n\n" +
+    "Punto 2 – \n" +
+    "Nombre del local\n" +
+    "Misión: Realizar mantenimiento de extintores\n\n" +
+    "RECORRIDO – JORNADA TARDE\n" +
+    "Punto 1 – \n" +
+    "Nombre del local\n" +
+    "Misión: Realizar mantenimiento de extintores\n";
+}
+
+function pfAgregarJornada(jornada) {
+  var txt = document.getElementById("admin-txt");
+  if (!txt) return;
+  var bloque = "\nRECORRIDO – JORNADA " + jornada + "\n" +
+    "Punto 1 – \n" +
+    "Nombre del local\n" +
+    "Misión: Realizar mantenimiento de extintores\n";
+  txt.value = txt.value + bloque;
+  txt.focus();
+  txt.setSelectionRange(txt.value.length, txt.value.length);
+  previsualizarRecorrido();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -596,9 +681,20 @@ var TIPO_ICON = { mantenimiento:"🔧", retiro:"📦", entrega:"🚚", instalaci
 var TIPO_COLOR = { mantenimiento:"var(--a)", retiro:"var(--n)", entrega:"var(--v)", instalacion:"var(--r)", cobro:"#888", otro:"var(--g4)" };
 var TIPO_BG    = { mantenimiento:"var(--ac)", retiro:"var(--nc)", entrega:"var(--vc)", instalacion:"var(--rc)", cobro:"var(--g1)", otro:"var(--g1)" };
 
+function pfFiltrarRecorrido(q) {
+  // Re-renderizar con el filtro activo
+  renderPuntos();
+  // Restaurar foco en el campo de búsqueda
+  setTimeout(function(){
+    var el = document.getElementById("s1-search");
+    if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+  }, 50);
+}
+
 function renderPuntos() {
   var lista = document.getElementById("s1list");
   if (!lista) return;
+  var _esFabiola = (USUARIO_ACTUAL === "fabiola");
   var total = 0, comp = 0;
   for (var i = 0; i < PUNTOS.length; i++)
     for (var j = 0; j < PUNTOS[i].locales.length; j++) { total++; if (PUNTOS[i].locales[j].done) comp++; }
@@ -607,7 +703,11 @@ function renderPuntos() {
   if (s1p)  s1p.textContent  = comp+"/"+total+" misiones";
   if (s1pf) s1pf.style.width = total > 0 ? (comp/total*100)+"%" : "0%";
   if (PUNTOS.length === 0) { mostrarSinRecorrido(); return; }
-  _pfRecalcProgress(); // #CRÍTICO FIX: recalcular caché de progreso al renderizar
+  _pfRecalcProgress();
+  // Búsqueda global — preservar valor si ya existe
+  var _busqVal = "";
+  var _busqEl = document.getElementById("s1-search");
+  if (_busqEl) _busqVal = _busqEl.value || "";
   // Header de jornada activa
   var jorActual = JORNADAS[JORNADA_ACTIVA];
   var h = "";
@@ -616,19 +716,33 @@ function renderPuntos() {
     var col   = jorActual.jornada === "TARDE" ? "var(--a)" : "var(--r)";
     h += '<div style="margin:8px 12px 4px;padding:10px 14px;background:'+col+';border-radius:12px;display:flex;align-items:center;justify-content:space-between">';
     h += '<div style="font-size:14px;font-weight:700;color:#fff">'+emoji+' '+jorActual.label+'</div>';
-    h += '<button onclick="renderSelectorJornada()" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;cursor:pointer">Cambiar</button>';
+    if (!_esFabiola) {
+      h += '<button onclick="renderSelectorJornada()" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;cursor:pointer">Cambiar</button>';
+    }
     h += '</div>';
   }
+  // Búsqueda global F8
+  h += '<div style="padding:6px 12px 2px"><input id="s1-search" type="search" value="'+(_busqVal.replace(/"/g,"&quot;"))+'" placeholder="🔍 Buscar local..." oninput="pfFiltrarRecorrido(this.value)" style="width:100%;padding:9px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;box-sizing:border-box;color:var(--ng)"></div>';
+
   for (var i = 0; i < PUNTOS.length; i++) {
     var p = PUNTOS[i];
+    var _puntoBusq = _busqVal.toLowerCase();
+    // Si hay búsqueda activa, verificar si el punto tiene al menos un local que matchee
+    if (_puntoBusq) {
+      var _tieneMatch = p.locales.some(function(l){ return (l.nombre||"").toLowerCase().indexOf(_puntoBusq) !== -1 || (l.mision||"").toLowerCase().indexOf(_puntoBusq) !== -1; });
+      if (!_tieneMatch) continue;
+    }
     h += '<div class="slbl">📍 Punto '+p.num+' — '+p.nombre+'</div>';
     for (var j = 0; j < p.locales.length; j++) {
       var loc  = p.locales[j];
+      // Filtrar por búsqueda
+      if (_puntoBusq && (loc.nombre||"").toLowerCase().indexOf(_puntoBusq) === -1 && (loc.mision||"").toLowerCase().indexOf(_puntoBusq) === -1) continue;
       var tipo = loc.tipo || TIPOS_TRABAJO.OTRO;
       var ico  = TIPO_ICON[tipo]  || "📋";
       var col  = TIPO_COLOR[tipo] || "var(--g4)";
       var bg   = TIPO_BG[tipo]    || "var(--g1)";
-      h += '<div class="cd'+(loc.done?" dn":"")+'" id="loc_item_'+i+'_'+j+'" onclick="abrirLocal('+i+','+j+')">';
+      var _cl=_esFabiola?' onclick=""':' onclick="abrirLocal('+i+','+j+')"';
+      h += '<div class="cd'+(loc.done?" dn":"")+'"'+_cl+' id="loc_item_'+i+'_'+j+'">';
       h += '<div class="pr">';
       h += '<div class="pn" style="'+(loc.done?'background:var(--vc);color:var(--v)':'background:'+bg+';color:'+col)+'">'+ico+'</div>';
       h += '<div class="pi"><div class="pnm">'+loc.nombre+'</div>';
@@ -1158,6 +1272,8 @@ function accionDespuesFirma() {
     if (NOTA_PENDIENTE_PI !== null && NOTA_PENDIENTE_LI !== null) {
       abrirNotaEntrega(NOTA_PENDIENTE_PI, NOTA_PENDIENTE_LI);
     }
+  } else if (TIPO_TRABAJO === TIPOS_TRABAJO.DISTRIBUIDOR) {
+    irFirmaParaNota();
   } else {
     generarPDF();
   }
@@ -1167,9 +1283,9 @@ function accionDespuesFirma() {
 function actualizarBotonFirma() {
   var btn = document.getElementById("sfir-btn-txt");
   if (!btn) return;
-  btn.textContent = (window._DESTINO_FIRMA === "nota")
-    ? "Continuar a nota de entrega"
-    : "Generar certificado PDF";
+  var _esDist = TIPO_TRABAJO===TIPOS_TRABAJO.DISTRIBUIDOR;
+  btn.textContent = (window._DESTINO_FIRMA==="nota"||_esDist)?"Continuar a nota de entrega":"Generar certificado PDF";
+  var _ns=document.getElementById("sfir-nov-sec"); if(_ns) _ns.style.display=_esDist?"none":"";
 }
 
 // irFirma: resetea destino y actualiza botón (coordinator.js agrega sus propios hooks encima)
@@ -1194,7 +1310,9 @@ function actualizarSigLocal() {
         var loc = PUNTOS[i].locales[j];
         var tipo = loc.tipo || detectarTipoTrabajo(loc.mision);
         var ico = { mantenimiento:"🔧", retiro:"📦", entrega:"🚚", instalacion:"🔩", cobro:"💰", otro:"📋" }[tipo] || "📋";
-        sigC.innerHTML = '<div class="sgn">'+ico+'</div><div><div class="sgnm">'+loc.nombre+'</div><div class="sgm">'+PUNTOS[i].nombre+'</div></div>';
+        var _escNom  = (loc.nombre||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+        var _escPunt = (PUNTOS[i].nombre||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+        sigC.innerHTML = '<div class="sgn">'+ico+'</div><div><div class="sgnm">'+_escNom+'</div><div class="sgm">'+_escPunt+'</div></div>';
         return;
       }
     }
@@ -1203,6 +1321,8 @@ function actualizarSigLocal() {
 }
 
 function irSig() {
+  // FIX: guardar progreso antes de saltar
+  try { if(LOCAL_ACTUAL && typeof actualizarItemLista==="function") actualizarItemLista(LOCAL_ACTUAL._pi||0, LOCAL_ACTUAL._li||0); } catch(e){}
   for (var i = 0; i < PUNTOS.length; i++) {
     for (var j = 0; j < PUNTOS[i].locales.length; j++) {
       if (!PUNTOS[i].locales[j].done) { abrirLocal(i,j); return; }
@@ -1225,9 +1345,19 @@ function renderHistorial() {
   var lista = document.getElementById("hist-l");
   if (!lista) return;
   if (HISTORIAL.length === 0) { lista.innerHTML = '<div class="empty">Aún no hay registros hoy</div>'; return; }
-  var h = '<div class="slbl">Hoy</div>';
-  for (var i = 0; i < HISTORIAL.length; i++) {
-    var hi = HISTORIAL[i];
+  // Filtro por tipo
+  var _filtro = window._pfHistFiltro || "todos";
+  var filtrados = _filtro === "todos" ? HISTORIAL : HISTORIAL.filter(function(h){ return h.tipo === _filtro || (h.tipo !== "sin_cert" && _filtro === "cert"); });
+  var _tiposBtns = ["todos","mantenimiento","entrega","retiro","cobro"];
+  var hf = '<div style="display:flex;gap:6px;padding:8px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch">';
+  _tiposBtns.forEach(function(t){
+    var _act = _filtro === t;
+    hf += '<button onclick="window._pfHistFiltro=\''+t+'\';renderHistorial()" style="flex-shrink:0;padding:5px 10px;border-radius:16px;border:1.5px solid '+(_act?'var(--r)':'var(--bo)')+';background:'+(_act?'var(--r)':'#fff')+';color:'+(_act?'#fff':'var(--g4)')+';font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">'+t.charAt(0).toUpperCase()+t.slice(1)+'</button>';
+  });
+  hf += '</div>';
+  var h = hf + '<div class="slbl">Hoy — '+fechaHoy()+'</div>';
+  for (var i = 0; i < filtrados.length; i++) {
+    var hi = filtrados[i];
     var esCert   = hi.tipo !== "sin_cert" && hi.url;
     var icoBg    = esCert ? "var(--rc)" : "var(--g2)";
     var icoColor = esCert ? "var(--r)"  : "var(--g4)";
@@ -1240,6 +1370,7 @@ function renderHistorial() {
     if (esCert) h += '<a href="'+hi.url+'" download="'+hi.nombre+'" style="font-size:10px;font-weight:700;background:var(--ac);color:var(--a);padding:4px 8px;border-radius:10px;text-decoration:none">⬇ PDF</a>';
     h += '</div></div>';
   }
+  if (filtrados.length === 0) h += '<div class="empty">Sin registros de este tipo hoy</div>';
   lista.innerHTML = h;
 }
 
@@ -1284,6 +1415,8 @@ function renderPerfil() {
 }
 
 function cerrarSesion() {
+  USUARIO_ACTUAL=null;TECNICO_NOMBRE="";JORNADAS=[];PUNTOS=[];JORNADA_ACTIVA=0;
+  LOCAL_ACTUAL=null;PUNTO_ACTUAL=null;FD={};FB64={};ACCS=[];NOV=null;FIRMADO=false;
   pfConfirm("¿Cambiar de usuario?", function() {
     localStorage.removeItem("pf_usuario");
     // #019 FIX: limpiar interval de badge
@@ -1337,6 +1470,62 @@ function admTab(n) {
   }
   if (n === 3) { renderCalendarioMes(); renderResumenJornadas(); }
   if (n === 2) { renderPizarra(); }
+}
+
+function pfRenderPendientesIncluir() {
+  var el = document.getElementById("admin-pendientes-incluir");
+  if (!el) return;
+  // Leer proformas autorizadas / pendientes de factura
+  var proformas = [];
+  try { proformas = JSON.parse(localStorage.getItem("pf_proformas") || "[]"); } catch(e) {}
+  var pendientes = proformas.filter(function(p){
+    return p.estado === "autorizada" || p.estado === "pend_factura";
+  });
+  if (!pendientes.length) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--g3);padding:8px 0">Sin proformas pendientes de entrega.</div>';
+    return;
+  }
+  // Ver qué locales ya están en el recorrido de hoy
+  var recData = [];
+  try { recData = JSON.parse(localStorage.getItem("pf_recorrido_data") || "[]"); } catch(e) {}
+  var localesEnRec = {};
+  recData.forEach(function(p){ (p.locales||[]).forEach(function(l){ localesEnRec[(l.nombre||"").toLowerCase()] = true; }); });
+
+  var h = "";
+  pendientes.forEach(function(prof) {
+    var cli = prof.cliente || {};
+    var nomCli = (cli.razon || "—").toLowerCase();
+    var yaIncluido = localesEnRec[nomCli];
+    var col = yaIncluido ? "var(--v)" : "var(--n)";
+    var bg  = yaIncluido ? "var(--vc)" : "var(--nc)";
+    var ico = yaIncluido ? "✅" : "⚠️";
+    h += '<div style="margin-bottom:8px;background:'+bg+';border-radius:12px;padding:10px 14px;border:1.5px solid '+col+'">';
+    h += '<div style="display:flex;justify-content:space-between;align-items:flex-start">';
+    h += '<div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--ng)">'+ico+' '+(cli.razon||"—")+'</div>';
+    h += '<div style="font-size:11px;color:var(--g4);margin-top:2px">'+prof.num+' · $'+prof.total.toFixed(2)+' · '+prof.fecha+'</div>';
+    h += '<div style="font-size:11px;color:'+col+';font-weight:700;margin-top:2px">'+(yaIncluido?"Ya en el recorrido":"No está en el recorrido de hoy")+'</div></div>';
+    if (!yaIncluido) {
+      h += '<button onclick="pfAgregarProformaAlRecorrido(\''+prof.id+'\')" style="padding:6px 10px;border-radius:8px;border:none;background:var(--r);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;margin-left:8px">+ Agregar</button>';
+    }
+    h += '</div></div>';
+  });
+  el.innerHTML = h;
+}
+
+function pfAgregarProformaAlRecorrido(profId) {
+  var proformas = [];
+  try { proformas = JSON.parse(localStorage.getItem("pf_proformas") || "[]"); } catch(e) {}
+  var prof = proformas.find(function(p){ return p.id === profId; });
+  if (!prof) return;
+  var cli = prof.cliente || {};
+  var txt = document.getElementById("admin-txt");
+  if (!txt) { pfModal("Abre el tab de Recorrido primero."); return; }
+  var linea = "\nPunto — \n" + (cli.razon||"Cliente") + "\nMisión: Entregar productos de proforma " + prof.num + " ($" + prof.total.toFixed(2) + ")\n";
+  txt.value = txt.value + linea;
+  previsualizarRecorrido();
+  // Ir al tab recorrido
+  if (typeof admTab === "function") admTab(1);
+  pfModal("✅ Local agregado al final del recorrido. Ajusta el número de punto.");
 }
 
 function renderResumenJornadas() {
@@ -1602,9 +1791,21 @@ function pfMarcarListoTaller(id) {
   pfRenderTaller();
 }
 
+function pfActualizarBadgeTaller() {
+  var badge = document.getElementById("nav-badge-taller");
+  if (!badge) return;
+  try {
+    var taller = JSON.parse(localStorage.getItem(PF_TALLER_KEY) || "[]");
+    var listos = taller.filter(function(t){ return t.estado === "listo"; }).length;
+    badge.textContent = listos > 0 ? listos : "";
+    badge.style.display = listos > 0 ? "flex" : "none";
+  } catch(e) { badge.style.display = "none"; }
+}
+
 function pfRenderTaller() {
   var el = document.getElementById("pf-taller-lista");
   if (!el) return;
+  pfActualizarBadgeTaller(); // actualizar badge
   var taller = pfGetTaller();
 
   if (!taller.length) {
@@ -1799,18 +2000,26 @@ function pfSaveTareas(arr) {
 }
 
 function pfCrearTarea() {
-  var desc = (document.getElementById("pf-tar-desc") || {}).value || "";
-  var tec  = (document.getElementById("pf-tar-tec")  || {}).value || "todos";
+  var desc     = (document.getElementById("pf-tar-desc")     || {}).value || "";
+  var tec      = (document.getElementById("pf-tar-tec")      || {}).value || "todos";
+  var deadlineEl = document.getElementById("pf-tar-deadline");
+  var deadline   = deadlineEl ? deadlineEl.value : "";
+  // Convertir formato ISO (YYYY-MM-DD) a DD/MM/YYYY para consistencia
+  if (deadline) {
+    var _dp = deadline.split("-");
+    if (_dp.length === 3) deadline = _dp[2]+"/"+_dp[1]+"/"+_dp[0];
+  }
   if (!desc.trim()) { pfModal("Escribe la descripción de la tarea."); return; }
   var tareas = pfGetTareas();
   var tecNombres = { raul:"Raúl Romero", juan:"Juan Arboleda", fabiola:"Fabiola Mejía", todos:"Todos" };
   tareas.unshift({
-    id: "tar_" + Date.now() + "_" + Math.random().toString(36).substr(2,5), // BAJO FIX: evitar colisión
+    id: "tar_" + Date.now() + "_" + Math.random().toString(36).substr(2,5),
     desc: desc.trim(),
     tecnico: tec,
     tecNombre: tecNombres[tec] || tec,
     prioridad: PF_TAREA_PRIO,
     fecha: fechaHoy(),
+    deadline: deadline || null,
     hora: new Date().toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"}),
     completada: false,
     completadaPor: null,
@@ -1819,6 +2028,7 @@ function pfCrearTarea() {
   pfSaveTareas(tareas);
   var inp = document.getElementById("pf-tar-desc");
   if (inp) inp.value = "";
+  if (deadlineEl) deadlineEl.value = "";
   pfRenderTareas();
 }
 
@@ -1844,6 +2054,46 @@ function pfEliminarTarea(id) {
   });
 }
 
+
+function pfEditarTarea(id) {
+  var t = pfGetTareas().find(function(x){return x.id===id;});
+  if (!t) return;
+  // Convertir DD/MM/YYYY a YYYY-MM-DD para el input date
+  var _dlISO = "";
+  if (t.deadline) {
+    var _dp = t.deadline.split("/");
+    if (_dp.length === 3) _dlISO = _dp[2]+"-"+_dp[1]+"-"+_dp[0];
+  }
+  var ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px";
+  ov.innerHTML = '<div style="background:#fff;border-radius:20px;padding:24px 20px;max-width:340px;width:100%">' +
+    '<div style="font-size:17px;font-weight:700;margin-bottom:14px">✏️ Editar tarea</div>' +
+    '<input id="pf-et-desc" type="text" value="'+t.desc.replace(/"/g,"&quot;")+'" style="width:100%;padding:10px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:10px">' +
+    '<select id="pf-et-prio" style="width:100%;padding:10px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:10px">' +
+    '<option value="urgente"'+(t.prioridad==="urgente"?" selected":"")+'>🔴 Urgente</option>' +
+    '<option value="normal"'+(t.prioridad==="normal"?" selected":"")+'>🔵 Normal</option>' +
+    '<option value="baja"'+(t.prioridad==="baja"?" selected":"")+'>⬜ Baja</option>' +
+    '</select>' +
+    '<div style="font-size:10px;font-weight:700;color:var(--g3);margin-bottom:4px">FECHA LÍMITE (opcional)</div>' +
+    '<input id="pf-et-deadline" type="date" value="'+_dlISO+'" style="width:100%;padding:9px 10px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:13px;margin-bottom:14px">' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+    '<button id="pf-et-cancel" style="padding:13px;border-radius:12px;border:1.5px solid var(--bo);background:var(--g1);color:var(--g4);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Cancelar</button>' +
+    '<button id="pf-et-ok" style="padding:13px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Guardar</button>' +
+    '</div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector("#pf-et-cancel").onclick = function(){document.body.removeChild(ov);};
+  ov.querySelector("#pf-et-ok").onclick = function(){
+    var desc = ov.querySelector("#pf-et-desc").value.trim();
+    var prio = ov.querySelector("#pf-et-prio").value;
+    var dlRaw = ov.querySelector("#pf-et-deadline").value;
+    var dl = "";
+    if (dlRaw) { var _dp = dlRaw.split("-"); if (_dp.length===3) dl = _dp[2]+"/"+_dp[1]+"/"+_dp[0]; }
+    if (!desc) { pfModal("La descripción no puede estar vacía."); return; }
+    var todas = pfGetTareas();
+    for (var i=0;i<todas.length;i++) if(todas[i].id===id){todas[i].desc=desc;todas[i].prioridad=prio;todas[i].deadline=dl||null;break;}
+    pfSaveTareas(todas); pfRenderTareas(); document.body.removeChild(ov);
+  };
+}
 function pfRenderTareas() {
   var el = document.getElementById("pf-tareas-lista");
   if (!el) return;
@@ -1862,13 +2112,19 @@ function pfRenderTareas() {
     h += '<div class="slbl">Pendientes ('+pendientes.length+')</div>';
     pendientes.forEach(function(t) {
       var col = prioColor[t.prioridad] || "var(--g4)";
-      h += '<div style="margin:0 12px 8px;background:#fff;border-radius:14px;border:1.5px solid '+col+';padding:12px 14px">';
+      var _hoy = fechaHoy();
+      var _vencida = t.deadline && t.deadline < _hoy;
+      var _pronto  = t.deadline && t.deadline === _hoy;
+      h += '<div style="margin:0 12px 8px;background:#fff;border-radius:14px;border:1.5px solid '+(_vencida?"var(--r)":col)+';padding:12px 14px">';
       h += '<div style="display:flex;align-items:flex-start;gap:8px">';
       h += '<div style="font-size:18px;flex-shrink:0">'+(prioIco[t.prioridad]||"📋")+'</div>';
       h += '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--ng)">'+t.desc+'</div>';
-      h += '<div style="font-size:11px;color:var(--g4);margin-top:3px">'+t.tecNombre+' · '+t.fecha+'</div></div></div>';
-      h += '<div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:10px">';
+      h += '<div style="font-size:11px;color:var(--g4);margin-top:3px">'+t.tecNombre+' · '+t.fecha;
+      if (t.deadline) h += ' · <span style="color:'+(_vencida?"var(--r)":_pronto?"var(--n)":"var(--g4)")+'">⏰ Límite: '+t.deadline+'</span>';
+      h += '</div></div></div>';
+      h += '<div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;margin-top:10px">';
       h += '<button onclick="pfCompletarTarea(\''+t.id+'\')" style="padding:10px;border-radius:10px;border:none;background:var(--v);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✅ Completar</button>';
+      h += '<button onclick="pfEditarTarea(\''+t.id+'\')" style="padding:10px 12px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:13px;color:var(--a);cursor:pointer;font-family:inherit">✏️</button>';
       h += '<button onclick="pfEliminarTarea(\''+t.id+'\')" style="padding:10px 12px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:13px;color:var(--r);cursor:pointer;font-family:inherit">🗑</button>';
       h += '</div></div>';
     });
@@ -2029,6 +2285,7 @@ function pfSincronizarFichas(callback) {
 
 // Sincronización automática al cargar (si es admin o técnico con datos)
 function pfAutoSync() {
+  if (!navigator.onLine) return;
   var ultimaSync = localStorage.getItem("pf_ultima_sync");
   if (ultimaSync) {
     try {
@@ -2258,6 +2515,7 @@ function pfRenderTareasPerfil() {
     h += '<div style="flex:1"><div style="font-size:13px;font-weight:700">'+t.desc+'</div>';
     h += '<div style="font-size:11px;color:var(--g3);margin-top:2px">'+t.fecha+'</div></div>';
     h += '<button onclick="pfCompletarTarea(\''+t.id+'\');pfRenderTareasPerfil()" style="padding:6px 12px;border-radius:8px;border:none;background:var(--v);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✓ Listo</button>';
+    h += '<button onclick="pfEditarTarea(\''+t.id+'\');setTimeout(pfRenderTareasPerfil,300)" style="padding:6px 10px;border-radius:8px;border:1.5px solid var(--bo);background:#fff;font-size:12px;color:var(--a);cursor:pointer;font-family:inherit;margin-left:4px">✏️</button>';
     h += '</div></div>';
   });
   el.innerHTML = h;
@@ -2343,3 +2601,124 @@ function pfAdminMarcarVisita() {
     pfModal("✅ Visita de " + tipo + " registrada para " + local + " (" + fecha + ")");
   };
 }
+
+// ════════════════════════════════════════════════════════════
+//  F4 — NOTIFICACIONES PUSH (Web Push API)
+// ════════════════════════════════════════════════════════════
+// VAPID public key — para producción real necesitas generar tus propias claves VAPID
+// Generar en: https://vapidkeys.com/ y poner la pública aquí
+var PF_VAPID_PUBLIC_KEY = "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBB4o8CCbLQn7kz4mwmA";
+
+function pfActualizarEstadoPush() {
+  var el = document.getElementById("pf-push-status");
+  var btn = document.getElementById("pf-push-btn");
+  if (!el) return;
+  if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+    el.textContent = "Estado: no compatible con este navegador";
+    if (btn) btn.style.display = "none";
+    return;
+  }
+  var perm = Notification.permission;
+  if (perm === "granted") {
+    // Verificar si hay suscripción activa
+    navigator.serviceWorker.ready.then(function(reg) {
+      reg.pushManager.getSubscription().then(function(sub) {
+        el.textContent = sub ? "Estado: ✅ Activas en este dispositivo" : "Estado: Permitidas pero no activas";
+        if (btn) { btn.textContent = sub ? "🔕 Desactivar notificaciones" : "🔔 Activar notificaciones"; btn.style.background = sub ? "var(--g3)" : "var(--a)"; }
+      });
+    }).catch(function(){ el.textContent = "Estado: error al verificar"; });
+  } else if (perm === "denied") {
+    el.textContent = "Estado: ⛔ Bloqueadas — actívalas en ajustes del navegador";
+    if (btn) { btn.textContent = "Abrir ajustes del navegador"; btn.style.background = "var(--g3)"; }
+  } else {
+    el.textContent = "Estado: sin configurar";
+    if (btn) { btn.textContent = "🔔 Activar notificaciones"; btn.style.background = "var(--a)"; }
+  }
+}
+
+function pfTogglePushNotif() {
+  if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+    pfModal("Tu navegador no soporta notificaciones push."); return;
+  }
+  if (Notification.permission === "denied") {
+    pfModal("Las notificaciones están bloqueadas.\nVe a Ajustes → Privacidad → Notificaciones y actívalas para esta app.");
+    return;
+  }
+  navigator.serviceWorker.ready.then(function(reg) {
+    reg.pushManager.getSubscription().then(function(existingSub) {
+      if (existingSub) {
+        // Desactivar
+        existingSub.unsubscribe().then(function() {
+          pfModal("🔕 Notificaciones desactivadas en este dispositivo.");
+          pfActualizarEstadoPush();
+        });
+      } else {
+        // Activar — pedir permiso y suscribir
+        Notification.requestPermission().then(function(perm) {
+          if (perm !== "granted") { pfModal("Permiso denegado."); return; }
+          // Convertir VAPID key a Uint8Array
+          var key = PF_VAPID_PUBLIC_KEY;
+          var raw = atob(key.replace(/-/g,"+").replace(/_/g,"/"));
+          var buf = new Uint8Array(raw.length);
+          for (var i=0;i<raw.length;i++) buf[i]=raw.charCodeAt(i);
+          reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: buf
+          }).then(function(sub) {
+            // Guardar suscripción en localStorage (en producción mandarla al servidor)
+            try { localStorage.setItem("pf_push_sub", JSON.stringify(sub.toJSON())); } catch(e){}
+            pfModal("✅ Notificaciones activadas.\nRecibirás alertas de retiros urgentes y tareas.");
+            pfActualizarEstadoPush();
+          }).catch(function(e) {
+            pfModal("Error al activar notificaciones: " + e.message + "\n\nNota: en GitHub Pages necesitas configurar VAPID keys propias.");
+          });
+        });
+      }
+    });
+  });
+}
+
+// Función para enviar notificación local (sin servidor) — para pruebas
+function pfEnviarNotifLocal(titulo, cuerpo, url) {
+  if (Notification.permission !== "granted") return;
+  navigator.serviceWorker.ready.then(function(reg) {
+    reg.showNotification(titulo || "Previfuego Field", {
+      body:    cuerpo || "",
+      icon:    "/previfuego-backend/icon-192.png",
+      tag:     "pf-local-" + Date.now(),
+      data:    url || "/previfuego-backend/",
+      vibrate: [200,100,200]
+    });
+  });
+}
+
+// Revisar alertas periódicamente y notificar si hay retiros urgentes
+window.addEventListener("load", function() {
+  // Solo si notificaciones activas
+  if (Notification.permission !== "granted") return;
+  setInterval(function() {
+    try {
+      var retiros = JSON.parse(localStorage.getItem("pf_retiros") || "[]");
+      var urgentes = retiros.filter(function(r){
+        if (r.estado !== "pendiente") return false;
+        var p = (r.fecha||"").split("/");
+        if (p.length < 3) return false;
+        var d = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+        return (Date.now() - d.getTime()) > 7*24*3600*1000;
+      });
+      if (urgentes.length > 0) {
+        // Solo notificar una vez por día
+        var hoy = new Date().toLocaleDateString("es-EC");
+        var ultima = localStorage.getItem("pf_push_ultima_alerta");
+        if (ultima !== hoy) {
+          localStorage.setItem("pf_push_ultima_alerta", hoy);
+          pfEnviarNotifLocal(
+            "⚠️ Retiros urgentes — Previfuego",
+            urgentes.length + " extintor(es) con más de 7 días sin entregar",
+            "/previfuego-backend/"
+          );
+        }
+      }
+    } catch(e){}
+  }, 3600000); // cada hora
+});

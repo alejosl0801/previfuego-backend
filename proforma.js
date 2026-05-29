@@ -336,6 +336,8 @@ var PF_PROF_ITEMS     = [];   // ítems de la proforma en edición
 var PF_PROF_CLIENTE   = null; // cliente seleccionado
 var PF_PROF_TIPO      = "dist"; // dist | cli
 var PF_PROF_EDITANDO  = null; // id de proforma en edición (null = nueva)
+var PF_PROF_DESC_TIPO = "pct"; // "pct" | "val" — tipo de descuento adicional
+var PF_PROF_DESC_VAL  = 0;    // valor del descuento adicional
 var PF_IVA_PROF       = 0.15;
 
 // ── NUMERACIÓN ───────────────────────────────────────────────
@@ -505,6 +507,8 @@ function pfAbrirNuevaProforma(tipo) {
   PF_PROF_CLIENTE  = null;
   PF_PROF_TIPO     = tipo || "dist";
   PF_PROF_EDITANDO = null;
+  PF_PROF_DESC_TIPO = "pct";
+  PF_PROF_DESC_VAL  = 0;
   pfRenderFormProforma();
 }
 
@@ -515,6 +519,8 @@ function pfEditarProforma(id) {
   PF_PROF_CLIENTE  = JSON.parse(JSON.stringify(prof.cliente || {}));
   PF_PROF_TIPO     = prof.tipo || "dist";
   PF_PROF_EDITANDO = id;
+  PF_PROF_DESC_TIPO = prof.descTipo || "pct";
+  PF_PROF_DESC_VAL  = prof.descVal  || 0;
   pfRenderFormProforma();
 }
 
@@ -587,14 +593,27 @@ function pfRenderFormProforma() {
   h += '<div id="prof-prod-results" style="max-height:220px;overflow-y:auto;margin-top:6px"></div>';
   h += '</div>';
 
-  // Totales
+  // Totales con IDs para actualización sin re-render
   var calc = pfCalcTotalProforma(PF_PROF_ITEMS);
-  h += '<div style="background:#fff;border-radius:14px;border:1.5px solid var(--bo);padding:12px 14px;margin-top:12px">';
-  h += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span style="color:var(--g4)">Precio de lista:</span><span style="font-weight:600">$'+calc.pbase.toFixed(2)+'</span></div>';
-  h += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span style="color:var(--r)">Descuento:</span><span style="font-weight:600;color:var(--r)">-$'+calc.desc.toFixed(2)+'</span></div>';
-  h += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span>Subtotal:</span><span style="font-weight:700">$'+calc.subtotal.toFixed(2)+'</span></div>';
-  h += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span style="color:var(--g4)">IVA 15%:</span><span>$'+calc.iva.toFixed(2)+'</span></div>';
-  h += '<div style="display:flex;justify-content:space-between;padding:6px 0 0;border-top:2px solid var(--r);margin-top:4px"><span style="font-size:16px;font-weight:700;color:var(--r)">TOTAL:</span><span style="font-size:18px;font-weight:700;color:var(--r)">$'+calc.total.toFixed(2)+'</span></div>';
+  h += '<div id="prof-totales-wrap" style="background:#fff;border-radius:14px;border:1.5px solid var(--bo);padding:12px 14px;margin-top:12px">';
+  h += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span style="color:var(--g4)">Precio de lista:</span><span id="prof-res-pbase" style="font-weight:600">$'+calc.pbase.toFixed(2)+'</span></div>';
+  h += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span style="color:var(--r)">Descuento:</span><span id="prof-res-desc" style="font-weight:600;color:var(--r)">-$'+calc.desc.toFixed(2)+'</span></div>';
+  h += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span>Subtotal:</span><span id="prof-res-subtotal" style="font-weight:700">$'+calc.subtotal.toFixed(2)+'</span></div>';
+  h += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span style="color:var(--g4)">IVA 15%:</span><span id="prof-res-iva">$'+calc.iva.toFixed(2)+'</span></div>';
+  h += '<div style="display:flex;justify-content:space-between;padding:6px 0 0;border-top:2px solid var(--r);margin-top:4px"><span style="font-size:16px;font-weight:700;color:var(--r)">TOTAL:</span><span id="prof-res-total" style="font-size:18px;font-weight:700;color:var(--r)">$'+calc.total.toFixed(2)+'</span></div>';
+  h += '</div>';
+
+  // ── DESCUENTO ADICIONAL GLOBAL ──
+  h += '<div style="background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:10px 14px;margin-top:10px">';
+  h += '<div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Descuento adicional</div>';
+  h += '<div style="display:flex;gap:8px;align-items:center">';
+  h += '<button onclick="PF_PROF_DESC_TIPO=\'pct\';pfActualizarDescUI()" id="prof-desc-pct-btn" style="padding:6px 12px;border-radius:8px;border:2px solid '+(PF_PROF_DESC_TIPO==='pct'?'var(--r)':'var(--bo)')+';background:'+(PF_PROF_DESC_TIPO==='pct'?'var(--rc)':'#fff')+';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:'+(PF_PROF_DESC_TIPO==='pct'?'var(--r)':'var(--g4)')+'">%</button>';
+  h += '<button onclick="PF_PROF_DESC_TIPO=\'val\';pfActualizarDescUI()" id="prof-desc-val-btn" style="padding:6px 12px;border-radius:8px;border:2px solid '+(PF_PROF_DESC_TIPO==='val'?'var(--r)':'var(--bo)')+';background:'+(PF_PROF_DESC_TIPO==='val'?'var(--rc)':'#fff')+';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:'+(PF_PROF_DESC_TIPO==='val'?'var(--r)':'var(--g4)')+'">$</button>';
+  h += '<input id="prof-desc-input" type="number" min="0" step="0.01" value="'+PF_PROF_DESC_VAL+'" oninput="PF_PROF_DESC_VAL=parseFloat(this.value)||0;pfRenderTotalesInline()" ';
+  h += 'style="flex:1;padding:8px 10px;border:1.5px solid var(--bo);border-radius:8px;font-family:inherit;font-size:14px;font-weight:700" ';
+  h += 'placeholder="'+(PF_PROF_DESC_TIPO==='pct'?'0.00 %':'0.00 $')+'">';
+  h += '</div>';
+  h += '<div style="font-size:11px;color:var(--g3);margin-top:6px">'+(PF_PROF_DESC_TIPO==='pct'?'Porcentaje sobre el subtotal':'Valor fijo en dólares')+'</div>';
   h += '</div>';
 
   // Campo condición de pago y validez
@@ -639,15 +658,21 @@ function pfRenderItemProforma(item, idx) {
 }
 
 // ── BÚSQUEDA DE CLIENTES ─────────────────────────────────────
+function _pfNorm(s) {
+  // Normalizar acentos para búsqueda (é→e, á→a, etc.)
+  try { return (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase(); }
+  catch(e) { return (s||"").toLowerCase().replace(/[áàä]/g,"a").replace(/[éèë]/g,"e").replace(/[íìï]/g,"i").replace(/[óòö]/g,"o").replace(/[úùü]/g,"u").replace(/[ñ]/g,"n"); }
+}
+
 function pfBuscarClienteDist(q) {
   var res = document.getElementById("prof-cli-results");
   if (!res) return;
   if (!q || q.length < 2) { res.style.display = "none"; return; }
-  var q2 = q.toLowerCase().trim();
-  // #AUDIO FIX: buscar por cualquier palabra del nombre
+  var q2 = _pfNorm(q).trim();
+  // Buscar por cualquier palabra del nombre, con normalización de acentos
   var palabras = q2.split(/\s+/).filter(function(p){ return p.length >= 2; });
   var matches = PF_CLIENTES_DIST.filter(function(c){
-    var razon = (c.razon||"").toLowerCase();
+    var razon = _pfNorm(c.razon);
     var ruc   = (c.ruc||"");
     if (ruc.indexOf(q) !== -1) return true;
     if (razon.indexOf(q2) !== -1) return true;
@@ -768,16 +793,12 @@ function pfActualizarListaItems() {
 
 function pfActualizarTotalesProforma() {
   var calc = pfCalcTotalProforma(PF_PROF_ITEMS);
-  var actualizar = function(id, val) {
-    var el = document.getElementById(id);
-    if (el) el.textContent = val;
-  };
-  // Buscar divs de totales y actualizarlos (si están en el DOM)
   pfRenderTotalesInline(calc);
 }
 
 function pfRenderTotalesInline(calc) {
-  // #AUDIO FIX: actualizar totales en tiempo real sin re-render completo
+  // Recalcular siempre con el descuento adicional actual
+  if (!calc) calc = pfCalcTotalProforma(PF_PROF_ITEMS);
   var ids = {
     "prof-res-pbase":    "$" + calc.pbase.toFixed(2),
     "prof-res-desc":     "-$" + calc.desc.toFixed(2),
@@ -785,6 +806,9 @@ function pfRenderTotalesInline(calc) {
     "prof-res-iva":      "$" + calc.iva.toFixed(2),
     "prof-res-total":    "$" + calc.total.toFixed(2)
   };
+  // Mostrar/ocultar fila de descuento adicional
+  var rowDesc = document.getElementById("prof-res-desc-row");
+  if (rowDesc) rowDesc.style.display = calc.descAdicional > 0 ? "" : "none";
   Object.keys(ids).forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.textContent = ids[id];
@@ -828,13 +852,30 @@ function pfActualizarTipoProforma() {
 }
 
 // ── CÁLCULO DE TOTALES ───────────────────────────────────────
-function pfCalcTotalProforma(items) {
-  if (!items || !items.length) return { pbase:0, desc:0, subtotal:0, iva:0, total:0 };
+function pfCalcTotalProforma(items, descTipo, descVal) {
+  if (!items || !items.length) return { pbase:0, desc:0, descAdicional:0, subtotal:0, iva:0, total:0 };
   var pbase    = items.reduce(function(s,i){ return s + i.pbase * i.cant; }, 0);
-  var subtotal = items.reduce(function(s,i){ return s + i.punit * i.cant; }, 0);
-  var desc     = pbase - subtotal;
+  var subtotalItems = items.reduce(function(s,i){ return s + i.punit * i.cant; }, 0);
+  var descItems = pbase - subtotalItems;
+  // Descuento adicional global
+  var _dt  = descTipo !== undefined ? descTipo : (PF_PROF_DESC_TIPO || "pct");
+  var _dv  = descVal  !== undefined ? descVal  : (PF_PROF_DESC_VAL  || 0);
+  var descAdicional = _dt === "pct" ? subtotalItems * (_dv / 100) : Math.min(_dv, subtotalItems);
+  var subtotal = subtotalItems - descAdicional;
+  var desc     = descItems + descAdicional;
   var iva      = subtotal * PF_IVA_PROF;
-  return { pbase:pbase, desc:desc, subtotal:subtotal, iva:iva, total:subtotal+iva };
+  return { pbase:pbase, desc:desc, descAdicional:descAdicional, subtotal:subtotal, iva:iva, total:subtotal+iva };
+}
+
+function pfActualizarDescUI() {
+  // Actualizar botones de tipo
+  var btnPct = document.getElementById("prof-desc-pct-btn");
+  var btnVal = document.getElementById("prof-desc-val-btn");
+  var inp    = document.getElementById("prof-desc-input");
+  if (btnPct) { btnPct.style.borderColor = PF_PROF_DESC_TIPO==="pct"?"var(--r)":"var(--bo)"; btnPct.style.background = PF_PROF_DESC_TIPO==="pct"?"var(--rc)":"#fff"; btnPct.style.color = PF_PROF_DESC_TIPO==="pct"?"var(--r)":"var(--g4)"; }
+  if (btnVal) { btnVal.style.borderColor = PF_PROF_DESC_TIPO==="val"?"var(--r)":"var(--bo)"; btnVal.style.background = PF_PROF_DESC_TIPO==="val"?"var(--rc)":"#fff"; btnVal.style.color = PF_PROF_DESC_TIPO==="val"?"var(--r)":"var(--g4)"; }
+  if (inp) inp.placeholder = PF_PROF_DESC_TIPO==="pct" ? "0.00 %" : "0.00 $";
+  pfRenderTotalesInline();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -866,6 +907,8 @@ function pfGuardarProforma(generarPDF) {
       proformas[idx].pago     = pago;
       proformas[idx].validez  = validez;
       proformas[idx].total    = calc.total;
+      proformas[idx].descTipo = PF_PROF_DESC_TIPO;
+      proformas[idx].descVal  = PF_PROF_DESC_VAL;
       proformas[idx].editadoEn = fecha;
     }
   } else {
@@ -885,6 +928,8 @@ function pfGuardarProforma(generarPDF) {
       subtotal: calc.subtotal,
       iva:      calc.iva,
       total:    calc.total,
+      descTipo: PF_PROF_DESC_TIPO,
+      descVal:  PF_PROF_DESC_VAL,
       estado:   "pendiente",
       notas:    []
     };
@@ -932,7 +977,7 @@ function pfHacerPDFProforma(prof) {
   var CW  = W - MAR*2; // 194mm
 
   var cli  = prof.cliente || {};
-  var calc = pfCalcTotalProforma(prof.items);
+  var calc = pfCalcTotalProforma(prof.items, prof.descTipo, prof.descVal);
 
   // Colores
   var ROJO  = [192, 57, 43];
@@ -958,8 +1003,14 @@ function pfHacerPDFProforma(prof) {
 
   // ── HEADER ──
   y = 5;
-  // Logo background negro
-  setFill(NEGRO); doc.roundedRect(MAR, y, 30, 30, 3, 3, "F");
+  // Logo: fallback PYS si no hay imagen
+  setFill(ROJO); doc.roundedRect(MAR, y, 30, 30, 3, 3, "F");
+  if (window.PF_LOGO_B64) {
+    try { doc.addImage(window.PF_LOGO_B64,"PNG",MAR+1,y+1,28,28); } catch(e){}
+  } else {
+    doc.setFont("helvetica","bold"); doc.setFontSize(13); setTxt([255,255,255]);
+    doc.text("PYS", MAR+15, y+18, {align:"center"});
+  }
 
   // Nombre empresa
   var EX = MAR + 33;
@@ -1003,7 +1054,7 @@ function pfHacerPDFProforma(prof) {
   // Badge tipo
   setFill([253,236,234]); doc.roundedRect(BX+3, BY+32, BW-6, 5.5, 2, 2, "F");
   doc.setFont("helvetica","bold"); doc.setFontSize(6.5); setTxt(ROJO);
-  // #AUDIO FIX: CLIENTE PREFERENCIAL va al lado de la razón social, no aquí
+  doc.text(prof.tipo==="dist"?"DISTRIBUIDOR":"CLIENTE FINAL", BX+BW/2, BY+35.5, {align:"center"});
 
   y += 38;
 
@@ -1019,26 +1070,26 @@ function pfHacerPDFProforma(prof) {
   doc.text("DATOS DEL COMPRADOR", MAR+3, y+5.5);
 
   // Badge tipo en header
-  var tipoLabel = "CLIENTE PREFERENCIAL"; // #AUDIO FIX: cambiar a CLIENTE PREFERENCIAL
-  var tipoW = doc.getTextWidth(tipoLabel) + 7;
-  setFill(ROJO); doc.roundedRect(W-MAR-tipoW-0.5, y+1, tipoW, 5, 1.5, 1.5, "F");
-  doc.setFont("helvetica","bold"); doc.setFontSize(6.5); setTxt([255,255,255]);
-  doc.text(tipoLabel, W-MAR-tipoW/2-0.5, y+4.5, {align:"center"});
+  // (badge tipo movido junto a la razón social — ver grid abajo)
 
   // Grid 2 columnas
   var MID = MAR + CW*0.55;
   setDraw(GRIS3); doc.setLineWidth(0.4);
   doc.line(MID, y+7.5, MID, y+CLI_H-1);
 
+  // Calcular espacio para badge tipo al lado de razón social
+  var _tipoLbl = prof.tipo === "dist" ? "DISTRIBUIDOR" : "CLIENTE FINAL";
+  var _tipoW2  = doc.getTextWidth(_tipoLbl) + 5;
+
   var CAMPOS_IZQ = [
-    ["RAZÓN SOCIAL / NOMBRES", (cli.razon||"—").substring(0,50)],
+    ["RAZÓN SOCIAL / NOMBRES", (cli.razon||"—").substring(0,38)], // más corto para dejar espacio al badge
     ["IDENTIFICACIÓN (RUC)",   cli.ruc||"—"],
     ["DIRECCIÓN",              (cli.dir||"—").substring(0,50)],
     ["CORREO ELECTRÓNICO",     (cli.correo||"—").substring(0,40)],
   ];
   var CAMPOS_DER = [
     ["FECHA DE EMISIÓN", prof.fecha],
-    ["VÁLIDA HASTA",     pfSumarDias(prof.fecha, 15)],
+    ["VÁLIDA HASTA",     pfSumarDias(prof.fecha, prof.validez ? parseInt(prof.validez) || 15 : 15)],
     ["CONDICIÓN DE PAGO",prof.pago||"CRÉDITO 30 DÍAS"],
     ["TELÉFONO",         cli.tel||"—"],
   ];
@@ -1050,6 +1101,13 @@ function pfHacerPDFProforma(prof) {
     doc.text(CAMPOS_IZQ[i][0], MAR+2.5, yy+3.5);
     doc.setFont("helvetica","normal"); doc.setFontSize(7.5); setTxt(NEGRO);
     doc.text(CAMPOS_IZQ[i][1], MAR+2.5, yy+8);
+    // Badge tipo al lado de razón social (fila 0 únicamente)
+    if (i === 0) {
+      setFill(prof.tipo === "dist" ? ROJO : VERDE);
+      doc.roundedRect(MID - _tipoW2 - 3, yy+5, _tipoW2, 4.5, 1.5, 1.5, "F");
+      doc.setFont("helvetica","bold"); doc.setFontSize(5.5); setTxt([255,255,255]);
+      doc.text(_tipoLbl, MID - _tipoW2/2 - 3, yy+8.5, {align:"center"});
+    }
     doc.setFont("helvetica","bold"); doc.setFontSize(5.5); setTxt(GRIS2);
     doc.text(CAMPOS_DER[i][0], MID+2, yy+3.5);
     doc.setFont("helvetica","normal"); doc.setFontSize(7.5); setTxt(NEGRO);
@@ -1204,9 +1262,9 @@ function pfHacerPDFProforma(prof) {
   doc.setFont("helvetica","normal"); doc.setFontSize(6.5); setTxt(GRIS2);
   doc.text("Firma y Sello del Cliente", (MAR+8+MF-8)/2, y+15.5, {align:"center"});
 
-  // Separador
+  // Separador (desde y+6 para no atravesar el texto superior)
   setDraw(GRIS3); doc.setLineWidth(0.4);
-  doc.line(MF, y+1, MF, y+FIRMA_H-1);
+  doc.line(MF, y+6, MF, y+FIRMA_H-1);
 
   // Línea empresa
   setDraw(NEGRO); doc.setLineWidth(0.6);
@@ -1215,8 +1273,8 @@ function pfHacerPDFProforma(prof) {
   doc.text("ALEJANDRO LÓPEZ — JEFE DE OPERACIONES", (MF+8+W-MAR-8)/2, y+15.5, {align:"center"});
   doc.setFont("helvetica","normal"); doc.setFontSize(6); setTxt(GRIS2);
   doc.text("Pyroshield  ·  RUC: 0952773976001", (MF+8+W-MAR-8)/2, y+18.5, {align:"center"});
-  doc.setFont("helvetica","normal"); doc.setFontSize(6.5); setTxt(GRIS1);
-  doc.text("Documento generado electrónicamente", (MF+8+W-MAR-8)/2, y+4, {align:"center"});
+  doc.setFont("helvetica","italic"); doc.setFontSize(5.5); setTxt(GRIS2);
+  doc.text("Documento generado electrónicamente", MAR+CW/2, y+3.5, {align:"center"});
 
   // ── PIE ──
   setFill(NEGRO); doc.rect(0, H-9, W, 9, "F");
@@ -1483,8 +1541,33 @@ function pfCambiarEstadoProforma(id, nuevoEstado) {
   if (idx === -1) return;
   proformas[idx].estado = nuevoEstado;
   proformas[idx]["fecha_"+nuevoEstado] = new Date().toLocaleDateString("es-EC");
+  // Historial de estados
+  if (!proformas[idx].histEstados) proformas[idx].histEstados = [];
+  proformas[idx].histEstados.push({
+    estado: nuevoEstado,
+    fecha:  new Date().toLocaleDateString("es-EC") + " " + new Date().toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"}),
+    usuario: (typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "Admin")
+  });
   pfSaveProformas(proformas);
   pfSincronizarProforma(id);
+}
+
+function pfAgregarNotaProforma(id) {
+  var inp = document.getElementById("prof-nota-txt");
+  if (!inp || !inp.value.trim()) return;
+  var texto = inp.value.trim();
+  var proformas = pfGetProformas();
+  var idx = proformas.findIndex(function(p){ return p.id === id; });
+  if (idx === -1) return;
+  if (!proformas[idx].notasInternas) proformas[idx].notasInternas = [];
+  proformas[idx].notasInternas.unshift({
+    texto:   texto,
+    fecha:   new Date().toLocaleDateString("es-EC") + " " + new Date().toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"}),
+    usuario: (typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "Admin")
+  });
+  pfSaveProformas(proformas);
+  inp.value = "";
+  pfVerProforma(id); // refrescar
 }
 
 // ── VER PROFORMA DETALLE ─────────────────────────────────────
@@ -1548,6 +1631,38 @@ function pfVerProforma(id) {
     h += '<button onclick="pfFinalizarProforma(\''+id+'\''+')" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--v);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🏁 Finalizar</button>';
   }
   h += '</div>';
+
+  // Notas internas
+  var notasProf = prof.notasInternas || [];
+  h += '<div style="margin-top:14px">';
+  h += '<div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Notas internas</div>';
+  if (notasProf.length) {
+    notasProf.forEach(function(n){
+      h += '<div style="background:var(--g1);border-radius:10px;padding:8px 12px;margin-bottom:6px">';
+      h += '<div style="font-size:12px;color:var(--ng)">'+n.texto+'</div>';
+      h += '<div style="font-size:10px;color:var(--g3);margin-top:3px">'+n.fecha+' · '+n.usuario+'</div>';
+      h += '</div>';
+    });
+  }
+  h += '<div style="display:flex;gap:6px;margin-top:6px">';
+  h += '<input id="prof-nota-txt" type="text" placeholder="Agregar nota interna..." style="flex:1;padding:8px 10px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:13px">';
+  h += '<button onclick="pfAgregarNotaProforma(\''+id+'\')" style="padding:8px 14px;border-radius:10px;border:none;background:var(--a);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+</button>';
+  h += '</div>';
+
+  // Historial de estados
+  var histEst = prof.histEstados || [];
+  if (histEst.length) {
+    h += '<div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin:12px 0 6px">Historial de cambios</div>';
+    histEst.slice().reverse().forEach(function(e){
+      var est2 = PF_PROF_ESTADOS[e.estado] || {ico:"•",label:e.estado};
+      h += '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--g1)">';
+      h += '<div style="font-size:11px;font-weight:700;color:var(--g4)">'+est2.ico+' '+est2.label+'</div>';
+      h += '<div style="font-size:10px;color:var(--g3);margin-left:auto">'+e.fecha+'</div>';
+      h += '</div>';
+    });
+  }
+  h += '</div>';
+
   h += '<div style="height:80px"></div></div>';
 
   var el = document.getElementById("pf-prof-contenido");

@@ -108,17 +108,21 @@ function pfAbrirCRM(nombreLocal) {
   h += '<button onclick="pfGuardarContactoUI(\''+pfEscNom(nombreLocal)+'\')" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--bo);background:var(--g1);color:var(--ng);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ Agregar contacto</button>';
   h += '</div></div>';
 
-  // Historial de notas
-  h += '<div class="slbl">Historial</div>';
+  // Historial de notas con búsqueda
+  h += '<div class="slbl">Historial ('+data.notas.length+')</div>';
+  h += '<div style="padding:0 12px 8px"><input id="crm-search-notas" type="search" placeholder="🔍 Buscar en notas..." oninput="pfFiltrarNotasCRM(\''+pfEscNom(nombreLocal)+'\',this.value)" style="width:100%;padding:8px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:13px;box-sizing:border-box"></div>';
   if (data.notas.length === 0) {
     h += '<div style="padding:16px;text-align:center;color:var(--g3);font-size:14px">Sin notas aún.</div>';
   } else {
     var tipoIco = { nota:"📝", llamada:"📞", visita:"🤝", problema:"⚠", pago:"💰" };
     var tipoCol = { nota:"var(--a)", llamada:"var(--v)", visita:"var(--n)", problema:"var(--r)", pago:"var(--v)" };
-    data.notas.forEach(function(n) {
+    // Mostrar máximo 15, el resto colapsado
+    var notasMostrar = data.notas.slice(0, 15);
+    h += '<div id="crm-notas-lista">';
+    notasMostrar.forEach(function(n) {
       var ico = tipoIco[n.tipo] || "📝";
       var col = tipoCol[n.tipo] || "var(--a)";
-      h += '<div style="margin:0 12px 8px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:11px 14px">';
+      h += '<div class="crm-nota-item" data-texto="'+(n.texto||"").toLowerCase().replace(/"/g,"&quot;")+'" style="margin:0 12px 8px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:11px 14px">';
       h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">';
       h += '<div style="font-size:13px;font-weight:700;color:'+col+'">'+ico+' '+n.tipo+'</div>';
       h += '<div style="font-size:11px;color:var(--g3)">'+n.fecha+' '+n.hora+'</div></div>';
@@ -126,6 +130,10 @@ function pfAbrirCRM(nombreLocal) {
       h += '<div style="font-size:11px;color:var(--g4);margin-top:4px">'+n.usuario+'</div>';
       h += '</div>';
     });
+    h += '</div>';
+    if (data.notas.length > 15) {
+      h += '<div style="padding:0 12px 12px;text-align:center"><button onclick="pfVerTodasNotas(\''+pfEscNom(nombreLocal)+'\')" style="padding:8px 20px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:13px;font-weight:700;color:var(--a);cursor:pointer;font-family:inherit">Ver todas ('+data.notas.length+')</button></div>';
+    }
   }
   h += '<div style="height:80px"></div>';
 
@@ -231,6 +239,22 @@ function pfRenderProductividad() {
 
     // Stats por tipo
     h += '<div style="padding:12px 14px">';
+    // Comparativo mes actual vs anterior
+    var _raw = new Date();
+    var _ec  = new Date(_raw.toLocaleString("en-US",{timeZone:"America/Guayaquil"}));
+    var _mm  = String(_ec.getMonth()+1).padStart(2,"0");
+    var _yy  = String(_ec.getFullYear());
+    var _mmAnt = _ec.getMonth() === 0 ? "12" : String(_ec.getMonth()).padStart(2,"0");
+    var _yyAnt = _ec.getMonth() === 0 ? String(_ec.getFullYear()-1) : _yy;
+    var visitasMes    = data.visitas.filter(function(v){ var p=(v.fecha||"").split("/"); return p.length>=3 && p[1]===_mm && p[2]===_yy; }).length;
+    var visitasAnt    = data.visitas.filter(function(v){ var p=(v.fecha||"").split("/"); return p.length>=3 && p[1]===_mmAnt && p[2]===_yyAnt; }).length;
+    var diff          = visitasMes - visitasAnt;
+    var diffTxt       = diff > 0 ? ("↑ +" + diff + " vs mes anterior") : diff < 0 ? ("↓ " + diff + " vs mes anterior") : "= igual que mes anterior";
+    var diffCol       = diff > 0 ? "var(--v)" : diff < 0 ? "var(--r)" : "var(--g3)";
+    h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
+    h += '<div><div style="font-size:22px;font-weight:700;color:'+col+'">'+visitasMes+'</div><div style="font-size:11px;color:var(--g3)">visitas este mes</div></div>';
+    h += '<div style="text-align:right"><div style="font-size:13px;font-weight:700;color:'+diffCol+'">'+diffTxt+'</div><div style="font-size:11px;color:var(--g3)">'+visitasAnt+' el mes pasado</div></div>';
+    h += '</div>';
     h += '<div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Por tipo de trabajo</div>';
     Object.keys(data.tipos).forEach(function(tipo) {
       var cnt = data.tipos[tipo];
@@ -244,11 +268,11 @@ function pfRenderProductividad() {
     });
 
     // Últimas visitas
-    var ultimas = data.visitas.slice().sort(function(a,b){ return (b.fecha+b.hora).localeCompare(a.fecha+a.hora); }).slice(0,3); // #068 FIX: ordenar por fecha desc
+    var ultimas = data.visitas.slice().sort(function(a,b){ return (b.fecha+b.hora).localeCompare(a.fecha+a.hora); }).slice(0,3);
     h += '<div style="font-size:11px;font-weight:700;color:var(--g3);letter-spacing:1px;text-transform:uppercase;margin:10px 0 6px">Últimas visitas</div>';
     ultimas.forEach(function(v) {
       h += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid var(--bo)">';
-      h += '<div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">'+( v.punto || v.nota || "—")+'</div>';
+      h += '<div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">'+(v.punto || v.nota || "—")+'</div>';
       h += '<div style="font-size:11px;color:var(--g3)">'+v.fecha+'</div></div>';
     });
 
@@ -375,6 +399,40 @@ function pfRenderContactosCRM(nombreLocal, el) {
     });
   }
   el.innerHTML = h;
+}
+
+function pfFiltrarNotasCRM(nombreLocal, q) {
+  var items = document.querySelectorAll(".crm-nota-item");
+  var qLow = (q||"").toLowerCase().trim();
+  items.forEach(function(el){
+    var texto = el.getAttribute("data-texto") || "";
+    el.style.display = !qLow || texto.indexOf(qLow) !== -1 ? "" : "none";
+  });
+}
+
+function pfVerTodasNotas(nombreLocal) {
+  var crm  = pfGetCRM();
+  var data = crm[nombreLocal] || { notas:[] };
+  var lista = document.getElementById("crm-notas-lista");
+  if (!lista) return;
+  var tipoIco = { nota:"📝", llamada:"📞", visita:"🤝", problema:"⚠", pago:"💰" };
+  var tipoCol = { nota:"var(--a)", llamada:"var(--v)", visita:"var(--n)", problema:"var(--r)", pago:"var(--v)" };
+  var h = "";
+  data.notas.forEach(function(n) {
+    var ico = tipoIco[n.tipo] || "📝";
+    var col = tipoCol[n.tipo] || "var(--a)";
+    h += '<div class="crm-nota-item" data-texto="'+(n.texto||"").toLowerCase().replace(/"/g,"&quot;")+'" style="margin:0 0 8px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:11px 14px">';
+    h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">';
+    h += '<div style="font-size:13px;font-weight:700;color:'+col+'">'+ico+' '+n.tipo+'</div>';
+    h += '<div style="font-size:11px;color:var(--g3)">'+n.fecha+' '+n.hora+'</div></div>';
+    h += '<div style="font-size:13px;color:var(--ng);line-height:1.5">'+n.texto+'</div>';
+    h += '<div style="font-size:11px;color:var(--g4);margin-top:4px">'+n.usuario+'</div>';
+    h += '</div>';
+  });
+  lista.innerHTML = h;
+  // Ocultar botón ver todas
+  var btn = lista.nextElementSibling;
+  if (btn) btn.style.display = "none";
 }
 
 // ── INIT ──────────────────────────────────────────────────────

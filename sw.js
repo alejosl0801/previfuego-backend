@@ -1,6 +1,6 @@
 // PREVIFUEGO FIELD — Service Worker v1.0
 // #011 FIX: soporte offline básico
-const CACHE_VERSION = '3.7'; // #165 FIX: incrementar en cada deploy
+const CACHE_VERSION = '4.0'; // v4.0 — F4 push, F10 dashboard, PDF proforma, 341 semáforo
 const CACHE_NAME = 'previfuego-v' + CACHE_VERSION;
 // #11 #12 FIX: no cachear script.google.com, no incluir iconos que no existen
 const ASSETS = [
@@ -16,7 +16,7 @@ const ASSETS = [
   '/previfuego-backend/extras.js',
   '/previfuego-backend/mejoras2.js',
   '/previfuego-backend/coordinator.js',
-  '/previfuego-backend/logo.js',
+  // logo.js omitido (vacío)
   '/previfuego-backend/style.css',
   '/previfuego-backend/inteligencia.js',
   '/previfuego-backend/proforma.js',
@@ -82,6 +82,38 @@ self.addEventListener('fetch', function(event) {
       });
       // Para JS/CSS: servir caché inmediatamente y actualizar en background
       return (cached && isJSorCSS) ? cached : (fetchPromise.catch(function(){ return cached; }));
+    })
+  );
+});
+
+// ── F4: NOTIFICACIONES PUSH ───────────────────────────────────
+self.addEventListener('push', function(event) {
+  var data = {};
+  try { data = event.data ? event.data.json() : {}; } catch(e) { data = { title: 'Previfuego', body: event.data ? event.data.text() : 'Nueva notificación' }; }
+  var title   = data.title || 'Previfuego Field';
+  var options = {
+    body:    data.body    || 'Tienes una notificación',
+    icon:    '/previfuego-backend/icon-192.png',
+    badge:   '/previfuego-backend/icon-192.png',
+    tag:     data.tag     || 'previfuego-notif',
+    data:    data.url     || '/previfuego-backend/',
+    vibrate: [200, 100, 200],
+    actions: data.actions || []
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  var url = event.notification.data || '/previfuego-backend/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(cls) {
+      for (var i = 0; i < cls.length; i++) {
+        if (cls[i].url.indexOf('previfuego-backend') !== -1 && 'focus' in cls[i]) {
+          return cls[i].focus();
+        }
+      }
+      if (clients.openWindow) return clients.openWindow(url);
     })
   );
 });

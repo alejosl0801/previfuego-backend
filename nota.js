@@ -38,15 +38,30 @@ function abrirNotaEntrega(pi, li) {
     }
   }
 
-  // Si hay accesorios de la sesión actual, agregarlos como segunda nota
-  // (se maneja por separado)
+  // FIX: pre-cargar accesorios de la sesión en NOTA_ITEMS
+  if (typeof ACCS!=="undefined" && ACCS && ACCS.length>0) {
+    for (var _ai=0;_ai<ACCS.length;_ai++) {
+      var _a=ACCS[_ai];
+      NOTA_ITEMS.push({cant:1,desc:_a.n||_a.nombre||"Accesorio",puni:_a.p||_a.precio||0,total:_a.p||_a.precio||0});
+    }
+  }
 
   // Llenar datos del cliente
   var now    = new Date();
   var fecha  = String(now.getDate()).padStart(2,"0") + " DE " + mesEnLetras(now.getMonth()) + " DEL " + now.getFullYear();
 
   // #27 FIX: obtener todos los datos del cliente en una sola llamada
-  var _notaCli = (typeof pfBuscarCliente === "function") ? pfBuscarCliente(loc.nombre) : null;
+  var _notaCli = null;
+  if (typeof pfBuscarCliente === "function") {
+    _notaCli = pfBuscarCliente(loc.nombre) || pfBuscarCliente(p.nombre) || null;
+    if (!_notaCli && typeof PF_CLIENTES !== "undefined") {
+      var _nL = (loc.nombre||"").toLowerCase();
+      for (var _ci=0;_ci<PF_CLIENTES.length;_ci++) {
+        var _cc=PF_CLIENTES[_ci];
+        if ((_cc.nombre||"").toLowerCase().indexOf(_nL)!==-1||_nL.indexOf((_cc.nombre||"").toLowerCase())!==-1){_notaCli=_cc;break;}
+      }
+    }
+  }
   NOTA_ACTUAL = {
     numero:    null,
     cliente:   _notaCli ? (_notaCli.razon  || loc.nombre) : loc.nombre,
@@ -75,6 +90,9 @@ function abrirNotaEntrega(pi, li) {
 
   renderNotaItems();
   ir("snota");
+  // Mostrar número próximo de nota
+  var _prevNum = document.getElementById("nota-preview-num");
+  if (_prevNum) _prevNum.textContent = String(NOTA_CONTADOR + 1).padStart(7, "0");
 }
 
 function mesEnLetras(m) {
@@ -205,13 +223,11 @@ function notaTienePrecios() {
 
 var _notaGenerando = false;
 function generarNotaPDF(tipo) {
-  // MEDIO FIX: guard contra doble generación
   if (_notaGenerando) return;
   _notaGenerando = true;
-  setTimeout(function(){ _notaGenerando = false; }, 5000); // resetear después de 5s
-  // tipo: "entrega" o "accesorios"
+  var _notaTimeout = setTimeout(function(){ _notaGenerando = false; mostrarCargando(false); }, 8000); // timeout de seguridad
   var items = tipo === "accesorios" ? ACCS.map(function(a){ return {cant:1, desc:a.n, puni:a.p, total:a.p}; }) : NOTA_ITEMS;
-  if (!items || items.length === 0) { _notaGenerando = false; pfModal("Agrega al menos un ítem a la nota."); return; }
+  if (!items || items.length === 0) { _notaGenerando = false; clearTimeout(_notaTimeout); pfModal("Agrega al menos un ítem a la nota."); return; }
 
   mostrarCargando(true, "Generando nota de entrega...", "Por favor espera");
 
@@ -219,7 +235,6 @@ function generarNotaPDF(tipo) {
   localStorage.setItem("pf_notaCount", NOTA_CONTADOR);
   var numNota = String(NOTA_CONTADOR).padStart(7, "0");
 
-  // Leer campos del formulario
   var cliente  = (document.getElementById("nota-cliente") || {}).value || NOTA_ACTUAL.cliente;
   var direccion= (document.getElementById("nota-dir")     || {}).value || NOTA_ACTUAL.direccion;
   var ruc      = (document.getElementById("nota-ruc")     || {}).value || NOTA_ACTUAL.ruc;
@@ -231,11 +246,12 @@ function generarNotaPDF(tipo) {
     if (!window.jspdf || !window.jspdf.jsPDF) {
       var s = document.createElement("script");
       s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-      s.onload  = function(){ hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, items, tipo); };
-      s.onerror = function(){ mostrarCargando(false); pfModal("Error cargando PDF. Verifica conexión."); };
+      s.onload  = function(){ hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, items, tipo); clearTimeout(_notaTimeout); };
+      s.onerror = function(){ mostrarCargando(false); _notaGenerando = false; clearTimeout(_notaTimeout); pfModal("Error cargando PDF. Verifica conexión."); };
       document.head.appendChild(s);
     } else {
       hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, items, tipo);
+      clearTimeout(_notaTimeout);
     }
   }, 200);
 }
@@ -414,7 +430,8 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     doc.setFont("helvetica","bold"); doc.setFontSize(7); tG();
     doc.text("OBSERVACIÓN:", ML+2, obsY+5);
     doc.setFont("helvetica","normal"); doc.setFontSize(7.5); tN();
-    var obs = "NO NOS RESPONSABILIZAMOS POR TRABAJOS ABANDONADOS DESPUÉS DE 30 DÍAS.";
+    var _obsEl = document.getElementById("nota-obs");
+    var obs = (_obsEl && _obsEl.value.trim()) ? _obsEl.value.trim() : "NO NOS RESPONSABILIZAMOS POR TRABAJOS ABANDONADOS DESPUÉS DE 30 DÍAS.";
     var obsL = doc.splitTextToSize(obs, obsW-4);
     for (var i=0; i<obsL.length; i++) doc.text(obsL[i], ML+2, obsY+10+i*4);
 
@@ -472,14 +489,13 @@ function hacerNotaPDF(numNota, cliente, direccion, ruc, telefono, fecha, local, 
     // Firma Alejandro (derecha)
     var rx3 = ML + firW + 8;
     dL(); doc.rect(rx3, y, firW, 32, "S");
+    doc.setFont("helvetica","bold"); doc.setFontSize(7); tG();
+    doc.text("Autorizado por:", rx3+firW/2, y+5, {align:"center"});
+    dL(); doc.line(rx3+2, y+20, rx3+firW-2, y+20);
     doc.setFont("helvetica","bold"); doc.setFontSize(8); tN();
-    doc.text("Alejandro López", rx3+firW/2, y+13, {align:"center"});
-    dL(); doc.line(rx3+2, y+14, rx3+firW-2, y+14);
-    doc.setFont("helvetica","normal"); doc.setFontSize(7.5); tG();
-    doc.text("Jefe de Operaciones", rx3+firW/2, y+19, {align:"center"});
-    doc.text("Documento autorizado por:", rx3+firW/2, y+18, {align:"center"});
-    doc.text("Alejandro López | Jefe de Operaciones", rx3+firW/2, y+24, {align:"center"});
-    doc.text("RUC: 0952773976001", rx3+firW/2, y+29, {align:"center"});
+    doc.text("Alejandro López", rx3+firW/2, y+25, {align:"center"});
+    doc.setFont("helvetica","normal"); doc.setFontSize(7); tG();
+    doc.text("Jefe de Operaciones · Previfuego", rx3+firW/2, y+29.5, {align:"center"});
 
     y += 36;
 

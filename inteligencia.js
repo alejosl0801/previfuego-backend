@@ -158,15 +158,21 @@ var PF_CAL_OFFSET = 0;
 
 function pfRenderCalendario() {
   if (typeof PF_CLIENTES === "undefined" || !PF_CLIENTES || !PF_CLIENTES.length) {
-    // #075 FIX: mostrar mensaje y reintentar
     var el = document.getElementById("pf-cal-contenido");
     if (el) el.innerHTML = '<div style="padding:24px 16px;text-align:center;color:var(--g3);font-size:14px">⏳ Cargando base de datos...<br><br><button onclick="pfRenderCalendario()" style="padding:8px 16px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🔄 Reintentar</button></div>';
     setTimeout(pfRenderCalendario, 1500);
     return;
   }
-  
+
   var el = document.getElementById("pf-cal-contenido");
   if (!el) return;
+
+  // Cache de fichas: solo re-leer si cambió el localStorage (comparar tamaño)
+  var _fichasRaw = localStorage.getItem("pf_fichas") || "{}";
+  if (!window._pfCalFichasCache || window._pfCalFichasRaw !== _fichasRaw) {
+    window._pfCalFichasRaw = _fichasRaw;
+    try { window._pfCalFichasCache = JSON.parse(_fichasRaw); } catch(e) { window._pfCalFichasCache = {}; }
+  }
 
   var cal = pfCalendarioMes(PF_CAL_OFFSET);
   var h   = "";
@@ -191,8 +197,20 @@ function pfRenderCalendario() {
   h += '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 12px 12px">';
   var _canGoBack = PF_CAL_OFFSET > -6;
   h += '<button type="button" onclick="if(PF_CAL_OFFSET>-6){PF_CAL_OFFSET--;pfRenderCalendario();}" style="padding:8px 16px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:16px;cursor:pointer;opacity:'+(_canGoBack?'1':'0.3')+'">‹</button>'; // #078 FIX
+  // Contar visitados del mes para el contador
+  var _fichasCalHdr = window._pfCalFichasCache || {};
+  var _mesIdxStrHdr = String(_mesIdx + 1).padStart(2, "0");
+  var _anioStrHdr   = String(new Date().getFullYear());
+  var _visitadosHdr = localesMes.filter(function(cli){
+    var _f = _fichasCalHdr[cli.nombre] || _fichasCalHdr[cli.razon] || null;
+    if (!_f || !_f.visitas) return false;
+    return _f.visitas.some(function(v){
+      var p = (v.fecha||"").split("/");
+      return p.length >= 3 && p[1] === _mesIdxStrHdr && p[2] === _anioStrHdr;
+    });
+  }).length;
   h += '<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--ng)">'+cal.nombreMes+' '+cal.año+'</div>';
-  h += '<div style="font-size:12px;color:var(--g3)">'+localesMes.length+' local(es) programados</div></div>';
+  h += '<div style="font-size:12px;color:var(--g3)"><span style="color:var(--v);font-weight:700">'+_visitadosHdr+'</span>/'+localesMes.length+' visitados</div></div>';
   var _canGoFwd = PF_CAL_OFFSET < 12;
   h += '<button type="button" onclick="if(PF_CAL_OFFSET<12){PF_CAL_OFFSET++;pfRenderCalendario();}" style="padding:8px 16px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:16px;cursor:pointer;opacity:'+(_canGoFwd?'1':'0.3')+'">›</button>'; // #078 FIX
   h += '</div>';
@@ -212,8 +230,7 @@ function pfRenderCalendario() {
     Object.keys(porMarca).sort().forEach(function(marca) {
       h += '<div class="slbl">' + marca + ' (' + porMarca[marca].length + ')</div>';
       // #077 FIX: leer fichas para saber si ya fue visitado este mes
-    var _fichasCal = {};
-    try { _fichasCal = JSON.parse(localStorage.getItem("pf_fichas") || "{}"); } catch(e) {}
+    var _fichasCal = window._pfCalFichasCache || {};
     var _mesIdxStr = String(_mesIdx + 1).padStart(2, "0");
     var _anioStr   = String(new Date().getFullYear());
     porMarca[marca].forEach(function(cli) {
@@ -236,7 +253,7 @@ function pfRenderCalendario() {
         h += '<div style="font-size:16px">' + _ico + '</div>';
         h += '<div style="flex:1">';
         h += '<div style="font-size:13px;font-weight:700;color:' + (_visitado ? 'var(--v)' : 'var(--ng)') + '">' + cli.nombre + '</div>';
-        h += '<div style="font-size:11px;color:var(--g4);margin-top:2px">' + cli.razon + ' · ' + (cli.responsable||"") + '</div>';
+        h += '<div style="font-size:11px;color:var(--g4);margin-top:2px">' + cli.razon + ' · ' + (cli.responsable||cli.encargado||"⚠️ Sin responsable") + '</div>';
         h += '<div style="font-size:11px;color:var(--r);margin-top:2px">Mant: ' + cli.freqMant + ' · Recarga: ' + cli.freqRec + '</div>';
         h += '</div>';
         h += '<div style="font-size:11px;color:var(--g3)">'+(_visitado?'Ver':'Marcar')+'›</div>';
@@ -435,8 +452,11 @@ function pfCalPopupLocal(nombreLocal, yaVisitado) {
       });
     }
     _cerrar();
-    // Refrescar calendario
-    setTimeout(pfRenderCalendario, 150);
+    // FIX: refrescar calendario + resumen de jornadas
+    setTimeout(function(){
+      if(typeof pfRenderCalendario==="function") pfRenderCalendario();
+      if(typeof renderResumenJornadas==="function") renderResumenJornadas();
+    }, 200);
   };
 }
 

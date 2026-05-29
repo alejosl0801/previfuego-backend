@@ -124,7 +124,7 @@ function pfRenderDashboard() {
   // ── Visitas por tipo
   h += '<div class="slbl">Visitas por tipo — '+mes+'</div>';
   h += '<div style="margin:0 12px 12px;background:#fff;border-radius:14px;border:1.5px solid var(--bo);padding:12px 14px">';
-  var tipoLabel = { mantenimiento:"🔧 Mantenimiento", retiro:"📦 Retiro", entrega:"🚚 Entrega", instalacion:"🔩 Instalación", cobro:"💰 Cobro", otro:"📋 Otro" };
+  var tipoLabel = { mantenimiento:"🔧 Mantenimiento", retiro:"📦 Retiro", entrega:"🚚 Entrega", distribuidor:"🏢 Distribuidor", instalacion:"🔩 Instalación", cobro:"💰 Cobro", otro:"📋 Otro" };
   var tipoColor = { mantenimiento:"var(--a)", retiro:"var(--n)", entrega:"var(--v)", instalacion:"var(--r)", cobro:"var(--g4)", otro:"var(--g4)" };
   var totalTipos = Object.values(d.visitasPorTipo).reduce(function(a,b){ return a+b; }, 0) || 1;
   Object.keys(d.visitasPorTipo).forEach(function(tipo) {
@@ -169,7 +169,9 @@ function pfRenderDashboard() {
   h += '</div>';
 
   // ── Botón actualizar
-  h += '<div style="padding:0 12px 16px"><button type="button" onclick="this.textContent=\'⏳ Actualizando...\';pfRenderDashboard()" style="width:100%;padding:12px;border-radius:12px;border:1.5px solid var(--bo);background:#fff;font-size:13px;font-weight:700;color:var(--g4);cursor:pointer;font-family:inherit">🔄 Actualizar datos</button></div>'; // #141 FIX
+  h += '<div style="padding:0 12px 8px"><button type="button" onclick="this.textContent=\'⏳ Actualizando...\';pfRenderDashboard()" style="width:100%;padding:12px;border-radius:12px;border:1.5px solid var(--bo);background:#fff;font-size:13px;font-weight:700;color:var(--g4);cursor:pointer;font-family:inherit">🔄 Actualizar datos</button></div>';
+  // F10: botón dashboard público
+  h += '<div style="padding:0 12px 16px"><button type="button" onclick="pfAbrirDashboardPublico()" style="width:100%;padding:12px;border-radius:12px;border:none;background:var(--a);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🌐 Ver dashboard público</button></div>';
   h += '<div style="height:80px"></div>';
 
   el.innerHTML = h;
@@ -222,3 +224,48 @@ function pfInyectarDashboard() {
 window.addEventListener("load", function() {
   pfInyectarDashboard();
 });
+
+// ── F10: DASHBOARD PÚBLICO ────────────────────────────────────
+function pfAbrirDashboardPublico() {
+  // Generar HTML del dashboard público en una nueva ventana
+  var win = window.open("", "_blank");
+  if (!win) { pfModal && pfModal("Activa las ventanas emergentes para ver el dashboard público."); return; }
+
+  var d = pfCalcDashboard();
+  var mes = pfMesActual();
+  var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>Previfuego — Panel de Avance</title>' +
+    '<style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:-apple-system,system-ui,sans-serif;background:#f5f5f3;color:#1c1c1a;padding:20px;}' +
+    '.header{background:linear-gradient(135deg,#9E1212,#5C0A0A);color:#fff;border-radius:16px;padding:24px;margin-bottom:20px;text-align:center;}' +
+    '.header h1{font-size:28px;font-weight:700;letter-spacing:-0.5px;}' +
+    '.header p{font-size:14px;opacity:.8;margin-top:6px;}' +
+    '.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}' +
+    '.card{background:#fff;border-radius:14px;padding:18px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.08);}' +
+    '.card-num{font-size:36px;font-weight:700;line-height:1;}' +
+    '.card-lbl{font-size:12px;color:#8a8884;margin-top:6px;font-weight:500;}' +
+    '.footer{text-align:center;font-size:11px;color:#8a8884;margin-top:20px;}' +
+    '.badge{display:inline-block;background:#9E1212;color:#fff;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;margin-top:8px;}' +
+    '</style></head><body>' +
+    '<div class="header"><h1>🔥 PREVIFUEGO</h1><p>Panel de operaciones en campo — ' + mes + '</p>' +
+    '<span class="badge">GUAYAQUIL, ECUADOR</span></div>' +
+    '<div class="grid">' +
+    '<div class="card"><div class="card-num" style="color:#9E1212">' + d.visitasMes + '</div><div class="card-lbl">Visitas este mes</div></div>' +
+    '<div class="card"><div class="card-num" style="color:#1A7A4A">' + d.totalLocales + '</div><div class="card-lbl">Locales atendidos</div></div>' +
+    '<div class="card"><div class="card-num" style="color:#1A5FAA">' + d.visitasHoy + '</div><div class="card-lbl">Visitas hoy</div></div>' +
+    '<div class="card"><div class="card-num" style="color:#C25A00">' + d.certsHoy + '</div><div class="card-lbl">Certificados hoy</div></div>' +
+    '</div>' +
+    '<div style="background:#fff;border-radius:14px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.08)">' +
+    '<div style="font-size:14px;font-weight:700;margin-bottom:12px">Servicios disponibles</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">' +
+    '<div>🔧 Mantenimiento de extintores</div><div>♻️ Recarga de extintores</div>' +
+    '<div>📦 Retiro y entrega</div><div>🚨 Sistemas CO₂</div>' +
+    '<div>🔍 Inspección gratuita</div><div>📋 Señaléticas NFPA</div>' +
+    '</div></div>' +
+    '<div class="footer">PREVIFUEGO · Tel: 04-2374822 · 0978997247<br>ventas_previfuego@hotmail.com<br>' +
+    'Actualizado: ' + new Date().toLocaleString("es-EC") + '</div>' +
+    '</body></html>';
+
+  win.document.write(html);
+  win.document.close();
+}

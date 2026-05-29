@@ -24,7 +24,7 @@ window.addEventListener("load", function() {
   // Tab 1 = Recorrido, Tab 2 = Pizarra, Tab 3 = Avance (app.js)
   window.PF_TAB_HANDLERS[1] = function() { /* solo activar panel */ };
   window.PF_TAB_HANDLERS[2] = function() { if (typeof renderPizarra === "function") renderPizarra(); };
-  window.PF_TAB_HANDLERS[3] = function() { /* app.js ya maneja tab 3 */ };
+  window.PF_TAB_HANDLERS[3] = function() { renderCalendarioMes(); renderResumenJornadas(); pfRenderPendientesIncluir(); };
   // Tab 4 = Retiros (retiros.js)
   window.PF_TAB_HANDLERS[4] = function() {
     if (typeof pfRenderRetiros  === "function") pfRenderRetiros();
@@ -203,11 +203,18 @@ window.addEventListener("load", function() {
       '<button type="button" onclick="pfGuardarAzurKey()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--r);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">💾 Guardar api_key</button>' +
       '<div style="font-size:11px;color:var(--g3);margin-top:6px">Una vez guardada no aparece en pantalla por seguridad.</div>' +
       '</div>' +
+      '<div class="slbl">🔔 Notificaciones Push</div>' +
+      '<div id="pf-push-config" style="margin:0 12px 12px;background:#fff;border-radius:14px;border:1.5px solid var(--bo);padding:14px">' +
+      '<div style="font-size:12px;color:var(--g4);margin-bottom:10px">Recibe alertas de retiros urgentes, tareas y recordatorios de mantenimiento directamente en tu teléfono.</div>' +
+      '<div id="pf-push-status" style="font-size:13px;color:var(--g3);margin-bottom:10px">Estado: verificando...</div>' +
+      '<button id="pf-push-btn" type="button" onclick="pfTogglePushNotif()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--a);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">🔔 Activar notificaciones</button>' +
+      '</div>' +
       '<div style="height:80px"></div></div>';
     admScr.appendChild(panel);
 
     window.PF_TAB_HANDLERS[13] = function() {
       if (typeof pfRenderConfigPrecios === "function") pfRenderConfigPrecios();
+      pfActualizarEstadoPush();
     };
   })();
 
@@ -243,7 +250,7 @@ window.addEventListener("load", function() {
   };
 
   // #MEJORA: flechas de scroll para la barra de tabs admin
-  pfInyectarFlechasTabs();
+  if (!window._pfFlechasInj) { window._pfFlechasInj=true; pfInyectarFlechasTabs(); }
   })();
 
   // Función guardar api_key Azur (llama a Code.gs)
@@ -277,39 +284,75 @@ window.addEventListener("load", function() {
   };
 
   // Función render historial de facturas
-  window.pfRenderHistorialFacturas = function() {
+  window.pfRenderHistorialFacturas = function(pagina, busq) {
     var el = document.getElementById("pf-facturas-lista");
     if (!el) return;
+    pagina = pagina || 1;
+    busq   = busq !== undefined ? busq : (window._pfFactBusq || "");
+    window._pfFactBusq = busq;
+    window._pfFactPag  = pagina;
 
     var facturas = [];
     try { facturas = JSON.parse(localStorage.getItem("pf_facturas_emitidas") || "[]"); } catch(e) {}
+    facturas = facturas.slice().reverse();
 
     if (!facturas.length) {
       el.innerHTML = '<div style="padding:40px 16px;text-align:center;color:var(--g3);font-size:14px">No hay facturas emitidas aún.<br><br>Genera una nota de entrega y presiona<br>"Emitir Factura Electrónica".</div>';
       return;
     }
 
-    var h = '';
-    facturas.forEach(function(f, idx) {
+    var filtradas = busq ? facturas.filter(function(f){
+      var q = busq.toLowerCase();
+      return (f.cliente||"").toLowerCase().indexOf(q) !== -1 || (f.local||"").toLowerCase().indexOf(q) !== -1 || (f.fecha||"").indexOf(q) !== -1;
+    }) : facturas;
+
+    var POR_PAG = 15;
+    var totalPags = Math.max(1, Math.ceil(filtradas.length / POR_PAG));
+    if (pagina > totalPags) pagina = totalPags;
+    var inicio = (pagina - 1) * POR_PAG;
+    var paginadas = filtradas.slice(inicio, inicio + POR_PAG);
+
+    var totalMes = facturas.filter(function(f){
+      var d = new Date(); var mm = String(d.getMonth()+1).padStart(2,"0"); var yy = String(d.getFullYear());
+      return (f.fecha||"").indexOf(mm+"/") !== -1 && (f.fecha||"").indexOf(yy) !== -1;
+    }).reduce(function(s,f){ return s + parseFloat(f.total||0); }, 0);
+
+    var h = "";
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 10px">';
+    h += '<div style="background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--v)">$'+totalMes.toFixed(2)+"</div><div style=\"font-size:10px;color:var(--g3)\">Facturado este mes</div></div>";
+    h += '<div style="background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--ng)">'+facturas.length+"</div><div style=\"font-size:10px;color:var(--g3)\">Total facturas</div></div>";
+    h += "</div>";
+    h += '<div style="padding:0 12px 8px"><input type="search" value="'+(busq||"")+'" placeholder="🔍 Buscar por cliente o fecha..." oninput="pfRenderHistorialFacturas(1,this.value)" style="width:100%;padding:9px 12px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:13px;box-sizing:border-box"></div>';
+
+    paginadas.forEach(function(f) {
       h += '<div style="margin:0 12px 8px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:12px 14px">';
       h += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
       h += '<div style="flex:1;min-width:0">';
-      h += '<div style="font-size:14px;font-weight:700;color:var(--ng);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (f.local || f.cliente || "—") + '</div>';
-      h += '<div style="font-size:12px;color:var(--g4);margin-top:2px">' + (f.cliente || "") + ' · ' + (f.fecha || "") + '</div>';
-      h += '<div style="font-family:monospace;font-size:10px;color:var(--g3);margin-top:4px;word-break:break-all">' + (f.claveAcceso || "—") + '</div>';
-      h += '</div>';
-      h += '<div style="font-size:15px;font-weight:700;color:var(--v);flex-shrink:0">$' + (parseFloat(f.total || 0).toFixed(2)) + '</div>';
-      h += '</div>';
+      h += '<div style="font-size:14px;font-weight:700;color:var(--ng);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (f.local || f.cliente || "—") + "</div>";
+      h += '<div style="font-size:12px;color:var(--g4);margin-top:2px">' + (f.cliente || "") + " · " + (f.fecha || "") + "</div>";
+      h += '<div style="font-family:monospace;font-size:10px;color:var(--g3);margin-top:4px;word-break:break-all">' + (f.claveAcceso || "—") + "</div>";
+      h += "</div>";
+      h += '<div style="font-size:15px;font-weight:700;color:var(--v);flex-shrink:0">$' + (parseFloat(f.total || 0).toFixed(2)) + "</div>";
+      h += "</div>";
       if (f.claveAcceso) {
-        h += '<div style="margin-top:8px"><button onclick="pfConsultarFactura(\"' + (f.claveAcceso||'').replace(/"/g,'') + '\")" style="width:100%;padding:8px;border-radius:8px;border:1.5px solid var(--bo);background:var(--g1);color:var(--g4);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🔍 Consultar estado en Azur</button></div>'; // #39 FIX: comillas escapadas
+        h += '<div style="margin-top:8px"><button onclick="pfConsultarFactura(\"' + (f.claveAcceso||"").replace(/"/g,"") + '\")" style="width:100%;padding:8px;border-radius:8px;border:1.5px solid var(--bo);background:var(--g1);color:var(--g4);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🔍 Consultar estado en Azur</button></div>';
       }
-      h += '</div>';
+      h += "</div>";
     });
 
+    if (totalPags > 1) {
+      h += '<div style="display:flex;justify-content:center;align-items:center;gap:8px;padding:8px 12px 16px">';
+      h += "<button onclick=\"pfRenderHistorialFacturas("+(pagina-1)+")\" "+(pagina<=1?"disabled":"")+' style="padding:7px 14px;border-radius:8px;border:1.5px solid var(--bo);background:#fff;font-size:14px;cursor:pointer">‹</button>';
+      h += '<span style="font-size:13px;color:var(--g4)">'+pagina+" / "+totalPags+"</span>";
+      h += "<button onclick=\"pfRenderHistorialFacturas("+(pagina+1)+")\" "+(pagina>=totalPags?"disabled":"")+' style="padding:7px 14px;border-radius:8px;border:1.5px solid var(--bo);background:#fff;font-size:14px;cursor:pointer">›</button>';
+      h += "</div>";
+    }
+    if (filtradas.length === 0) h += '<div style="padding:24px 16px;text-align:center;color:var(--g3)">Sin resultados.</div>';
+    h += '<div style="height:40px"></div>';
     el.innerHTML = h;
   };
 
-  // Consultar estado de factura en Azur
+    // Consultar estado de factura en Azur
   window.pfConsultarFactura = function(claveAcceso) {
     mostrarCargando(true, "Consultando Azur...", "");
     fetch(SCRIPT_URL, {

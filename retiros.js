@@ -177,10 +177,11 @@ function pfAbrirFicha(nombreLocal) {
   h += '<div class="si"><div class="sv" style="color:var(--v)">'+totalEntregados+'</div><div class="sl">Entregados</div></div>';
   h += '</div>';
 
-  // Historial de visitas — #ALTO FIX: paginar, máx 30 por render
-  var PF_FICHA_PAGE = 30;
-  var visitasRender = ficha.visitas.slice(0, PF_FICHA_PAGE);
-  h += '<div class="slbl">Historial de visitas</div>';
+  // Historial de visitas — paginación real con botón Ver más
+  var PF_FICHA_PAGE = 15;
+  var _fichaOffset = window._pfFichaOffset || 0;
+  var visitasRender = ficha.visitas.slice(0, PF_FICHA_PAGE + _fichaOffset);
+  h += '<div class="slbl">Historial de visitas ('+ficha.visitas.length+')</div>';
   if (ficha.visitas.length === 0) {
     h += '<div style="padding:24px 16px;text-align:center;color:var(--g3);font-size:14px">Sin historial aún.<br>Las visitas se registran automáticamente.</div>';
   } else {
@@ -196,8 +197,9 @@ function pfAbrirFicha(nombreLocal) {
       if (v.nota) h += '<div style="font-size:12px;color:var(--g4);margin-top:4px;line-height:1.5;border-top:1px solid var(--bo);padding-top:4px">'+v.nota+'</div>';
       h += '</div>';
     }
-    if (ficha.visitas.length > PF_FICHA_PAGE) {
-      h += '<div style="margin:0 12px 8px;padding:12px 14px;text-align:center;color:var(--g3);font-size:12px">Mostrando '+PF_FICHA_PAGE+' de '+ficha.visitas.length+' visitas (las más recientes)</div>';
+    if (visitasRender.length < ficha.visitas.length) {
+      var _nomEscF = nombreLocal.replace(/'/g,"");
+      h += '<div style="padding:0 12px 12px"><button onclick="window._pfFichaOffset=(window._pfFichaOffset||0)+15;pfAbrirFicha(\''+_nomEscF+'\')" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--bo);background:#fff;font-size:13px;font-weight:700;color:var(--a);cursor:pointer;font-family:inherit">Ver más ('+(ficha.visitas.length - visitasRender.length)+' restantes)</button></div>';
     }
   }
   h += '<div style="height:80px"></div>';
@@ -218,6 +220,7 @@ function pfAbrirFicha(nombreLocal) {
 function pfCerrarFicha() {
   var modal = document.getElementById("pf-ficha-modal");
   if (modal) modal.style.display = "none";
+  window._pfFichaOffset = 0; // resetear paginación
 }
 
 // ── PANEL RETIROS EN ADMIN ────────────────────────────────────
@@ -229,9 +232,23 @@ function pfRenderRetiros() {
     el.innerHTML = '<div style="padding:24px 16px;text-align:center;color:var(--g3);font-size:14px">No hay retiros registrados aún.</div>';
     return;
   }
+  var _filtro = window._pfRetiroFiltro || "todos";
+  var pendientes  = retiros.filter(function(r){ return r.estado === "pendiente"; });
+  var entregados  = retiros.filter(function(r){ return r.estado === "entregado"; });
+  var alertas     = retiros.filter(function(r){ return r.estado === "pendiente" && pfDiasTranscurridos(r.fecha) >= 7; });
+  var filtrados   = _filtro === "pendiente" ? pendientes : _filtro === "entregado" ? entregados : _filtro === "urgente" ? alertas : retiros;
+
   var h = "";
-  for (var i = 0; i < retiros.length; i++) {
-    var r    = retiros[i];
+  // Filtros
+  h += '<div style="display:flex;gap:6px;padding:0 12px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch">';
+  [["todos","Todos ("+retiros.length+")"],["pendiente","⏳ Pendientes ("+pendientes.length+")"],["urgente","⚠️ Urgentes ("+alertas.length+")"],["entregado","✅ Entregados ("+entregados.length+")"]].forEach(function(f){
+    var act = _filtro === f[0];
+    h += '<button onclick="window._pfRetiroFiltro=\''+f[0]+'\';pfRenderRetiros()" style="flex-shrink:0;padding:6px 12px;border-radius:20px;border:1.5px solid '+(act?'var(--r)':'var(--bo)')+';background:'+(act?'var(--r)':'#fff')+';color:'+(act?'#fff':'var(--g4)')+';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">'+f[1]+'</button>';
+  });
+  h += '</div>';
+
+  for (var i = 0; i < filtrados.length; i++) {
+    var r    = filtrados[i];
     var dias = pfDiasTranscurridos(r.fecha);
     var alerta = r.estado === "pendiente" && dias >= 7;
     var colorBg  = r.estado === "entregado" ? "var(--vc)"  : alerta ? "var(--rc)"  : "#fff";
@@ -243,9 +260,9 @@ function pfRenderRetiros() {
     h += '<div style="margin:0 12px 8px;background:'+colorBg+';border:1.5px solid '+colorBor+';border-radius:14px;overflow:hidden">';
     h += '<div style="padding:12px 14px">';
     h += '<div style="display:flex;align-items:flex-start;gap:8px">';
-    h += '<div style="flex:1"><div style="font-size:15px;font-weight:700;color:'+colorTx+'">'+(r.local||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'; // #088 FIX XSS
+    h += '<div style="flex:1"><div style="font-size:15px;font-weight:700;color:'+colorTx+'">'+(r.local||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
     h += '<div style="font-size:12px;color:var(--g4);margin-top:2px">'+r.fecha+' · '+r.hora+' · '+r.tecnico+'</div>';
-    if (r.descripcion) h += '<div style="font-size:12px;color:var(--g4);margin-top:3px;line-height:1.5">'+(r.descripcion||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'; // #088 FIX XSS
+    if (r.descripcion) h += '<div style="font-size:12px;color:var(--g4);margin-top:3px;line-height:1.5">'+(r.descripcion||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
     h += '</div>';
     h += '<div style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap;background:'+(r.estado==='entregado'?'var(--vc)':alerta?'var(--rc)':'var(--nc)')+';color:'+colorTx+'">'+estadoTxt+'</div>';
     h += '</div>';
@@ -257,10 +274,23 @@ function pfRenderRetiros() {
     }
     h += '</div>';
   }
+  if (filtrados.length === 0) h += '<div style="padding:24px 16px;text-align:center;color:var(--g3);font-size:14px">Sin retiros en este filtro.</div>';
   el.innerHTML = h;
 }
 
 function pfRenderAlertas() {
+  // FIX: badge urgente (retiros con más de 7 días pendientes)
+  try {
+    var _retiros = JSON.parse(localStorage.getItem("pf_retiros")||"[]");
+    var _hoy = new Date();
+    var _urgentes = _retiros.filter(function(r){
+      if (r.estado!=="pendiente") return false;
+      var p=r.fecha.split("/"); var d=new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));
+      return (_hoy-d)/86400000 > 7;
+    }).length;
+    var _badge = document.getElementById("nav-badge-retiros");
+    if (_badge) { _badge.textContent=_urgentes>0?_urgentes:""; _badge.style.display=_urgentes>0?"":"none"; }
+  } catch(e) {}
   var el = document.getElementById("pf-retiros-alertas");
   if (!el) return;
   var alertas = pfGetAlertas();
