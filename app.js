@@ -3,7 +3,7 @@
 //  Bloque A: PDF fixes + tipo trabajo + fotos libres + roles
 // ═══════════════════════════════════════════════════════════
 
-var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyD7BeJed9Z74CMcS9x8f53va8HVZnO_UwoCdHWB-HEm4STR9ry5NEvYUV6PZBu0cvw/exec";
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyw7HVESP0CSrJyf9gn26ikU6aji9QvYoeVOkF_DrXNcNv1S0q40Ugfo5KLnQTIbLgC/exec";
 var VERSION    = "3.6";
 
 // ── ACCESORIOS ───────────────────────────────────────────────
@@ -102,7 +102,7 @@ var URLS_GENERADAS  = [];
 var TIMER_INICIO    = null;   // timestamp al abrir un local
 var TIMER_INTERVAL  = null;   // setInterval del timer
 var HISTORIAL_DIA   = [];     // historial persistente (localStorage)
-var TECNICO_NOMBRE  = "";  // FIX: se asigna en login
+var TECNICO_NOMBRE  = "Raúl Romero";
 // Pizarra digital
 var PIZARRA         = { operativa:[], logistica:[], pendientes:[] };
 
@@ -553,7 +553,7 @@ function cargarRecorrido() {
       mostrarCargando(false);
       if (data.ok && data.texto) {
         var jornadas = parsearJornadas(data.texto);
-        if (jornadas.length > 0) { procesarJornadas(jornadas, data.tecnico||TECNICO_NOMBRE||""); return; }
+        if (jornadas.length > 0) { procesarJornadas(jornadas, data.tecnico||"Raúl Romero"); return; }
       }
       cargarRecorridoLocal();
     })
@@ -564,7 +564,7 @@ function cargarRecorridoLocal() {
   var fecha    = localStorage.getItem("pf_recorrido_fecha");
   var jorData  = localStorage.getItem("pf_recorrido_jornadas");
   var legData  = localStorage.getItem("pf_recorrido_data");
-  var _tecActual = (USUARIO_ACTUAL && USUARIOS[USUARIO_ACTUAL]) ? USUARIOS[USUARIO_ACTUAL].nombre : (TECNICO_NOMBRE||""); // #028 FIX
+  var _tecActual = (USUARIO_ACTUAL && USUARIOS[USUARIO_ACTUAL]) ? USUARIOS[USUARIO_ACTUAL].nombre : "Raúl Romero"; // #028 FIX
   if (fecha === fechaHoy()) {
     if (jorData) {
       try { procesarJornadas(JSON.parse(jorData), _tecActual); return; }
@@ -585,7 +585,7 @@ function cargarRecorridoLocal() {
 function procesarJornadas(jornadas, tecnico) {
   JORNADAS       = jornadas;
   JORNADA_ACTIVA = 0;
-  TECNICO_NOMBRE = tecnico || USUARIO_ACTUAL || "";
+  TECNICO_NOMBRE = tecnico || "Raúl Romero";
   document.querySelectorAll(".ts-nombre").forEach(function(el){ el.textContent = TECNICO_NOMBRE; });
   // Si hay más de una jornada mostrar selector
   if (jornadas.length > 1) {
@@ -600,7 +600,7 @@ function procesarPuntos(puntos, tecnico) {
   PUNTOS = puntos;
   JORNADAS = [{ jornada:"DIA", label:"Jornada del día", puntos:puntos }];
   JORNADA_ACTIVA = 0;
-  TECNICO_NOMBRE = tecnico || USUARIO_ACTUAL || "";
+  TECNICO_NOMBRE = tecnico || "Raúl Romero";
   document.querySelectorAll(".ts-nombre").forEach(function(el){ el.textContent = TECNICO_NOMBRE; });
   renderPuntos();
 }
@@ -1366,7 +1366,7 @@ function renderHistorial() {
     h += '<div class="cd"><div style="padding:13px 14px;display:flex;align-items:center;gap:12px">';
     h += '<div style="width:36px;height:36px;border-radius:11px;background:'+icoBg+';display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;color:'+icoColor+';font-weight:700">'+icoTxt+'</div>';
     h += '<div style="flex:1"><div style="font-size:15px;font-weight:700">'+hi.local.nombre+'</div>';
-    h += '<div style="font-size:12px;color:var(--g3);margin-top:2px">'+(hi.fecha?hi.fecha+' · ':'')+hi.hora+durTxt+(hi.fotos>0?' · '+hi.fotos+' foto(s)':'')+(hi.accs>0?' · '+hi.accs+' acc.':'')+'</div></div>';
+    h += '<div style="font-size:12px;color:var(--g3);margin-top:2px">'+hi.hora+durTxt+(hi.fotos>0?' · '+hi.fotos+' foto(s)':'')+(hi.accs>0?' · '+hi.accs+' acc.':'')+'</div></div>';
     if (esCert) h += '<a href="'+hi.url+'" download="'+hi.nombre+'" style="font-size:10px;font-weight:700;background:var(--ac);color:var(--a);padding:4px 8px;border-radius:10px;text-decoration:none">⬇ PDF</a>';
     h += '</div></div>';
   }
@@ -2722,38 +2722,3 @@ window.addEventListener("load", function() {
     } catch(e){}
   }, 3600000); // cada hora
 });
-
-// ── F8: BÚSQUEDA GLOBAL EN RECORRIDO ─────────────────────────
-function pfBuscarEnRecorrido(q) {
-  if (!q || !q.trim()) { pfModal("Escribe algo para buscar."); return; }
-  var qL = q.toLowerCase().trim();
-  var resultados = [];
-  (JORNADAS||[]).forEach(function(j) {
-    (j.puntos||[]).forEach(function(p, pi) {
-      (p.locales||[]).forEach(function(loc, li) {
-        var texto = (loc.nombre+" "+loc.mision).toLowerCase();
-        if (texto.indexOf(qL) !== -1) {
-          resultados.push({ jornada: j.label, punto: p.nombre, local: loc.nombre, pi: pi, li: li, done: loc.done });
-        }
-      });
-    });
-  });
-  if (!resultados.length) { pfModal("No se encontraron resultados para ""+q+""."); return; }
-  var h = '<div style="max-height:60vh;overflow-y:auto;padding:4px 0">';
-  resultados.forEach(function(res) {
-    h += '<div onclick="seleccionarJornada('+res.pi+');abrirLocal('+res.pi+','+res.li+');document.querySelector('.pf-search-ov').remove()" style="padding:12px 16px;border-bottom:1px solid var(--bo);cursor:pointer">';
-    h += '<div style="font-size:14px;font-weight:700'+(res.done?';color:var(--g3)":">':'">')+res.local+'</div>';
-    h += '<div style="font-size:11px;color:var(--g3)">'+res.jornada+' · '+res.punto+(res.done?' · ✅':'')+'</div>';
-    h += '</div>';
-  });
-  h += '</div>';
-  var ov = document.createElement("div");
-  ov.className = "pf-search-ov";
-  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:700;display:flex;align-items:flex-end;justify-content:center";
-  ov.innerHTML = '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding-bottom:env(safe-area-inset-bottom,0px)">' +
-    '<div style="padding:16px 16px 8px;display:flex;justify-content:space-between;align-items:center">' +
-    '<div style="font-size:16px;font-weight:700">🔍 '+resultados.length+' resultado(s)</div>' +
-    '<button onclick="this.closest('.pf-search-ov').remove()" style="border:none;background:var(--g2);border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer">✕</button>' +
-    '</div>'+h+'</div>';
-  document.body.appendChild(ov);
-}
