@@ -158,16 +158,28 @@ function seleccionarUsuario(key) {
   else if (USUARIOS[key] && USUARIOS[key].soloTaller) { ir("s1"); cargarRecorrido(); } // Fabiola ve recorrido pero no modifica
   else { ir("s1"); cargarRecorrido(); }
   // #22 FIX: sincronizar fichas al login (todos los usuarios)
-  // #AUDIO FIX: sync inmediato para que calendario móvil vea fichas actualizadas
   setTimeout(function(){
     if (typeof pfSincronizarFichas === "function") {
       pfSincronizarFichas(function(ok, n) {
         if (ok) {
           console.log("Sync OK: " + n + " locales");
-          // Refrescar calendario si está abierto
           if (typeof pfRenderCalendario === "function") pfRenderCalendario();
         }
       });
+    }
+    // #FIX: descargar correos KFC del servidor si no están en localStorage
+    var correos = localStorage.getItem("pf_correos_clientes");
+    var count = correos ? Object.keys(JSON.parse(correos)).length : 0;
+    if (count < 50) { // si tiene menos de 50 correos, descargar del servidor
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({ accion: "get_kv", token: localStorage.getItem("pf_token")||"", clave: "pf_correos_clientes" })
+      }).then(function(r){ return r.json(); }).then(function(d){
+        if (d.ok && d.valor) {
+          localStorage.setItem("pf_correos_clientes", d.valor);
+          console.log("Correos KFC descargados del servidor: " + Object.keys(JSON.parse(d.valor)).length);
+        }
+      }).catch(function(){});
     }
   }, 1500);
 }
