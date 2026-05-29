@@ -98,23 +98,72 @@ function pfAnioProximaRecarga(cli, mesIdx) {
   return anioRec;
 }
 
-// ¿A este local le toca RECARGA en su próxima visita (este ciclo)?
-// true → va al semáforo Recarga+Mant ; false → va al semáforo Mantenimiento
-function pfTocaRecargaEsteCiclo(cli, mesIdx) {
+// ¿A este local le toca RECARGA en su PRÓXIMA visita?
+// Usa la última visita REAL (más preciso). El mes teórico solo es fallback si no hay visitas.
+// true → semáforo Recarga+Mant ; false → semáforo Mantenimiento
+function pfTocaRecargaEsteCiclo(cli, mesIdx, ultVisitaFecha) {
   if (!cli) return false;
-  var esKFCoSushi = pfEsGrupoKFC(cli.nombre) || pfEsCasaRes(cli);
-  if (!esKFCoSushi) {
-    // Independiente: toca recarga si su freqRec es anual (mant y recarga coinciden cada año)
-    var fr = (cli.freqRec||"").toLowerCase();
-    return fr.indexOf("1") !== -1 || fr.indexOf("año") !== -1 && fr.indexOf("3") === -1 && fr.indexOf("2") === -1;
+  var esKFCoSushi = pfEsCicloKFC(cli);
+
+  // Determinar el AÑO de la próxima visita
+  var anioProxVisita, mesProx;
+  if (ultVisitaFecha) {
+    // Última visita real + 1 año (el mantenimiento es anual)
+    var pp = ultVisitaFecha.split("/");
+    var dUlt = new Date(parseInt(pp[2]), parseInt(pp[1])-1, parseInt(pp[0]));
+    anioProxVisita = dUlt.getFullYear() + 1;
+    mesProx = dUlt.getMonth();
+  } else {
+    // Fallback: mes teórico de clientes.js, próximo año-calendario futuro
+    if (mesIdx === null) return false;
+    var hoy = new Date();
+    anioProxVisita = hoy.getFullYear();
+    if (mesIdx < hoy.getMonth()) anioProxVisita++;
+    mesProx = mesIdx;
   }
-  if (mesIdx === null) return false;
-  // La próxima visita del local cae en su mes, del año-calendario más cercano futuro
+
+  if (!esKFCoSushi) {
+    // Independiente: recarga si su freqRec es anual (mant y recarga coinciden cada visita)
+    var fr = (cli.freqRec||"").toLowerCase();
+    return fr.indexOf("1") !== -1 && fr.indexOf("3") === -1 && fr.indexOf("2") === -1;
+  }
+
+  // KFC/Sushicorp/CasaRes: ¿el año de la próxima visita es un año de recarga?
+  var anioRec = pfAnioProximaRecargaDesdeMes(cli, mesProx);
+  return anioRec === anioProxVisita;
+}
+
+// Año-calendario de la próxima recarga, dado el mes de visita del local
+function pfAnioProximaRecargaDesdeMes(cli, mesProx) {
+  if (pfEsCasaRes(cli)) {
+    var cod = (cli.codigo||"").toUpperCase().replace(/^R0*/,"R");
+    var baseR = (cod === "R4") ? 2025 : 2026;
+    var anio = baseR;
+    var hoyA = new Date().getFullYear();
+    while (anio < hoyA || (anio === hoyA && (new Date().getMonth() > mesProx))) anio += PF_RECARGA_CICLO;
+    return anio;
+  }
+  if (mesProx === null || mesProx === undefined) return null;
+  var ciclo = PF_RECARGA_BASE;
+  function av(c){ return (mesProx >= 9) ? (c + 2) : (c + 3); }
+  var anioRec = av(ciclo);
   var hoy = new Date();
-  var anioVisita = hoy.getFullYear();
-  if (mesIdx < hoy.getMonth()) anioVisita++; // ya pasó este año → el próximo
-  var anioRec = pfAnioProximaRecarga(cli, mesIdx);
-  return anioRec === anioVisita;
+  while (anioRec < hoy.getFullYear() || (anioRec === hoy.getFullYear() && mesProx < hoy.getMonth())) {
+    ciclo += PF_RECARGA_CICLO;
+    anioRec = av(ciclo);
+  }
+  return anioRec;
+}
+
+// ¿Este cliente sigue el ciclo de recarga de 3 años (Grupo KFC + Sushicorp + Casa Res)?
+// Usa el OBJETO cliente (campo grupo/razon), NO el nombre del local — más fiable.
+function pfEsCicloKFC(cli) {
+  if (!cli) return false;
+  if (cli.grupo === "Grupo KFC") return true;
+  var raz = (cli.razon||"").toUpperCase();
+  if (raz.indexOf("SUSHICORP") !== -1) return true; // Kobe y Noe → ciclo KFC
+  if (raz.indexOf("SHEMLON") !== -1) return true;    // Casa Res
+  return false;
 }
 
 function pfProximoMantenimiento(nombreLocal, ultimaVisita) {
@@ -197,15 +246,15 @@ function pfRenderSemaforo(modo) {
     if (!_cli) return null;                 // sin cliente en BD → fuera (evita ruido)
 
     var _mesIdx = pfMesLocal(_cli);
-    var _tocaRec = pfTocaRecargaEsteCiclo(_cli, _mesIdx);
+    // Última visita real ANTES de decidir el reparto (para precisión)
+    var ultVisita = null;
+    var visitas = ficha ? (ficha.visitas || []).filter(function(v){ return v.tipo === "mantenimiento" || v.tipo === "entrega"; }) : [];
+    if (visitas.length > 0) ultVisita = visitas[0].fecha;
+    var _tocaRec = pfTocaRecargaEsteCiclo(_cli, _mesIdx, ultVisita);
     // Reparto: si modo=recarga, solo los que tocan recarga; si modo=mant, solo los que NO
     if (modo === "recarga" && !_tocaRec) return null;
     if (modo === "mant"    &&  _tocaRec) return null;
 
-    // Última visita de mantenimiento o entrega
-    var ultVisita = null;
-    var visitas = ficha ? (ficha.visitas || []).filter(function(v){ return v.tipo === "mantenimiento" || v.tipo === "entrega"; }) : [];
-    if (visitas.length > 0) ultVisita = visitas[0].fecha;
     var proxFecha = pfProximoMantenimiento(nombre, ultVisita);
     var dias      = pfDiasParaVencer(proxFecha);
     return { nombre:nombre, ultVisita:ultVisita, proxFecha:proxFecha, dias:dias, mesIdx:_mesIdx, esRec:_tocaRec };
@@ -291,10 +340,11 @@ function pfRenderSemaforo(modo) {
   // Función para generar HTML de un ítem
   function _semItemHTML(item) {
     var sem   = pfSemaforoColor(item.dias);
-    var esKFC = pfEsGrupoKFC(item.nombre);
+    var _cliItem = (typeof pfBuscarCliente === "function") ? pfBuscarCliente(item.nombre) : null;
+    var esKFC = _cliItem ? pfEsCicloKFC(_cliItem) : false;
     var freqLabel;
     if (modo === "recarga") freqLabel = "🔄 RECARGA + Mantenimiento";
-    else freqLabel = esKFC ? "🔧 Mantenimiento (KFC)" : "🔧 Mantenimiento";
+    else freqLabel = esKFC ? "🔧 Mantenimiento (Grupo KFC)" : "🔧 Mantenimiento";
     return '<div class="pf-sem-item" data-nombre="'+item.nombre+'" style="margin:0 12px 6px;background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:10px 14px;display:flex;align-items:center;gap:10px">' +
       '<div style="font-size:20px;flex-shrink:0">'+sem.ico+'</div>' +
       '<div style="flex:1;min-width:0">' +
