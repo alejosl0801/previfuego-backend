@@ -3,8 +3,21 @@
 //  Bloque A: PDF fixes + tipo trabajo + fotos libres + roles
 // ═══════════════════════════════════════════════════════════
 
-var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyw7HVESP0CSrJyf9gn26ikU6aji9QvYoeVOkF_DrXNcNv1S0q40Ugfo5KLnQTIbLgC/exec";
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwCjDmELj_eH-G4IAvN7bRLgKZXv3M8228csf-ZgJLRfZ-3peT49US6TSZHhDDc1AHR/exec";
 var VERSION    = "3.6";
+
+// ── TOKEN DE SINCRONIZACIÓN ──────────────────────────────────
+// Se asegura de que el dispositivo siempre tenga el token correcto para
+// autenticar contra el servidor. Sin esto, la sincronización de fichas falla
+// silenciosamente si el servidor tiene pf_token configurado.
+var PF_SYNC_TOKEN = "previfuego2026";
+(function(){
+  try {
+    if (localStorage.getItem("pf_token") !== PF_SYNC_TOKEN) {
+      localStorage.setItem("pf_token", PF_SYNC_TOKEN);
+    }
+  } catch(e){}
+})();
 
 // ── ACCESORIOS ───────────────────────────────────────────────
 var ACCESORIOS = [
@@ -102,7 +115,7 @@ var URLS_GENERADAS  = [];
 var TIMER_INICIO    = null;   // timestamp al abrir un local
 var TIMER_INTERVAL  = null;   // setInterval del timer
 var HISTORIAL_DIA   = [];     // historial persistente (localStorage)
-var TECNICO_NOMBRE  = "Raúl Romero";
+var TECNICO_NOMBRE  = "";
 // Pizarra digital
 var PIZARRA         = { operativa:[], logistica:[], pendientes:[] };
 
@@ -168,18 +181,28 @@ function seleccionarUsuario(key) {
       });
     }
     // #FIX: descargar correos KFC del servidor si no están en localStorage
-    var correos = localStorage.getItem("pf_correos_clientes");
-    var count = correos ? Object.keys(JSON.parse(correos)).length : 0;
+    var count = 0;
+    try {
+      var correos = localStorage.getItem("pf_correos_clientes");
+      count = correos ? Object.keys(JSON.parse(correos)).length : 0;
+    } catch(e) { count = 0; } // dato corrupto → tratar como vacío y re-descargar
     if (count < 50) { // si tiene menos de 50 correos, descargar del servidor
       fetch(SCRIPT_URL, {
         method: "POST",
         body: JSON.stringify({ accion: "get_kv", token: localStorage.getItem("pf_token")||"", clave: "pf_correos_clientes" })
       }).then(function(r){ return r.json(); }).then(function(d){
         if (d.ok && d.valor) {
-          localStorage.setItem("pf_correos_clientes", d.valor);
-          console.log("Correos KFC descargados del servidor: " + Object.keys(JSON.parse(d.valor)).length);
+          try {
+            var n = Object.keys(JSON.parse(d.valor)).length; // validar antes de guardar
+            localStorage.setItem("pf_correos_clientes", d.valor);
+            console.log("Correos KFC descargados del servidor: " + n);
+          } catch(e) { console.warn("Correos del servidor con formato inválido, ignorados"); }
         }
       }).catch(function(){});
+    }
+    // #FIX: descargar CRM (notas + contactos) del servidor para que todos los dispositivos lo vean
+    if (typeof pfDescargarCRM === "function") {
+      pfDescargarCRM(function(){ console.log("CRM sincronizado desde servidor"); });
     }
   }, 1500);
 }
@@ -594,10 +617,19 @@ function cargarRecorridoLocal() {
   mostrarSinRecorrido();
 }
 
+// Nombre del técnico logueado (fallback seguro, no hardcodear "Raúl Romero")
+function pfNombreTecnicoActual() {
+  if (typeof USUARIO_ACTUAL !== "undefined" && USUARIO_ACTUAL &&
+      typeof USUARIOS !== "undefined" && USUARIOS[USUARIO_ACTUAL]) {
+    return USUARIOS[USUARIO_ACTUAL].nombre;
+  }
+  return "Técnico";
+}
+
 function procesarJornadas(jornadas, tecnico) {
   JORNADAS       = jornadas;
   JORNADA_ACTIVA = 0;
-  TECNICO_NOMBRE = tecnico || "Raúl Romero";
+  TECNICO_NOMBRE = tecnico || pfNombreTecnicoActual();
   document.querySelectorAll(".ts-nombre").forEach(function(el){ el.textContent = TECNICO_NOMBRE; });
   // Si hay más de una jornada mostrar selector
   if (jornadas.length > 1) {
@@ -612,12 +644,13 @@ function procesarPuntos(puntos, tecnico) {
   PUNTOS = puntos;
   JORNADAS = [{ jornada:"DIA", label:"Jornada del día", puntos:puntos }];
   JORNADA_ACTIVA = 0;
-  TECNICO_NOMBRE = tecnico || "Raúl Romero";
+  TECNICO_NOMBRE = tecnico || pfNombreTecnicoActual();
   document.querySelectorAll(".ts-nombre").forEach(function(el){ el.textContent = TECNICO_NOMBRE; });
   renderPuntos();
 }
 
 function seleccionarJornada(idx) {
+  if (!JORNADAS || !JORNADAS[idx]) return;
   JORNADA_ACTIVA = idx;
   PUNTOS = JORNADAS[idx].puntos;
   renderPuntos();

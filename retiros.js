@@ -288,8 +288,8 @@ function pfRenderAlertas() {
       var p=r.fecha.split("/"); var d=new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));
       return (_hoy-d)/86400000 > 7;
     }).length;
-    var _badge = document.getElementById("nav-badge-retiros");
-    if (_badge) { _badge.textContent=_urgentes>0?_urgentes:""; _badge.style.display=_urgentes>0?"":"none"; }
+    // El badge de retiros urgentes se muestra en el tab admin (adm-t4) vía pfActualizarBadge().
+    // No existe badge en la nav del técnico (los retiros son vista admin).
   } catch(e) {}
   var el = document.getElementById("pf-retiros-alertas");
   if (!el) return;

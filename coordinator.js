@@ -121,9 +121,12 @@ window.addEventListener("load", function() {
     var emailEl = document.getElementById("pf-email-enc");
     if (emailEl && emailEl.value && emailEl.value.includes("@")) {
       if (typeof pfEnviarEmailCertificado === "function") {
-        var certNum = typeof CERT_CONTADOR !== "undefined"
-          ? "CERT-" + (local.nombre||"").substring(0,8).toUpperCase().replace(/[^A-Z0-9]/g,"") + "-" + new Date().getFullYear() + "-" + String(CERT_CONTADOR).padStart(3,"0")
-          : "—";
+        // Usar el número REAL del certificado generado (el mismo del PDF), no uno inventado
+        var certNum = "—";
+        if (window._ULTIMO_LOCAL_CERT && window._ULTIMO_LOCAL_CERT.certNum &&
+            window._ULTIMO_LOCAL_CERT.local && window._ULTIMO_LOCAL_CERT.local.nombre === local.nombre) {
+          certNum = window._ULTIMO_LOCAL_CERT.certNum;
+        }
         pfEnviarEmailCertificado(certNum, local.nombre, emailEl.value);
       }
     }

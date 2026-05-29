@@ -107,12 +107,20 @@ function pfTocaRecargaEsteCiclo(cli, mesIdx, ultVisitaFecha) {
 
   // Determinar el AÑO de la próxima visita
   var anioProxVisita, mesProx;
-  if (ultVisitaFecha) {
+  var pp = ultVisitaFecha ? ultVisitaFecha.split("/") : [];
+  if (ultVisitaFecha && pp.length === 3 && pp[2] && pp[2].length >= 4) {
     // Última visita real + 1 año (el mantenimiento es anual)
-    var pp = ultVisitaFecha.split("/");
     var dUlt = new Date(parseInt(pp[2]), parseInt(pp[1])-1, parseInt(pp[0]));
-    anioProxVisita = dUlt.getFullYear() + 1;
-    mesProx = dUlt.getMonth();
+    if (isNaN(dUlt.getTime())) { // fecha inválida → usar fallback
+      if (mesIdx === null) return false;
+      var hoyF = new Date();
+      anioProxVisita = hoyF.getFullYear();
+      if (mesIdx < hoyF.getMonth()) anioProxVisita++;
+      mesProx = mesIdx;
+    } else {
+      anioProxVisita = dUlt.getFullYear() + 1;
+      mesProx = dUlt.getMonth();
+    }
   } else {
     // Fallback: mes teórico de clientes.js, próximo año-calendario futuro
     if (mesIdx === null) return false;

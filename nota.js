@@ -123,7 +123,7 @@ function renderNotaItems() {
     subtotal  += item.total;
     h += '<div class="nota-row" id="nota-row-'+i+'">';
     h += '<input type="number" class="nota-inp nota-cant" value="'+(item.cant||1)+'" min="1" onchange="notaItemChange('+i+',\'cant\',this.value)">';
-    h += '<input type="text"   class="nota-inp nota-desc" value="'+(item.desc||"")+'" placeholder="Descripción" onchange="notaItemChange('+i+',\'desc\',this.value)">';
+    h += '<input type="text"   class="nota-inp nota-desc" value="'+(item.desc||"").replace(/"/g,"&quot;")+'" placeholder="Descripción" onchange="notaItemChange('+i+',\'desc\',this.value)">';
     h += '<input type="number" class="nota-inp nota-puni" value="'+(item.puni||0)+'" step="0.01" onchange="notaItemChange('+i+',\'puni\',this.value)">';
     h += '<div class="nota-tot">$'+(item.total).toFixed(2)+'</div>';
     h += '<button class="nota-del" onclick="notaEliminar('+i+')">✕</button>';
