@@ -2383,6 +2383,48 @@ function pfRenderConfigPrecios() {
   h += '<button type="button" onclick="pfGuardarPrecios()" style="flex:1;padding:14px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">💾 Guardar precios</button>';
   h += '<button type="button" onclick="pfResetPrecios()" style="padding:14px 16px;border-radius:12px;border:1.5px solid var(--bo);background:#fff;color:var(--g4);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">↺</button>';
   h += '</div>';
+
+  // #29: Catálogo de proforma — añadir / eliminar productos del admin
+  h += '<div class="slbl">Catálogo de proforma</div>';
+  h += '<div style="margin:0 12px 8px;background:#fff;border-radius:14px;border:1.5px solid var(--bo);overflow:hidden">';
+  var extraProds = (typeof pfCargarProductosExtra === "function") ? pfCargarProductosExtra() : [];
+  if (extraProds.length === 0) {
+    h += '<div style="padding:12px;font-size:12px;color:var(--g3)">Aún no has añadido productos. Los productos base del catálogo no se listan aquí.</div>';
+  } else {
+    for (var k = 0; k < extraProds.length; k++) {
+      var ep = extraProds[k];
+      h += '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--bo)">';
+      h += '<div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--ng)">'+ep.nombre+'</div>';
+      h += '<div style="font-size:11px;color:var(--g3)">'+ep.id+' · '+(ep.tipo==="extintor"?"Extintor":"Accesorio")+' · $'+(parseFloat(ep.punit)||0).toFixed(2)+' · Stock '+(parseInt(ep.stock,10)||0)+'</div></div>';
+      h += '<button type="button" onclick="pfBorrarProductoCatalogo(\''+ep.id+'\')" style="padding:6px 10px;border-radius:8px;border:1.5px solid var(--bo);background:#fff;color:var(--r);font-size:13px;cursor:pointer;font-family:inherit">🗑</button>';
+      h += '</div>';
+    }
+  }
+  h += '</div>';
+  // Botón abrir formulario + formulario (oculto por defecto)
+  h += '<div style="padding:0 12px 4px"><button type="button" id="pf-cat-toggle" onclick="pfToggleFormProductoCat()" style="width:100%;padding:12px;border-radius:12px;border:1.5px dashed var(--bo);background:#fff;color:var(--r);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">➕ Añadir producto</button></div>';
+  var inpS = 'width:100%;padding:8px 10px;border:1.5px solid var(--bo);border-radius:8px;font-family:inherit;font-size:13px;box-sizing:border-box';
+  var lblS = 'font-size:11px;font-weight:700;color:var(--g3);margin:8px 0 3px';
+  h += '<div id="pf-cat-form" style="display:none;margin:8px 12px 12px;background:#fff;border-radius:14px;border:1.5px solid var(--bo);padding:12px">';
+  h += '<div style="'+lblS+'">ID (sin espacios, único)</div>';
+  h += '<input id="pcat-id" type="text" placeholder="VENT30PQS" style="'+inpS+';text-transform:uppercase">';
+  h += '<div style="'+lblS+'">Nombre</div>';
+  h += '<input id="pcat-nombre" type="text" placeholder="30LBS PQS" style="'+inpS+'">';
+  h += '<div style="'+lblS+'">Descripción</div>';
+  h += '<input id="pcat-desc" type="text" placeholder="EXTINTOR 30 LIBRAS - POLVO QUÍMICO SECO" style="'+inpS+'">';
+  h += '<div style="'+lblS+'">Tipo</div>';
+  h += '<select id="pcat-tipo" style="'+inpS+'"><option value="extintor">Extintor</option><option value="accesorio">Accesorio / equipo</option></select>';
+  h += '<div style="display:flex;gap:8px">';
+  h += '<div style="flex:1"><div style="'+lblS+'">Precio vitrina $</div><input id="pcat-pbase" type="number" step="0.01" min="0" placeholder="0.00" style="'+inpS+'"></div>';
+  h += '<div style="flex:1"><div style="'+lblS+'">Precio unit. $</div><input id="pcat-punit" type="number" step="0.01" min="0" placeholder="0.00" style="'+inpS+'"></div>';
+  h += '<div style="flex:1"><div style="'+lblS+'">Stock</div><input id="pcat-stock" type="number" step="1" min="0" value="0" style="'+inpS+'"></div>';
+  h += '</div>';
+  h += '<div style="display:flex;gap:8px;margin-top:12px">';
+  h += '<button type="button" onclick="pfGuardarNuevoProductoCat()" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">💾 Guardar producto</button>';
+  h += '<button type="button" onclick="pfToggleFormProductoCat()" style="padding:12px 16px;border-radius:12px;border:1.5px solid var(--bo);background:#fff;color:var(--g4);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Cancelar</button>';
+  h += '</div>';
+  h += '</div>';
+
   // #72 #73 FIX: config nota de entrega
   h += '<div class="slbl">Configuración Nota de Entrega</div>';
   h += '<div style="margin:0 12px 12px;background:#fff;border-radius:14px;border:1.5px solid var(--bo);overflow:hidden">';
@@ -2451,6 +2493,45 @@ function pfResetPrecios() {
     renderAccSel();
     pfRenderConfigPrecios();
     pfModal("↺ Precios restaurados a valores por defecto.");
+  });
+}
+
+// #29: Catálogo de proforma — añadir / eliminar productos
+function pfToggleFormProductoCat() {
+  var f = document.getElementById("pf-cat-form");
+  var btn = document.getElementById("pf-cat-toggle");
+  if (!f) return;
+  var abrir = f.style.display === "none";
+  f.style.display = abrir ? "block" : "none";
+  if (btn) btn.style.display = abrir ? "none" : "block";
+}
+
+function pfGuardarNuevoProductoCat() {
+  function val(id){ var e = document.getElementById(id); return e ? e.value : ""; }
+  var res = pfGuardarProductoCatalogo({
+    id:     val("pcat-id"),
+    nombre: val("pcat-nombre"),
+    desc:   val("pcat-desc"),
+    tipo:   val("pcat-tipo"),
+    pbase:  val("pcat-pbase"),
+    punit:  val("pcat-punit"),
+    stock:  val("pcat-stock")
+  });
+  if (!res.ok) { pfModal("⚠️ " + res.error); return; }
+  pfRenderConfigPrecios();
+  // refrescar el buscador de la proforma si está abierto
+  var srch = document.getElementById("prof-prod-search");
+  if (srch && typeof pfBuscarProductoDist === "function") pfBuscarProductoDist(srch.value);
+  pfModal('✅ Producto "' + res.producto.nombre + '" añadido al catálogo.');
+}
+
+function pfBorrarProductoCatalogo(id) {
+  pfConfirm("¿Eliminar este producto del catálogo? (solo afecta a los que tú añadiste)", function() {
+    pfEliminarProductoCatalogo(id);
+    pfRenderConfigPrecios();
+    var srch = document.getElementById("prof-prod-search");
+    if (srch && typeof pfBuscarProductoDist === "function") pfBuscarProductoDist(srch.value);
+    pfModal("🗑 Producto eliminado del catálogo.");
   });
 }
 
