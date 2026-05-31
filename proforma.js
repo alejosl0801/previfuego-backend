@@ -1129,7 +1129,7 @@ function pfHacerPDFProforma(prof) {
   y += 38;
 
   // ── DATOS CLIENTE ──
-  var CLI_H = 35;
+  var CLI_H = 42;   // #24: 35→42mm; antes RHC=6.88mm y el valor (yy+8) se montaba sobre las líneas
   setFill(GRIS4); doc.rect(MAR, y, CW, CLI_H, "F");
   setDraw(GRIS3); doc.setLineWidth(0.4);
   doc.rect(MAR, y, CW, CLI_H, "D");
@@ -1168,20 +1168,20 @@ function pfHacerPDFProforma(prof) {
     var yy = y + 7.5 + i * RHC;
     if (i > 0) { setDraw(GRIS3); doc.setLineWidth(0.25); doc.line(MAR+1, yy, W-MAR-1, yy); }
     doc.setFont("helvetica","bold"); doc.setFontSize(5.5); setTxt(GRIS2);
-    doc.text(CAMPOS_IZQ[i][0], MAR+2.5, yy+3.5);
+    doc.text(CAMPOS_IZQ[i][0], MAR+2.5, yy+3);
     doc.setFont("helvetica","normal"); doc.setFontSize(7.5); setTxt(NEGRO);
-    doc.text(CAMPOS_IZQ[i][1], MAR+2.5, yy+8);
+    doc.text(CAMPOS_IZQ[i][1], MAR+2.5, yy+7);
     // Badge tipo al lado de razón social (fila 0 únicamente)
     if (i === 0) {
       setFill(prof.tipo === "dist" ? ROJO : VERDE);
-      doc.roundedRect(MID - _tipoW2 - 3, yy+5, _tipoW2, 4.5, 1.5, 1.5, "F");
+      doc.roundedRect(MID - _tipoW2 - 3, yy+3, _tipoW2, 4.5, 1.5, 1.5, "F");
       doc.setFont("helvetica","bold"); doc.setFontSize(5.5); setTxt([255,255,255]);
-      doc.text(_tipoLbl, MID - _tipoW2/2 - 3, yy+8.5, {align:"center"});
+      doc.text(_tipoLbl, MID - _tipoW2/2 - 3, yy+6.5, {align:"center"});
     }
     doc.setFont("helvetica","bold"); doc.setFontSize(5.5); setTxt(GRIS2);
-    doc.text(CAMPOS_DER[i][0], MID+2, yy+3.5);
+    doc.text(CAMPOS_DER[i][0], MID+2, yy+3);
     doc.setFont("helvetica","normal"); doc.setFontSize(7.5); setTxt(NEGRO);
-    doc.text(CAMPOS_DER[i][1], MID+2, yy+8);
+    doc.text(CAMPOS_DER[i][1], MID+2, yy+7);
   }
   y += CLI_H + 2;
 
