@@ -225,6 +225,13 @@ function pfGenerarRecorridoSemaforo(items) {
 }
 
 var _PF_SEM_CACHE = {}; // #060 FIX: cache de proximoMantenimiento
+// Normaliza código de local: colapsa R010/r10/R0010→R10; preserva IND-045, K100, R100
+function pfNormCod(c) {
+  c = (c || "").toString().trim().toUpperCase();
+  var m = c.match(/^R0*(\d+)$/);
+  return m ? "R" + m[1] : c;
+}
+
 function pfRenderSemaforo(modo) {
   modo = modo || PF_SEM_MODO || "mant"; // "mant" = solo mantenimiento | "recarga" = recarga+mant
   PF_SEM_MODO = modo;
@@ -265,11 +272,24 @@ function pfRenderSemaforo(modo) {
 
     var proxFecha = pfProximoMantenimiento(nombre, ultVisita);
     var dias      = pfDiasParaVencer(proxFecha);
-    return { nombre:nombre, ultVisita:ultVisita, proxFecha:proxFecha, dias:dias, mesIdx:_mesIdx, esRec:_tocaRec };
+    return { nombre:nombre, codigo:(_cli.codigo||""), ultVisita:ultVisita, proxFecha:proxFecha, dias:dias, mesIdx:_mesIdx, esRec:_tocaRec };
   });
 
   // Filtrar nulos
   items = items.filter(function(i){ return i !== null; });
+
+  // Dedup por código normalizado (mismo local con R010/r10/R0010 aparecía varias veces).
+  // Sin código → se conserva por nombre. En colisión, gana el que tenga visita real / datos.
+  var _porCod = {};
+  items.forEach(function(it) {
+    var key = it.codigo ? pfNormCod(it.codigo) : ("NOM:" + it.nombre);
+    var prev = _porCod[key];
+    if (!prev) { _porCod[key] = it; return; }
+    var ps = (prev.ultVisita ? 2 : 0) + (prev.dias !== null ? 1 : 0);
+    var cs = (it.ultVisita   ? 2 : 0) + (it.dias   !== null ? 1 : 0);
+    if (cs > ps) _porCod[key] = it;
+  });
+  items = Object.keys(_porCod).map(function(k){ return _porCod[k]; });
 
   // Ordenar: vencidos primero, luego por días asc
   items.sort(function(a,b) {
