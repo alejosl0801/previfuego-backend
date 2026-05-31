@@ -2805,11 +2805,11 @@ var PF_CLIENTES = [
     "codigo": "IND-034",
     "grupo": "Independiente",
     "marca": "SOCELEC",
-    "nombre": "SOCELEC", "inactivo": true, "motivo": "Sin continuidad",
+    "nombre": "SOCELEC", "inactivo": false,
     "razon": "SOCIEDAD ELECTRONICA S.A. SOCELEC",
     "ruc": "190370585001",
     "responsable": "",
-    "mes": "FEBRERO",
+    "mes": "FEBRERO",  // reactivado; también tiene extintores en MAYO y AGOSTO (pendiente: modelo por extintor)
     "freqMant": "1 año",
     "freqRec": "1 año"
   },
@@ -4155,6 +4155,22 @@ var PF_CLIENTES = [
     "responsable": "",
     "email": "",
     "extintores": [{"tipo": "CO2", "capacidad": "50 LBS", "ubicacion": ""}, {"tipo": "PQS", "capacidad": "10 LBS", "ubicacion": ""}]
+  },
+  {
+    "codigo": "IND-142",
+    "grupo": "Independiente",
+    "marca": "ING BUSTOS CASTILLO",
+    "nombre": "ING BUSTOS CASTILLO FRANKLIN EMILIO",
+    "razon": "ING BUSTOS CASTILLO FRANKLIN EMILIO",
+    "ruc": "0951230853001",
+    "dir": "ARGENTINA E/AV QUITO Y MACHALA, GUAYAQUIL",
+    "tel": "0423776704",
+    "direccion": "ARGENTINA E/AV QUITO Y MACHALA, GUAYAQUIL",
+    "telefono": "0423776704",
+    "responsable": "",
+    "mes": "MAYO",
+    "freqMant": "1 año",
+    "inactivo": false
   }
 ];
 
