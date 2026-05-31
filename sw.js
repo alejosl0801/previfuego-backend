@@ -1,6 +1,6 @@
 // PREVIFUEGO FIELD — Service Worker v1.0
 // #011 FIX: soporte offline básico
-const CACHE_VERSION = '4.0'; // v4.0 — F4 push, F10 dashboard, PDF proforma, 341 semáforo
+const CACHE_VERSION = '5.0'; // v5.0 — logo PyroShield, comprador 42mm, taller técnico, dedup semáforo, recorrido, iconos PWA
 const CACHE_NAME = 'previfuego-v' + CACHE_VERSION;
 // #11 #12 FIX: no cachear script.google.com, no incluir iconos que no existen
 const ASSETS = [
@@ -20,8 +20,9 @@ const ASSETS = [
   '/previfuego-backend/style.css',
   '/previfuego-backend/inteligencia.js',
   '/previfuego-backend/proforma.js',
-  '/previfuego-backend/manifest.json'
-  // Nota: icon-192.png e icon-512.png deben existir para incluirlos aquí
+  '/previfuego-backend/manifest.json',
+  '/previfuego-backend/icon-192.png',
+  '/previfuego-backend/icon-512.png'
   // Nota: script.google.com NUNCA debe cachearse (es la API de Apps Script)
 ];
 
