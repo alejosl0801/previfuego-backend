@@ -61,7 +61,7 @@ window.addEventListener("load", function() {
   };
   // Tab 11 = Taller (app.js)
   window.PF_TAB_HANDLERS[11] = function() {
-    if (typeof pfRenderTaller === "function") pfRenderTaller();
+    if (typeof pfRenderTaller === "function") pfRenderTaller("pf-taller-lista");
   };
   // Tab 12 = Tareas (app.js)
   window.PF_TAB_HANDLERS[12] = function() {

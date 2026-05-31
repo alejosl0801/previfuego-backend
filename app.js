@@ -1847,8 +1847,10 @@ function pfActualizarBadgeTaller() {
   } catch(e) { badge.style.display = "none"; }
 }
 
-function pfRenderTaller() {
-  var el = document.getElementById("pf-taller-lista");
+var _PF_TALLER_TARGET = "pf-taller-lista";   // #4: id del contenedor activo (admin vs técnico)
+function pfRenderTaller(targetId) {
+  if (targetId) _PF_TALLER_TARGET = targetId;
+  var el = document.getElementById(_PF_TALLER_TARGET);
   if (!el) return;
   pfActualizarBadgeTaller(); // actualizar badge
   var taller = pfGetTaller();
@@ -1948,20 +1950,10 @@ function pfAbrirAgregarAcc(talId) {
   });
 }
 
-// Vista para técnicos — misma lógica pero en div distinto
+// Vista para técnicos — pinta directo en su contenedor (#4: ya no usa div temporal,
+// que colisionaba con el id "pf-taller-lista" de la pantalla sadmin y dejaba la vista en blanco)
 function pfRenderTallerTec() {
-  var tec = document.getElementById("pf-taller-lista-tec");
-  if (!tec) return;
-  var tmp = document.createElement("div");
-  tmp.id  = "pf-taller-lista";
-  tmp.style.display = "none";
-  document.body.appendChild(tmp);
-  try { // #018 FIX: try/finally para garantizar limpieza
-    pfRenderTaller();
-    tec.innerHTML = tmp.innerHTML;
-  } finally {
-    if (tmp.parentNode) document.body.removeChild(tmp);
-  }
+  pfRenderTaller("pf-taller-lista-tec");
 }
 
 // ════════════════════════════════════════════════════════════
