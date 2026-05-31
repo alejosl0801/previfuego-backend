@@ -596,23 +596,22 @@ function cargarRecorrido() {
 }
 
 function cargarRecorridoLocal() {
-  var fecha    = localStorage.getItem("pf_recorrido_fecha");
   var jorData  = localStorage.getItem("pf_recorrido_jornadas");
   var legData  = localStorage.getItem("pf_recorrido_data");
   var _tecActual = (USUARIO_ACTUAL && USUARIOS[USUARIO_ACTUAL]) ? USUARIOS[USUARIO_ACTUAL].nombre : "Raúl Romero"; // #028 FIX
-  if (fecha === fechaHoy()) {
-    if (jorData) {
-      try { procesarJornadas(JSON.parse(jorData), _tecActual); return; }
-      catch(e) {
-        // #19 FIX: notificar si datos corruptos en lugar de fallar silenciosamente
-        console.warn("pf_recorrido_jornadas corrupto:", e);
-        localStorage.removeItem("pf_recorrido_jornadas");
-      }
+  // #2 FIX: cargar el recorrido guardado por su propia fecha, sin exigir que sea hoy
+  // (antes exigía fecha === fechaHoy() y el recorrido no llegaba a los técnicos)
+  if (jorData) {
+    try { procesarJornadas(JSON.parse(jorData), _tecActual); return; }
+    catch(e) {
+      // #19 FIX: notificar si datos corruptos en lugar de fallar silenciosamente
+      console.warn("pf_recorrido_jornadas corrupto:", e);
+      localStorage.removeItem("pf_recorrido_jornadas");
     }
-    if (legData) {
-      try { procesarPuntos(JSON.parse(legData), _tecActual); return; }
-      catch(e) { console.warn("pf_recorrido_data corrupto:", e); localStorage.removeItem("pf_recorrido_data"); }
-    }
+  }
+  if (legData) {
+    try { procesarPuntos(JSON.parse(legData), _tecActual); return; }
+    catch(e) { console.warn("pf_recorrido_data corrupto:", e); localStorage.removeItem("pf_recorrido_data"); }
   }
   mostrarSinRecorrido();
 }

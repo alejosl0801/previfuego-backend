@@ -98,13 +98,21 @@ function getRecorridoTexto(p) {
   }
   if (colPublicado === -1) colPublicado = 13; // fallback al índice anterior si no hay headers
 
+  // 1) match exacto de fecha + publicado
   for (var i = data.length - 1; i >= 1; i--) {
     var row = data[i];
     if (String(row[0]).trim() === fecha && String(row[colPublicado]).trim().toUpperCase() === "SI") {
-      return { ok:true, texto: String(row[2]), fecha: fecha, tecnico: String(row[1]||"Raúl Romero") };
+      return { ok:true, exacto:true, texto: String(row[2]), fecha: fecha, tecnico: String(row[1]||"Raúl Romero") };
     }
   }
-  return { ok:false, msg:"No hay recorrido publicado para " + fecha };
+  // 2) #2 FIX: sin match exacto, devolver el recorrido PUBLICADO más reciente con su fecha real
+  for (var j = data.length - 1; j >= 1; j--) {
+    var r2 = data[j];
+    if (String(r2[colPublicado]).trim().toUpperCase() === "SI") {
+      return { ok:true, exacto:false, texto: String(r2[2]), fecha: String(r2[0]).trim(), tecnico: String(r2[1]||"Raúl Romero") };
+    }
+  }
+  return { ok:false, msg:"No hay ningún recorrido publicado" };
 }
 
 // ── PUBLICAR RECORRIDO ────────────────────────────────────────
