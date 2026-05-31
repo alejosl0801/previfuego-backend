@@ -16,7 +16,7 @@ const ASSETS = [
   '/previfuego-backend/extras.js',
   '/previfuego-backend/mejoras2.js',
   '/previfuego-backend/coordinator.js',
-  // logo.js omitido (vacío)
+  '/previfuego-backend/logo.js',
   '/previfuego-backend/style.css',
   '/previfuego-backend/inteligencia.js',
   '/previfuego-backend/proforma.js',
