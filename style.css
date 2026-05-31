@@ -5,8 +5,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
 .screen{display:none;flex-direction:column;min-height:100vh;}
 .screen.active{display:flex;}
 .tb{padding:10px 16px;background:#fff;border-bottom:1.5px solid var(--bo);display:flex;align-items:center;gap:10px;flex-shrink:0;position:sticky;top:0;z-index:10;}
-.logo{width:36px;height:36px;border-radius:11px;background:transparent;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
-.logo img{width:100%;height:100%;object-fit:cover;display:block;}
+.logo{width:36px;height:36px;border-radius:11px;background:#fff;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.logo img{width:100%;height:100%;object-fit:contain;display:block;}
 .ti{flex:1;}.tt{font-size:17px;font-weight:700;color:var(--ng);}.ts{font-size:12px;color:var(--g3);}
 .bk{width:36px;height:36px;border-radius:11px;background:var(--g1);border:1.5px solid var(--bo);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;flex-shrink:0;}
 .bdg{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;}
@@ -138,8 +138,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--g1
 .adm-panel.on{display:block;}
 /* LOGIN */
 .login-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:12px;}
-.login-logo{width:80px;height:80px;border-radius:24px;overflow:hidden;margin-bottom:8px;}
-.login-logo img{width:100%;height:100%;object-fit:cover;}
+.login-logo{width:80px;height:80px;border-radius:24px;overflow:hidden;margin-bottom:8px;background:#fff;}
+.login-logo img{width:100%;height:100%;object-fit:contain;}
 .login-title{font-size:24px;font-weight:700;color:var(--ng);}
 .login-sub{font-size:14px;color:var(--g4);margin-bottom:8px;}
 .usr-btn{width:100%;max-width:340px;padding:16px 20px;border-radius:16px;border:1.5px solid var(--bo);background:#fff;display:flex;align-items:center;gap:14px;cursor:pointer;font-family:inherit;}
