@@ -1430,8 +1430,7 @@ function pfAsignarARecorrido(id) {
     '<option value="manana">☀️ Jornada Mañana</option>' +
     '<option value="tarde">🌆 Jornada Tarde</option>' +
     '</select>' +
-    '<div style="font-size:12px;font-weight:700;color:var(--g3);margin-bottom:4px">POSICIÓN EN EL RECORRIDO</div>' +
-    '<input id="asig-pos" type="number" min="1" value="1" placeholder="Nº de punto" style="width:100%;padding:10px;border:1.5px solid var(--bo);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:14px">' +
+    '<div style="font-size:11px;color:var(--g3);margin-bottom:14px">Se agregará como último punto de la jornada seleccionada.</div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
     '<button id="asig-cancel" style="padding:13px;border-radius:12px;border:1.5px solid var(--bo);background:var(--g1);color:var(--g4);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Cancelar</button>' +
     '<button id="asig-ok" style="padding:13px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ Agregar</button>' +
@@ -1441,21 +1440,22 @@ function pfAsignarARecorrido(id) {
   ov.querySelector('#asig-cancel').onclick = function(){ document.body.removeChild(ov); };
   ov.querySelector('#asig-ok').onclick = function(){
     var jornada = ov.querySelector('#asig-jornada').value;
-    var pos     = parseInt(ov.querySelector('#asig-pos').value) || 1;
     document.body.removeChild(ov);
-    pfAgregarEntregaPendiente(id, jornada, pos);
+    pfAgregarEntregaPendiente(id, jornada);
   };
 }
 
-function pfAgregarEntregaPendiente(profId, jornada, posicion) {
+function pfAgregarEntregaPendiente(profId, jornada) {
   var prof = pfGetProformas().find(function(p){ return p.id === profId; });
   if (!prof) return;
 
-  // Guardar en lista de entregas pendientes
+  // Insertar como Punto nuevo en el recorrido activo (con dedup)
+  var res = pfInsertarPuntoRecorrido(prof, jornada);
+  if (res.dup) { pfModal("Ya está en el recorrido"); return; }
+
+  // Bookkeeping: lista de entregas pendientes (con su propio dedup)
   var pendientes = [];
   try { pendientes = JSON.parse(localStorage.getItem("pf_entregas_pendientes") || "[]"); } catch(e){}
-
-  // Verificar si ya existe
   var yaExiste = pendientes.some(function(e){ return e.profId === profId; });
   if (!yaExiste) {
     pendientes.push({
@@ -1465,7 +1465,7 @@ function pfAgregarEntregaPendiente(profId, jornada, posicion) {
       cliente:  prof.cliente,
       items:    prof.items,
       jornada:  jornada,
-      posicion: posicion,
+      posicion: res.n,
       fecha:    new Date().toLocaleDateString("es-EC"),
       estado:   "pendiente_recorrido"
     });
@@ -1475,25 +1475,104 @@ function pfAgregarEntregaPendiente(profId, jornada, posicion) {
   // Cambiar estado de la proforma a pendiente_factura (entrega programada)
   pfCambiarEstadoProforma(profId, "pend_factura");
 
-  // Generar texto del punto de recorrido
-  var textoRecorrido = pfGenerarTextoEntrega(prof, jornada, posicion);
+  pfModal("✅ Agregado como Punto " + res.n + " al recorrido");
+  pfRenderTabProformas();
+}
 
-  // Mostrar con opción de copiar
-  var ov2 = document.createElement("div");
-  ov2.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:520;display:flex;align-items:center;justify-content:center;padding:20px";
-  ov2.innerHTML =
-    '<div style="background:#fff;border-radius:20px;padding:24px 20px;max-width:360px;width:100%">' +
-    '<div style="font-size:16px;font-weight:700;margin-bottom:4px">✅ Entrega programada</div>' +
-    '<div style="font-size:13px;color:var(--g4);margin-bottom:12px">Copia este texto y pégalo en el recorrido</div>' +
-    '<div style="background:var(--g1);border-radius:12px;padding:12px;font-size:12px;font-family:monospace;white-space:pre-wrap;max-height:180px;overflow-y:auto;margin-bottom:14px" id="texto-rec-prev">'+textoRecorrido+'</div>' +
-    '<button onclick="pfCopiarTexto(\'texto-rec-prev\')" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">📋 Copiar texto del recorrido</button>' +
-    '<button id="cerrar-ep" style="width:100%;padding:13px;border-radius:12px;border:1.5px solid var(--bo);background:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--g4)">Cerrar</button>' +
-    '</div>';
-  document.body.appendChild(ov2);
-  ov2.querySelector('#cerrar-ep').onclick = function(){
-    document.body.removeChild(ov2);
-    pfRenderTabProformas();
-  };
+// Inserta el cliente de la proforma como Punto nuevo al final de la jornada elegida,
+// en pf_recorrido_jornadas y (sincronizado) en pf_recorrido_texto. No pisa puntos existentes.
+// Devuelve {dup:true} si el cliente ya está, o {ok:true, n:<número de punto>}.
+function pfInsertarPuntoRecorrido(prof, jornadaCode) {
+  var cli = prof.cliente || {};
+  var nombrePunto = (cli.razon || cli.nombre || "CLIENTE").toString().trim();
+  var dir = (cli.dir || cli.direccion || "").toString().trim();
+  var norm = function(s){ return (s || "").toString().trim().toUpperCase(); };
+
+  var jornadas = [];
+  try { jornadas = JSON.parse(localStorage.getItem("pf_recorrido_jornadas") || "[]"); } catch(e) { jornadas = []; }
+  if (!Array.isArray(jornadas)) jornadas = [];
+
+  // Dedup: ¿ya existe un punto/local con ese cliente en cualquier jornada?
+  var objetivo = norm(nombrePunto);
+  var existe = jornadas.some(function(j){
+    return (j.puntos || []).some(function(p){
+      if (norm(p.nombre) === objetivo) return true;
+      return (p.locales || []).some(function(l){ return norm(l.nombre) === objetivo; });
+    });
+  });
+  if (existe) return { dup:true };
+
+  // Jornada destino (crear si no existe)
+  var label = jornadaCode === "tarde" ? "TARDE" : "MAÑANA";
+  var target = null;
+  for (var i = 0; i < jornadas.length; i++) {
+    if (norm(jornadas[i].jornada) === label) { target = jornadas[i]; break; }
+  }
+  if (!target) {
+    target = { jornada: label, label: "Jornada " + (label === "TARDE" ? "Tarde" : "Mañana"), puntos: [] };
+    jornadas.push(target);
+  }
+
+  // Número del nuevo punto = mayor num de la jornada + 1
+  var maxNum = 0;
+  (target.puntos || []).forEach(function(p){ if (typeof p.num === "number" && p.num > maxNum) maxNum = p.num; });
+  var N = maxNum + 1;
+
+  // Construir el bloque de texto y parsearlo con el mismo parser del recorrido
+  var bloque = "Punto " + N + " — " + nombrePunto + "\n";
+  bloque += "Misión: Entrega" + (dir ? " — " + dir : "") + "\n";
+  (prof.items || []).forEach(function(it){ bloque += "- " + it.cant + "x " + it.nombre + "\n"; });
+
+  var punto;
+  var parsed = (typeof parsearRecorrido === "function") ? parsearRecorrido(bloque) : [];
+  if (parsed.length) { punto = parsed[0]; punto.num = N; }
+  else {
+    punto = { num:N, nombre:nombrePunto, _nomPunto:nombrePunto,
+      locales:[{ id:Date.now(), nombre:nombrePunto, mision:"Entrega" + (dir ? " — " + dir : ""), done:false, ext:[] }] };
+  }
+  target.puntos.push(punto);
+  localStorage.setItem("pf_recorrido_jornadas", JSON.stringify(jornadas));
+
+  // Sincronizar el texto plano
+  pfSyncTextoRecorrido(label, bloque);
+
+  return { ok:true, n:N };
+}
+
+// Inserta el bloque de texto del punto bajo la jornada correcta en pf_recorrido_texto,
+// sin reescribir el resto del texto existente.
+function pfSyncTextoRecorrido(label, bloque) {
+  var texto = "";
+  try { texto = localStorage.getItem("pf_recorrido_texto") || ""; } catch(e) { texto = ""; }
+  var bloqueLineas = bloque.replace(/\s+$/, "").split("\n");
+
+  if (!texto.trim()) {
+    localStorage.setItem("pf_recorrido_texto", "JORNADA " + label + "\n" + bloqueLineas.join("\n"));
+    return;
+  }
+
+  var reHead = /^JORNADA\s+(MAÑANA|TARDE|NOCHE|DIA|DÍA)/i;
+  var lineas = texto.split("\n");
+  var idxTarget = -1;
+  for (var i = 0; i < lineas.length; i++) {
+    var m = lineas[i].trim().match(reHead);
+    if (m && m[1].toUpperCase() === label) { idxTarget = i; break; }
+  }
+
+  if (idxTarget === -1) {
+    // No hay header de esa jornada → añadir al final como sección nueva
+    localStorage.setItem("pf_recorrido_texto",
+      texto.replace(/\s+$/, "") + "\n\nJORNADA " + label + "\n" + bloqueLineas.join("\n"));
+    return;
+  }
+
+  // Insertar antes del siguiente header de jornada (o al final si no hay)
+  var idxNext = lineas.length;
+  for (var j = idxTarget + 1; j < lineas.length; j++) {
+    if (reHead.test(lineas[j].trim())) { idxNext = j; break; }
+  }
+  var nuevo = lineas.slice(0, idxNext).concat(bloqueLineas, lineas.slice(idxNext));
+  localStorage.setItem("pf_recorrido_texto", nuevo.join("\n"));
 }
 
 function pfGenerarTextoEntrega(prof, jornada, pos) {
