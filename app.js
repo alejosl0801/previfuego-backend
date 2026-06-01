@@ -3,7 +3,7 @@
 //  Bloque A: PDF fixes + tipo trabajo + fotos libres + roles
 // ═══════════════════════════════════════════════════════════
 
-var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhsUSimH4rHFoQCF-wU_ixVeve806DGR2sVrAuBD1VmhZnlgDtAkS4YCZatM0cGERK/exec";
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwiIAupZxy2T33EiDHbwkLBHTw0Q2Uv98r8pc9L351b6lXwY_mOD6kI2tvfzqdIUdxG/exec";
 var VERSION    = "3.6";
 
 // ── TOKEN DE SINCRONIZACIÓN ──────────────────────────────────

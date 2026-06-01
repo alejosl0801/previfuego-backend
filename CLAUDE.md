@@ -9,7 +9,7 @@ campo, Android), Fabiola (administración / solo taller).
 ## Infraestructura
 - GitHub Pages: https://alejosl0801.github.io/previfuego-backend/
 - Backend Apps Script (SCRIPT_URL activa):
-  https://script.google.com/macros/s/AKfycbzhsUSimH4rHFoQCF-wU_ixVeve806DGR2sVrAuBD1VmhZnlgDtAkS4YCZatM0cGERK/exec
+  https://script.google.com/macros/s/AKfycbwiIAupZxy2T33EiDHbwkLBHTw0Q2Uv98r8pc9L351b6lXwY_mOD6kI2tvfzqdIUdxG/exec
 - Sheet ID: 1H3OQmaJtqVWHqVrI_hX2h8ZL_-a6RRobQww7IuGMhp0
 - Credenciales: ver con Alejandro (no versionar)
 - Usuarios: alejandro (admin), raul/juan (técnicos), fabiola (soloTaller)
