@@ -201,8 +201,8 @@ function seleccionarUsuario(key) {
       }).catch(function(){});
     }
     // #FIX: descargar CRM (notas + contactos) del servidor para que todos los dispositivos lo vean
-    if (typeof pfDescargarCRM === "function") {
-      pfDescargarCRM(function(){ console.log("CRM sincronizado desde servidor"); });
+    if (typeof window.pfDescargarCRM === "function") {
+      window.pfDescargarCRM(function(){ console.log("CRM sincronizado desde servidor"); });
     }
   }, 1500);
 }

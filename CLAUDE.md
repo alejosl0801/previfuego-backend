@@ -75,8 +75,9 @@ Endpoints GET (solo lectura, sin token):
 ## Validación obligatoria antes de commit
 - `node --check <archivo>.js` en cada archivo tocado (Code.gs: validar copiándolo a `.js`).
 - ESLint `no-undef` sobre el bundle (clientes, logo, app, pdf, nota, retiros, dashboard,
-  extras, mejoras2, crm, inteligencia, proforma, coordinator). Hay 4 errores preexistentes
-  conocidos (pfDescargarCRM, pfOnLocalCompletado, pfRenderHistorialFacturas).
+  extras, mejoras2, crm, inteligencia, proforma, coordinator). Debe quedar en 0. Los
+  globales asignados a `window.X = function(){}` deben referenciarse con `window.X` para
+  evitar falsos positivos de no-undef.
 - CRÍTICO: `node --check` NO detecta un `}` mal puesto que cuadra globalmente. Usar acorn
   para contar funciones top-level de app.js: si baja de ~130 a ~15, hay un `}` faltante
   que está atrapando funciones dentro de otra (rompe toda la app).

@@ -490,8 +490,8 @@ function hacerPDF(fc) {
 
     // #10 FIX: registrar visita ANTES de ir("senv") para evitar race condition
     try {
-      if (typeof pfOnLocalCompletado === "function") {
-        pfOnLocalCompletado(LOCAL_ACTUAL, PUNTO_ACTUAL, TIPO_TRABAJO,
+      if (typeof window.pfOnLocalCompletado === "function") {
+        window.pfOnLocalCompletado(LOCAL_ACTUAL, PUNTO_ACTUAL, TIPO_TRABAJO,
           (typeof TECNICO_NOMBRE !== "undefined" ? TECNICO_NOMBRE : "Técnico"), "");
       }
     } catch(e2) { console.warn("pfOnLocalCompletado error:", e2); }

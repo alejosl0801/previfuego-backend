@@ -100,9 +100,9 @@ window.addEventListener("load", function() {
     if (typeof _confirmarSinBase === "function") _confirmarSinBase();
 
     // #083 FIX: ejecutar inmediatamente con snapshot, sin setTimeout que puede ejecutar en local equivocado
-    if (localSnap && typeof pfOnLocalCompletado === "function") {
+    if (localSnap && typeof window.pfOnLocalCompletado === "function") {
       try {
-        pfOnLocalCompletado(localSnap, puntoSnap, tipoSnap, tecSnap, "");
+        window.pfOnLocalCompletado(localSnap, puntoSnap, tipoSnap, tecSnap, "");
       } catch(e) { console.warn("pfOnLocalCompletado error:", e); }
     }
   };
@@ -249,7 +249,7 @@ window.addEventListener("load", function() {
       '<div style="height:80px"></div></div>';
     admScr.appendChild(panel);
 
-    window.PF_TAB_HANDLERS[14] = function() { pfRenderHistorialFacturas(); };
+    window.PF_TAB_HANDLERS[14] = function() { window.pfRenderHistorialFacturas(); };
 
   // Tab 15 = Proformas (proforma.js)
   window.PF_TAB_HANDLERS[15] = function() {
