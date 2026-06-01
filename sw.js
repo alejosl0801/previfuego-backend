@@ -1,6 +1,6 @@
 // PREVIFUEGO FIELD — Service Worker v1.0
 // #011 FIX: soporte offline básico
-const CACHE_VERSION = '5.0'; // v5.0 — logo PyroShield, comprador 42mm, taller técnico, dedup semáforo, recorrido, iconos PWA
+const CACHE_VERSION = '5.1'; // v5.1 — badge sistema CO2 por local en recorrido, SCRIPT_URL nueva, lint limpio
 const CACHE_NAME = 'previfuego-v' + CACHE_VERSION;
 // #11 #12 FIX: no cachear script.google.com, no incluir iconos que no existen
 const ASSETS = [

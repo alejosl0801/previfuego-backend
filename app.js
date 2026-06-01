@@ -735,6 +735,37 @@ function pfFiltrarRecorrido(q) {
   }, 50);
 }
 
+// Fase 2: badge de sistema CO2 por local. Caché en memoria; carga async desde getExtintores.
+var _PF_CO2_CACHE = {};   // norm(local) -> { tieneSistemaCO2, numCilindrosCO2 } | "loading"
+function _pfNormLocal(s) { return (s || "").toString().trim().toUpperCase(); }
+
+function _pfCargarCO2Recorrido() {
+  if (typeof SCRIPT_URL === "undefined" || !SCRIPT_URL) return;
+  var pend = [];
+  for (var i = 0; i < PUNTOS.length; i++) {
+    for (var j = 0; j < PUNTOS[i].locales.length; j++) {
+      var k = _pfNormLocal(PUNTOS[i].locales[j].nombre);
+      if (k && !(k in _PF_CO2_CACHE)) {
+        _PF_CO2_CACHE[k] = "loading";
+        pend.push({ key: k, nombre: PUNTOS[i].locales[j].nombre });
+      }
+    }
+  }
+  if (!pend.length) return;
+  var restantes = pend.length;
+  pend.forEach(function(it) {
+    fetch(SCRIPT_URL + "?accion=extintores_local&nombre=" + encodeURIComponent(it.nombre))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        _PF_CO2_CACHE[it.key] = (d && d.ok)
+          ? { tieneSistemaCO2: !!d.tieneSistemaCO2, numCilindrosCO2: d.numCilindrosCO2 || 0 }
+          : { tieneSistemaCO2: false, numCilindrosCO2: 0 };
+      })
+      .catch(function(){ _PF_CO2_CACHE[it.key] = { tieneSistemaCO2: false, numCilindrosCO2: 0 }; })
+      .then(function(){ restantes--; if (restantes <= 0 && typeof renderPuntos === "function") renderPuntos(); });
+  });
+}
+
 function renderPuntos() {
   var lista = document.getElementById("s1list");
   if (!lista) return;
@@ -786,11 +817,15 @@ function renderPuntos() {
       var col  = TIPO_COLOR[tipo] || "var(--g4)";
       var bg   = TIPO_BG[tipo]    || "var(--g1)";
       var _cl=_esFabiola?' onclick=""':' onclick="abrirLocal('+i+','+j+')"';
+      var _co2 = _PF_CO2_CACHE[_pfNormLocal(loc.nombre)];
+      var _co2Badge = (_co2 && _co2 !== "loading" && _co2.tieneSistemaCO2)
+        ? '<span style="display:inline-block;margin-top:4px;font-size:10px;font-weight:700;color:#fff;background:var(--r);padding:2px 8px;border-radius:20px">🔴 Sistema CO2 ('+_co2.numCilindrosCO2+(_co2.numCilindrosCO2===1?' cilindro':' cilindros')+')</span>'
+        : '';
       h += '<div class="cd'+(loc.done?" dn":"")+'"'+_cl+' id="loc_item_'+i+'_'+j+'">';
       h += '<div class="pr">';
       h += '<div class="pn" style="'+(loc.done?'background:var(--vc);color:var(--v)':'background:'+bg+';color:'+col)+'">'+ico+'</div>';
       h += '<div class="pi"><div class="pnm">'+loc.nombre+'</div>';
-      h += '<div class="psb">'+(loc.done?"Completado ✓":p.nombre)+'</div></div>';
+      h += '<div class="psb">'+(loc.done?"Completado ✓":p.nombre)+'</div>'+_co2Badge+'</div>';
       h += '<div class="pch">'+(loc.done?"✓":"›")+'</div></div>';
       if (loc.mision && !loc.done) {
         var misionCorta = loc.mision.length > 80 ? loc.mision.substring(0,80)+"..." : loc.mision;
@@ -801,6 +836,7 @@ function renderPuntos() {
   }
   // #CRÍTICO FIX: evitar flash — solo actualizar DOM si contenido cambió
   if (lista._pfLastHash !== h) { lista._pfLastHash = h; lista.innerHTML = h; }
+  _pfCargarCO2Recorrido();   // Fase 2: carga CO2 por local y re-renderiza con badges
 }
 
 function mostrarSinRecorrido() {
