@@ -198,7 +198,21 @@ function getExtintoresPorMes(mes) {
   for (var i = hd.headerRow + 1; i < data.length; i++) {
     if (_extNorm(data[i][c.mes]) === objetivo) lista.push(_extFila(data[i], c));
   }
-  return { ok:true, mes: mes, total: lista.length, extintores: lista };
+  // Resumen por local (para pintar el badge CO2 en la lista del recorrido con 1 sola llamada)
+  var mapa = {};
+  lista.forEach(function(e){
+    var k = _extNorm(e.local);
+    if (!k) return;
+    if (!mapa[k]) mapa[k] = { local:e.local, total:0, numCilindrosCO2:0 };
+    mapa[k].total++;
+    if (_esSistemaCO2(e)) mapa[k].numCilindrosCO2++;
+  });
+  var locales = Object.keys(mapa).map(function(k){
+    var m = mapa[k];
+    return { local:m.local, total:m.total,
+             tieneSistemaCO2: m.numCilindrosCO2 > 0, numCilindrosCO2: m.numCilindrosCO2 };
+  });
+  return { ok:true, mes: mes, total: lista.length, locales: locales, extintores: lista };
 }
 
 // GET ?accion=extintores_local&nombre=KFC URDESA
