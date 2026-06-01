@@ -24,6 +24,8 @@ function doGet(e) {
 
   try {
     if (accion === "recorrido_texto")  return responder(getRecorridoTexto(p));
+    if (accion === "extintores_mes")   return responder(getExtintoresPorMes(p.mes));
+    if (accion === "extintores_local") return responder(getExtintores(p.nombre || p.local));
     if (accion === "testConexion")     return responder({ ok:true, msg:"Conexión OK", ts: new Date().toISOString() });
     return responder({ ok:false, msg:"Acción no reconocida: " + accion });
   } catch(err) {
@@ -113,6 +115,102 @@ function getRecorridoTexto(p) {
     }
   }
   return { ok:false, msg:"No hay ningún recorrido publicado" };
+}
+
+// ── EXTINTORES (hoja EXTINTORES) ──────────────────────────────
+// Columnas: MES | NOMBRE DEL LOCAL | UBICACIÓN EN EL LOCAL | TIPO |
+//           CAPACIDAD | TRABAJO (M/R) | AÑO RECARGA | PRECIO
+function _extLeerHoja() {
+  var ss    = SpreadsheetApp.openById(SHEET_ID);
+  var sheet = ss.getSheetByName("EXTINTORES");
+  if (!sheet) return null;
+  return sheet.getDataRange().getValues();
+}
+
+// Detecta columnas por nombre de header (robusto a reordenamiento); cae a posición fija.
+function _extCols(headers) {
+  function buscar(tokens, fallback) {
+    for (var h = 0; h < headers.length; h++) {
+      var H = String(headers[h]).trim().toUpperCase();
+      for (var t = 0; t < tokens.length; t++) {
+        if (H.indexOf(tokens[t]) !== -1) return h;
+      }
+    }
+    return fallback;
+  }
+  return {
+    mes:    buscar(["MES"], 0),
+    local:  buscar(["NOMBRE"], 1),
+    ubic:   buscar(["UBICAC"], 2),
+    tipo:   buscar(["TIPO"], 3),
+    cap:    buscar(["CAPACID"], 4),
+    trab:   buscar(["TRABAJO"], 5),
+    anio:   buscar(["RECARGA", "AÑO", "ANO"], 6),
+    precio: buscar(["PRECIO"], 7)
+  };
+}
+
+function _extNorm(s) { return String(s || "").trim().toUpperCase(); }
+
+function _extFila(row, c) {
+  return {
+    mes:         String(row[c.mes]   || "").trim(),
+    local:       String(row[c.local] || "").trim(),
+    ubicacion:   String(row[c.ubic]  || "").trim(),
+    tipo:        String(row[c.tipo]  || "").trim(),
+    capacidad:   String(row[c.cap]   || "").trim(),
+    trabajo:     String(row[c.trab]  || "").trim(),    // "M" mantenimiento / "R" recarga
+    anioRecarga: String(row[c.anio]  || "").trim(),
+    precio:      row[c.precio]
+  };
+}
+
+// REGLA DE NEGOCIO: un extintor cuenta como "sistema CO2 fijo" solo si es CO2 de
+// 50, 75 o 100 lbs. Los CO2 de 5/10/20 lbs son portátiles y NO cuentan.
+function _esSistemaCO2(ext) {
+  var tipo = _extNorm(ext.tipo);
+  if (tipo.indexOf("CO2") === -1 && tipo.indexOf("CO₂") === -1) return false;
+  var lbs = parseInt(String(ext.capacidad).replace(/[^0-9]/g, ""), 10);
+  return lbs === 50 || lbs === 75 || lbs === 100;
+}
+
+// GET ?accion=extintores_mes&mes=MAYO
+function getExtintoresPorMes(mes) {
+  var data = _extLeerHoja();
+  if (!data) return { ok:false, msg:"Hoja EXTINTORES no encontrada" };
+  if (!mes)  return { ok:false, msg:"Falta el parámetro 'mes'" };
+  var c = _extCols(data[0] || []);
+  var objetivo = _extNorm(mes);
+  var lista = [];
+  for (var i = 1; i < data.length; i++) {
+    if (_extNorm(data[i][c.mes]) === objetivo) lista.push(_extFila(data[i], c));
+  }
+  return { ok:true, mes: mes, total: lista.length, extintores: lista };
+}
+
+// GET ?accion=extintores_local&nombre=KFC URDESA
+function getExtintores(nombreLocal) {
+  var data = _extLeerHoja();
+  if (!data) return { ok:false, msg:"Hoja EXTINTORES no encontrada" };
+  if (!nombreLocal) return { ok:false, msg:"Falta el parámetro 'nombre'" };
+  var c = _extCols(data[0] || []);
+  var objetivo = _extNorm(nombreLocal);
+  var exactos = [], contiene = [];
+  for (var i = 1; i < data.length; i++) {
+    var nom = _extNorm(data[i][c.local]);
+    if (!nom) continue;
+    if (nom === objetivo) exactos.push(_extFila(data[i], c));
+    else if (nom.indexOf(objetivo) !== -1 || objetivo.indexOf(nom) !== -1) contiene.push(_extFila(data[i], c));
+  }
+  var lista = exactos.length ? exactos : contiene;
+  // Campos calculados de sistema CO2 fijo (CO2 de 50/75/100 lbs).
+  // Varios cilindros grandes = UN solo sistema, pero se reporta el conteo.
+  var numCilindrosCO2 = lista.filter(function(e){ return _esSistemaCO2(e); }).length;
+  return { ok:true, local: nombreLocal, exacto: exactos.length > 0,
+           total: lista.length,
+           tieneSistemaCO2: numCilindrosCO2 > 0,
+           numCilindrosCO2: numCilindrosCO2,
+           extintores: lista };
 }
 
 // ── PUBLICAR RECORRIDO ────────────────────────────────────────
