@@ -145,9 +145,21 @@ function _extCols(headers) {
     tipo:   buscar(["TIPO"], 3),
     cap:    buscar(["CAPACID"], 4),
     trab:   buscar(["TRABAJO"], 5),
-    anio:   buscar(["RECARGA", "AÑO", "ANO"], 6),
+    anio:   buscar(["AÑO", "ANO", "RECARGA"], 6),
     precio: buscar(["PRECIO"], 7)
   };
+}
+
+// Encuentra la fila de encabezados (la que tiene "MES" y "NOMBRE"); la hoja real
+// tiene una fila de título arriba, así que los encabezados NO están en la fila 0.
+function _extHeader(data) {
+  for (var r = 0; r < Math.min(data.length, 10); r++) {
+    var fila = (data[r] || []).map(function(x){ return String(x).trim().toUpperCase(); });
+    if (fila.indexOf("MES") !== -1 && fila.some(function(h){ return h.indexOf("NOMBRE") !== -1; })) {
+      return { headerRow: r, cols: _extCols(data[r]) };
+    }
+  }
+  return { headerRow: 0, cols: _extCols(data[0] || []) };
 }
 
 function _extNorm(s) { return String(s || "").trim().toUpperCase(); }
@@ -179,10 +191,11 @@ function getExtintoresPorMes(mes) {
   var data = _extLeerHoja();
   if (!data) return { ok:false, msg:"Hoja EXTINTORES no encontrada" };
   if (!mes)  return { ok:false, msg:"Falta el parámetro 'mes'" };
-  var c = _extCols(data[0] || []);
+  var hd = _extHeader(data);
+  var c = hd.cols;
   var objetivo = _extNorm(mes);
   var lista = [];
-  for (var i = 1; i < data.length; i++) {
+  for (var i = hd.headerRow + 1; i < data.length; i++) {
     if (_extNorm(data[i][c.mes]) === objetivo) lista.push(_extFila(data[i], c));
   }
   return { ok:true, mes: mes, total: lista.length, extintores: lista };
@@ -193,10 +206,11 @@ function getExtintores(nombreLocal) {
   var data = _extLeerHoja();
   if (!data) return { ok:false, msg:"Hoja EXTINTORES no encontrada" };
   if (!nombreLocal) return { ok:false, msg:"Falta el parámetro 'nombre'" };
-  var c = _extCols(data[0] || []);
+  var hd = _extHeader(data);
+  var c = hd.cols;
   var objetivo = _extNorm(nombreLocal);
   var exactos = [], contiene = [];
-  for (var i = 1; i < data.length; i++) {
+  for (var i = hd.headerRow + 1; i < data.length; i++) {
     var nom = _extNorm(data[i][c.local]);
     if (!nom) continue;
     if (nom === objetivo) exactos.push(_extFila(data[i], c));
