@@ -83,10 +83,26 @@ function responder(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+// Búsqueda de hoja tolerante a emojis/espacios/mayúsculas/acentos. Las pestañas tienen
+// prefijos como "📅 RECORRIDOS" o "💰 FACTURACIÓN" → getSheetByName exacto falla.
+function _normNombreHoja(s) {
+  return String(s || "").toUpperCase().replace(/[^A-Z0-9_]/g, "");
+}
+function _hoja(ss, nombre) {
+  var sheet = ss.getSheetByName(nombre);
+  if (sheet) return sheet;
+  var objetivo = _normNombreHoja(nombre);
+  var hojas = ss.getSheets();
+  for (var i = 0; i < hojas.length; i++) {
+    if (_normNombreHoja(hojas[i].getName()) === objetivo) return hojas[i];
+  }
+  return null;
+}
+
 // ── GET RECORRIDO ─────────────────────────────────────────────
 function getRecorridoTexto(p) {
   var ss    = SpreadsheetApp.openById(SHEET_ID);
-  var sheet = ss.getSheetByName("RECORRIDOS");
+  var sheet = _hoja(ss, "RECORRIDOS");
   if (!sheet) return { ok:false, msg:"Hoja RECORRIDOS no encontrada" };
 
   var fecha  = p.fecha || Utilities.formatDate(new Date(), "America/Guayaquil", "dd/MM/yyyy");
@@ -244,7 +260,7 @@ function getExtintores(nombreLocal) {
 // ── PUBLICAR RECORRIDO ────────────────────────────────────────
 function publicarRecorrido(body) {
   var ss    = SpreadsheetApp.openById(SHEET_ID);
-  var sheet = ss.getSheetByName("RECORRIDOS");
+  var sheet = _hoja(ss, "RECORRIDOS");
   if (!sheet) return { ok:false, msg:"Hoja RECORRIDOS no encontrada" };
 
   var fecha  = body.fecha   || Utilities.formatDate(new Date(), "America/Guayaquil", "dd/MM/yyyy");
@@ -270,7 +286,7 @@ function publicarRecorrido(body) {
 // ── APROBAR RECORRIDO ─────────────────────────────────────────
 function aprobarRecorrido(body) {
   var ss    = SpreadsheetApp.openById(SHEET_ID);
-  var sheet = ss.getSheetByName("RECORRIDOS");
+  var sheet = _hoja(ss, "RECORRIDOS");
   if (!sheet) return { ok:false, msg:"Hoja RECORRIDOS no encontrada" };
 
   var fecha = Utilities.formatDate(new Date(), "America/Guayaquil", "dd/MM/yyyy");
@@ -291,7 +307,7 @@ function aprobarRecorrido(body) {
 // ── GUARDAR FACTURACIÓN ───────────────────────────────────────
 function guardarFacturacion(body) {
   var ss    = SpreadsheetApp.openById(SHEET_ID);
-  var sheet = ss.getSheetByName("FACTURACIÓN");
+  var sheet = _hoja(ss, "FACTURACIÓN");
   if (!sheet) sheet = ss.insertSheet("FACTURACIÓN");
 
   var accs = body.accesorios || [];
