@@ -1550,6 +1550,7 @@ function admTab(n) {
   }
   if (n === 3) { renderCalendarioMes(); renderResumenJornadas(); }
   if (n === 2) { renderPizarra(); }
+  if (n === 13) { pfRenderPedidosAdmin(); }
 }
 
 function pfRenderPendientesIncluir() {
@@ -3052,4 +3053,105 @@ function pfAgregarPedidoAlRecorrido(pedidoId) {
   if (el && _PF_PEDIDOS_PYRO) _pfRenderPedidosLista(el, _PF_PEDIDOS_PYRO);
 
   pfModal("✅ Pedido agregado al recorrido como Punto " + nextNum + ".");
+}
+
+// ════════════════════════════════════════════════════════════
+// PEDIDOS PYROSHIELD — vista Admin (Tab 13 de sadmin)
+// ════════════════════════════════════════════════════════════
+function pfRenderPedidosAdmin() {
+  var el = document.getElementById("adm-pedidos-lista");
+  if (!el) return;
+  if (_PF_PEDIDOS_PYRO !== null) {
+    _pfRenderPedidosAdminLista(el, _PF_PEDIDOS_PYRO);
+    return;
+  }
+  el.innerHTML = '<div class="empty">Cargando pedidos...</div>';
+  var _ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+  var _timer = setTimeout(function() {
+    if (_ctrl) _ctrl.abort();
+    el.innerHTML = '<div class="empty">Sin respuesta del servidor. Toca &#8635; para reintentar.</div>';
+  }, 15000);
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({ accion: "obtenerPedidosPyro" }),
+    signal: _ctrl ? _ctrl.signal : undefined
+  })
+    .then(function(r) { clearTimeout(_timer); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then(function(data) {
+      if (!data.ok) { el.innerHTML = '<div class="empty">Error: ' + (data.error || "Sin respuesta") + '</div>'; return; }
+      var pedidos = (data.pedidos || []).filter(function(p) {
+        return (String(p.estado || "")).toLowerCase() === "pendiente";
+      });
+      _PF_PEDIDOS_PYRO = pedidos;
+      _pfRenderPedidosAdminLista(el, pedidos);
+    })
+    .catch(function() {
+      clearTimeout(_timer);
+      el.innerHTML = '<div class="empty">Error de conexión. Toca &#8635; para reintentar.</div>';
+    });
+}
+
+function _pfRenderPedidosAdminLista(el, pedidos) {
+  var insertados = {};
+  try {
+    var ids = JSON.parse(localStorage.getItem("pf_pedidos_en_recorrido_admin") || "[]");
+    ids.forEach(function(id) { insertados[id] = true; });
+  } catch(e) {}
+  function esc(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  if (!pedidos.length) { el.innerHTML = '<div class="empty">Sin pedidos pendientes</div>'; return; }
+  var h = "";
+  pedidos.forEach(function(ped) {
+    var yaInsertado = insertados[ped.id_pedido];
+    var items = [];
+    try { items = JSON.parse(String(ped.items_json || "[]")); } catch(e) {}
+    var itemsStr = items.map(function(it) { return (it.nombre||it.name||"") + " ×" + (it.cantidad||it.qty||1); }).join(", ");
+    h += '<div class="cd" style="margin-bottom:8px"><div style="padding:14px">';
+    h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">';
+    h += '<div style="flex:1">';
+    h += '<div style="font-size:14px;font-weight:700;color:var(--ng)">' + esc(ped.nombre_dist || "—") + '</div>';
+    h += '<div style="font-size:12px;color:var(--g4);margin-top:3px">📅 ' + esc(ped.fecha || "—") + ' &nbsp;·&nbsp; 💰 $' + parseFloat(ped.total || 0).toFixed(2) + '</div>';
+    if (itemsStr) h += '<div style="font-size:12px;color:var(--g4);margin-top:3px">📦 ' + esc(itemsStr) + '</div>';
+    h += '</div>';
+    if (yaInsertado) {
+      h += '<div style="font-size:11px;font-weight:700;color:var(--g3);background:var(--g1);padding:6px 10px;border-radius:8px;flex-shrink:0;white-space:nowrap">Ya insertado</div>';
+    } else {
+      h += '<button onclick="pfInsertarPedidoEnRecorrido(\'' + esc(ped.id_pedido) + '\')" style="padding:6px 10px;border-radius:8px;border:none;background:var(--r);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">📋 Agregar al recorrido</button>';
+    }
+    h += '</div></div></div>';
+  });
+  el.innerHTML = h;
+}
+
+function pfInsertarPedidoEnRecorrido(pedidoId) {
+  if (!_PF_PEDIDOS_PYRO) return;
+  var ped = _PF_PEDIDOS_PYRO.filter(function(p) { return p.id_pedido === pedidoId; })[0];
+  if (!ped) return;
+  var txt = document.getElementById("admin-txt");
+  if (!txt) return;
+  var actual = txt.value;
+  var matches = actual.match(/Punto\s+(\d+)/gi) || [];
+  var maxPunto = 0;
+  matches.forEach(function(m) {
+    var n = parseInt(m.replace(/\D/g, ""), 10);
+    if (n > maxPunto) maxPunto = n;
+  });
+  var nextNum = maxPunto + 1;
+  var items = [];
+  try { items = JSON.parse(String(ped.items_json || "[]")); } catch(e) {}
+  var itemsStr = items.map(function(it) { return (it.nombre||it.name||"") + " ×" + (it.cantidad||it.qty||1); }).join(", ");
+  var bloque = "\nPunto " + nextNum + " – " + (ped.nombre_dist || "Distribuidor PyroShield") + "\n" +
+    (ped.nombre_dist || "Distribuidor PyroShield") + "\n" +
+    "Misión: Entregar pedido PyroShield #" + (ped.id_pedido || "") + " ($" + parseFloat(ped.total || 0).toFixed(2) + ")" +
+    (itemsStr ? "\nProductos: " + itemsStr : "") + "\n";
+  txt.value = actual + bloque;
+  txt.focus();
+  txt.setSelectionRange(txt.value.length, txt.value.length);
+  previsualizarRecorrido();
+  var ids = [];
+  try { ids = JSON.parse(localStorage.getItem("pf_pedidos_en_recorrido_admin") || "[]"); } catch(e) {}
+  if (ids.indexOf(pedidoId) === -1) ids.push(pedidoId);
+  localStorage.setItem("pf_pedidos_en_recorrido_admin", JSON.stringify(ids));
+  var el = document.getElementById("adm-pedidos-lista");
+  if (el && _PF_PEDIDOS_PYRO) _pfRenderPedidosAdminLista(el, _PF_PEDIDOS_PYRO);
+  admTab(1);
 }

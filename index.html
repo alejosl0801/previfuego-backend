@@ -207,6 +207,7 @@
     <button class="adm-tab-btn"    id="adm-t3" onclick="admTab(3)">📊 Avance</button>
     <button class="adm-tab-btn"    id="adm-t11" onclick="admTab(11)">🔧 Taller</button>
     <button class="adm-tab-btn"    id="adm-t12" onclick="admTab(12)">✅ Tareas</button>
+    <button class="adm-tab-btn"    id="adm-t13" onclick="admTab(13)">📦 Pedidos</button>
   </div>
 
   <!-- TAB 1: Recorrido -->
@@ -313,6 +314,18 @@
         <button onclick="pfCrearTarea()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">+ Crear tarea</button>
       </div>
       <div id="pf-tareas-lista"></div>
+      <div style="height:80px"></div>
+    </div>
+  </div>
+
+  <!-- TAB 13: Pedidos PyroShield -->
+  <div class="adm-panel" id="adm-p13">
+    <div style="padding:12px 0">
+      <div class="slbl" style="display:flex;justify-content:space-between;align-items:center;padding-right:12px">
+        <span>Pedidos pendientes</span>
+        <button type="button" onclick="pfRenderPedidosAdmin()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--g4);padding:0 4px">&#8635;</button>
+      </div>
+      <div id="adm-pedidos-lista" style="margin:0 12px"><div class="empty">Cargando pedidos...</div></div>
       <div style="height:80px"></div>
     </div>
   </div>
