@@ -33,6 +33,9 @@ function doPost(e) {
       case "guardarPedidoPyro":
         resultado = recibirPedidoPyro(datos);
         break;
+      case "obtenerPedidosPyro":
+        resultado = obtenerPedidosPyro();
+        break;
       default:
         resultado = { ok: false, error: "Acción no reconocida: " + datos.accion };
     }
@@ -73,4 +76,33 @@ function recibirPedidoPyro(datos) {
   ]);
 
   return { ok: true };
+}
+
+// ════════════════════════════════════════════════════════════
+// obtenerPedidosPyro — retorna todas las filas de PEDIDOS_PYRO
+// ════════════════════════════════════════════════════════════
+function obtenerPedidosPyro() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var hoja = ss.getSheetByName(HOJA_PEDIDOS);
+  if (!hoja) return { ok: true, pedidos: [] };
+
+  var datos = hoja.getDataRange().getValues();
+  if (datos.length <= 1) return { ok: true, pedidos: [] };
+
+  var headers = datos[0];
+  var pedidos = [];
+  for (var i = 1; i < datos.length; i++) {
+    var fila = datos[i];
+    var obj = {};
+    for (var j = 0; j < headers.length; j++) {
+      var val = fila[j];
+      if (val instanceof Date) {
+        obj[headers[j]] = Utilities.formatDate(val, Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm");
+      } else {
+        obj[headers[j]] = val;
+      }
+    }
+    pedidos.push(obj);
+  }
+  return { ok: true, pedidos: pedidos };
 }
