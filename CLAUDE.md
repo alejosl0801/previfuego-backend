@@ -11,8 +11,7 @@ campo, Android), Fabiola (administración / solo taller).
 - Backend Apps Script (SCRIPT_URL activa):
   https://script.google.com/macros/s/AKfycbzhsUSimH4rHFoQCF-wU_ixVeve806DGR2sVrAuBD1VmhZnlgDtAkS4YCZatM0cGERK/exec
 - Sheet ID: 1H3OQmaJtqVWHqVrI_hX2h8ZL_-a6RRobQww7IuGMhp0
-- Token API: previfuego2026
-- Contraseña admin (PF_ADMIN_PASS): previfuego2026
+- Credenciales: ver con Alejandro (no versionar)
 - Usuarios: alejandro (admin), raul/juan (técnicos), fabiola (soloTaller)
 
 > Nota de seguridad: token y contraseña viven en el código cliente (PWA pública en
