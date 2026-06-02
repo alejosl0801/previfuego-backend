@@ -130,6 +130,31 @@ window.addEventListener("load", function() {
         pfEnviarEmailCertificado(certNum, local.nombre, emailEl.value);
       }
     }
+    // Cerrar ciclo de pedidos PyroShield: marcar entregado en el Sheet (#unif)
+    try {
+      var _map  = JSON.parse(localStorage.getItem("pf_pedidos_map") || "{}");
+      var _norm = String((local && local.nombre) || "").trim().toUpperCase();
+      if (_map[_norm] && typeof SCRIPT_URL !== "undefined") {
+        var _pid = _map[_norm];
+        fetch(SCRIPT_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            accion:    "actualizarEstadoPedidoPyro",
+            id_pedido: _pid,
+            estado:    "entregado",
+            token:     localStorage.getItem("pf_token") || ""
+          })
+        }).catch(function(){});
+        delete _map[_norm];
+        localStorage.setItem("pf_pedidos_map", JSON.stringify(_map));
+        try {
+          var _ids = JSON.parse(localStorage.getItem("pf_pedidos_en_recorrido") || "[]")
+            .filter(function(x){ return x !== _pid; });
+          localStorage.setItem("pf_pedidos_en_recorrido", JSON.stringify(_ids));
+        } catch(e) {}
+      }
+    } catch(e) {}
+
     // Actualizar badge de retiros
     if (typeof pfActualizarBadge === "function") pfActualizarBadge();
   };

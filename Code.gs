@@ -36,6 +36,9 @@ function doPost(e) {
       case "obtenerPedidosPyro":
         resultado = obtenerPedidosPyro();
         break;
+      case "actualizarEstadoPedidoPyro":
+        resultado = actualizarEstadoPedidoPyro(datos);
+        break;
       default:
         resultado = { ok: false, error: "Acción no reconocida: " + datos.accion };
     }
@@ -105,4 +108,33 @@ function obtenerPedidosPyro() {
     pedidos.push(obj);
   }
   return { ok: true, pedidos: pedidos };
+}
+
+// ════════════════════════════════════════════════════════════
+// actualizarEstadoPedidoPyro — cambia el estado de un pedido
+// (p.ej. "pendiente" → "entregado") al completar la entrega en
+// el recorrido de campo. datos: {id_pedido, estado}
+// ════════════════════════════════════════════════════════════
+function actualizarEstadoPedidoPyro(datos) {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var hoja = ss.getSheetByName(HOJA_PEDIDOS);
+  if (!hoja) return { ok: false, error: "Hoja PEDIDOS_PYRO no encontrada" };
+
+  var rango = hoja.getDataRange().getValues();
+  if (rango.length <= 1) return { ok: false, error: "Sin pedidos" };
+
+  var headers = rango[0];
+  var colId = headers.indexOf("id_pedido");
+  var colEstado = headers.indexOf("estado");
+  if (colId === -1 || colEstado === -1) {
+    return { ok: false, error: "Columnas id_pedido/estado no encontradas" };
+  }
+
+  for (var i = 1; i < rango.length; i++) {
+    if (String(rango[i][colId]) === String(datos.id_pedido)) {
+      hoja.getRange(i + 1, colEstado + 1).setValue(datos.estado || "entregado");
+      return { ok: true };
+    }
+  }
+  return { ok: false, error: "Pedido no encontrado: " + datos.id_pedido };
 }

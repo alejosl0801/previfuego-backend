@@ -148,6 +148,16 @@ function fechaHoy() {
          ec.getFullYear();
 }
 
+// Convierte "DD/MM/YYYY" a "YYYYMMDD" (entero comparable). Permite comparar
+// fechas correctamente — la comparación lexicográfica de DD/MM/YYYY falla
+// entre meses/años (ej. "15/06/2026" < "02/07/2026" daría false).
+function _pfFechaComp(ddmmyyyy) {
+  if (!ddmmyyyy) return 0;
+  var p = String(ddmmyyyy).split("/");
+  if (p.length !== 3) return 0;
+  return parseInt(p[2] + p[1].padStart(2,"0") + p[0].padStart(2,"0"), 10) || 0;
+}
+
 // ── LOGO ─────────────────────────────────────────────────────
 function initLogos() {
   if (typeof LOGO_B64 === "undefined") return;
@@ -167,6 +177,9 @@ function seleccionarUsuario(key) {
   document.querySelectorAll(".ts-nombre").forEach(function(el){ el.textContent = TECNICO_NOMBRE; });
   document.querySelectorAll(".sperf-nom").forEach(function(el){ el.textContent = TECNICO_NOMBRE; });
   document.querySelectorAll(".sperf-rol").forEach(function(el){ el.textContent = USUARIOS[key].rol; });
+  // Fabiola (soloTaller) no gestiona pedidos PyroShield: ocultar ese ítem del nav
+  var _verPedidos = !(USUARIOS[key] && USUARIOS[key].soloTaller);
+  document.querySelectorAll(".nav-pedidos").forEach(function(el){ el.style.display = _verPedidos ? "" : "none"; });
   if (key === "alejandro") { ir("sadmin"); cargarRecorridoAdmin(); }
   else if (USUARIOS[key] && USUARIOS[key].soloTaller) { ir("s1"); cargarRecorrido(); } // Fabiola ve recorrido pero no modifica
   else { ir("s1"); cargarRecorrido(); }
@@ -482,11 +495,14 @@ function previsualizarRecorrido() {
   prev.innerHTML = h;
 }
 
+var _PF_PUBLICANDO = false;
 function publicarRecorrido() {
+  if (_PF_PUBLICANDO) return; // protección contra doble clic
   var txt = document.getElementById("admin-txt").value.trim();
   if (!txt) { pfModal("Escribe o pega el recorrido primero."); return; }
   var jornadas = parsearJornadas(txt);
   if (jornadas.length === 0) { pfModal("No se detectaron puntos. Verifica el formato."); return; }
+  _PF_PUBLICANDO = true;
 
   // #023 FIX: detectar si el recorrido menciona una fecha futura
   var fechaRecorrido = fechaHoy();
@@ -506,16 +522,21 @@ function publicarRecorrido() {
   localStorage.setItem("pf_recorrido_data", JSON.stringify(jornadas[0].puntos));
   var payload = { accion:"publicar_recorrido", fecha:fechaRecorrido, tecnico:TECNICO_NOMBRE||"Alejandro", texto:txt, jornadas:jornadas };
   // #21 FIX: usar .then().catch() en lugar de .finally() (no disponible en todos los móviles)
-  var _pubDone = function() {
+  var _pubDone = function(okFlag) {
+    _PF_PUBLICANDO = false;
     mostrarCargando(false);
     renderCalendarioMes();
+    if (okFlag === false) {
+      pfModal("⚠️ No se pudo confirmar la publicación en el servidor.\nSe guardó localmente; verifica tu conexión y vuelve a publicar.");
+      return;
+    }
     var ok = document.getElementById("admin-pub-ok");
     if (ok) { ok.style.display = "block"; setTimeout(function(){ ok.style.display = "none"; }, 3000); }
   };
   fetch(SCRIPT_URL, { method:"POST", body:JSON.stringify(payload) })
-    .then(function(r){ return r.json(); })
-    .then(function(){ _pubDone(); })
-    .catch(function(){ _pubDone(); });
+    .then(function(r){ if (!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+    .then(function(data){ _pubDone(!!(data && data.ok)); })
+    .catch(function(){ _pubDone(false); });
 }
 
 function limpiarRecorrido() {
@@ -1495,14 +1516,17 @@ function renderPerfil() {
 }
 
 function cerrarSesion() {
-  USUARIO_ACTUAL=null;TECNICO_NOMBRE="";JORNADAS=[];PUNTOS=[];JORNADA_ACTIVA=0;
-  LOCAL_ACTUAL=null;PUNTO_ACTUAL=null;FD={};FB64={};ACCS=[];NOV=null;FIRMADO=false;
+  // No destruir el estado antes de confirmar: si el usuario cancela, la
+  // sesión debe quedar intacta. La limpieza ocurre solo dentro del callback.
   pfConfirm("¿Cambiar de usuario?", function() {
+    USUARIO_ACTUAL=null;TECNICO_NOMBRE="";JORNADAS=[];PUNTOS=[];JORNADA_ACTIVA=0;
+    LOCAL_ACTUAL=null;PUNTO_ACTUAL=null;FD={};FB64={};ACCS=[];NOV=null;FIRMADO=false;
     localStorage.removeItem("pf_usuario");
+    localStorage.removeItem("pf_token"); // limpiar token de sync al cerrar sesión
     // #019 FIX: limpiar interval de badge
     if (window._pfBadgeInterval) { clearInterval(window._pfBadgeInterval); window._pfBadgeInterval = null; }
-    USUARIO_ACTUAL = null; PUNTOS = []; HISTORIAL = []; HISTORIAL_DIA = [];
-    FIRMA_GUARDADA_B64 = null; NOV = null; FIRMADO = false;
+    HISTORIAL = []; HISTORIAL_DIA = [];
+    FIRMA_GUARDADA_B64 = null;
     ir("slogin");
   });
 }
@@ -1541,7 +1565,7 @@ window.addEventListener("load", function() {
 // ── TABS ADMIN ───────────────────────────────────────────────
 // Soporta tabs 1-12 (coordinator.js extiende los handlers)
 function admTab(n) {
-  var MAX_TABS = 16;
+  var MAX_TABS = 20;
   for (var i = 1; i <= MAX_TABS; i++) {
     var btn = document.getElementById("adm-t"+i);
     var pan = document.getElementById("adm-p"+i);
@@ -1550,7 +1574,7 @@ function admTab(n) {
   }
   if (n === 3) { renderCalendarioMes(); renderResumenJornadas(); }
   if (n === 2) { renderPizarra(); }
-  if (n === 13) { pfRenderPedidosAdmin(); }
+  if (n === 20) { pfRenderPedidosAdmin(); }
 }
 
 function pfRenderPendientesIncluir() {
@@ -2186,7 +2210,7 @@ function pfRenderTareas() {
     pendientes.forEach(function(t) {
       var col = prioColor[t.prioridad] || "var(--g4)";
       var _hoy = fechaHoy();
-      var _vencida = t.deadline && t.deadline < _hoy;
+      var _vencida = t.deadline && _pfFechaComp(t.deadline) < _pfFechaComp(_hoy);
       var _pronto  = t.deadline && t.deadline === _hoy;
       h += '<div style="margin:0 12px 8px;background:#fff;border-radius:14px;border:1.5px solid '+(_vencida?"var(--r)":col)+';padding:12px 14px">';
       h += '<div style="display:flex;align-items:flex-start;gap:8px">';
@@ -2508,7 +2532,7 @@ function pfResetPrecios() {
     // Recargar precios originales (hardcoded)
     var defaults = [
       {id:"abrazadera",p:1.50},{id:"manometro",p:2.80},{id:"cabezal_pqs",p:8.80},
-      {id:"manguera_pqs",p:4.80},{id:"corneta_co2_5",p:8.80},{id:"corneta_co2_10",p:0},
+      {id:"manguera_pqs",p:4.80},{id:"corneta_co2_5",p:8.80},{id:"corneta_co2_10",p:13.80},
       {id:"manguera_co2_10",p:13.80},{id:"empaque",p:1.50},{id:"soporte",p:5.00},
       {id:"piton",p:1.50},{id:"tubo_sifon",p:2.00},{id:"boquilla",p:1.00},
       {id:"valvula_pqs",p:3.00},{id:"pintura",p:2.00},{id:"letrero",p:3.50},{id:"soporte_pared",p:5.00}
@@ -2995,64 +3019,68 @@ function _pfRenderPedidosLista(el, pedidos) {
   el.innerHTML = h;
 }
 
+// Convierte un pedido del portal PyroShield al formato que entiende
+// pfInsertarPuntoRecorrido (insertador canónico compartido con proformas).
+function _pfPedidoAProf(ped) {
+  var items = [];
+  try { items = JSON.parse(String(ped.items_json || "[]")); } catch(e) {}
+  var itemsProf = items.map(function(it) {
+    return { cant: (it.cantidad||it.qty||1), nombre: (it.nombre||it.name||"") };
+  });
+  return {
+    cliente: {
+      razon: ped.nombre_dist || "Distribuidor PyroShield",
+      dir:   "Pedido PyroShield #" + (ped.id_pedido||"") + " ($" + parseFloat(ped.total||0).toFixed(2) + ")"
+    },
+    items: itemsProf
+  };
+}
+
+// Registra el pedido en la única clave de dedup compartida (técnico + admin)
+// y en el mapa nombre→id que permite cerrar el ciclo al marcar la entrega.
+function _pfRegistrarPedidoEnRecorrido(ped) {
+  var ids = [];
+  try { ids = JSON.parse(localStorage.getItem("pf_pedidos_en_recorrido") || "[]"); } catch(e) {}
+  if (ids.indexOf(ped.id_pedido) === -1) ids.push(ped.id_pedido);
+  localStorage.setItem("pf_pedidos_en_recorrido", JSON.stringify(ids));
+
+  var map = {};
+  try { map = JSON.parse(localStorage.getItem("pf_pedidos_map") || "{}"); } catch(e) {}
+  var norm = String(ped.nombre_dist || "Distribuidor PyroShield").trim().toUpperCase();
+  map[norm] = ped.id_pedido;
+  localStorage.setItem("pf_pedidos_map", JSON.stringify(map));
+}
+
 function pfAgregarPedidoAlRecorrido(pedidoId) {
   if (!_PF_PEDIDOS_PYRO) return;
   var ped = _PF_PEDIDOS_PYRO.filter(function(p) { return p.id_pedido === pedidoId; })[0];
   if (!ped) return;
-
-  var jornadas = [];
-  try { jornadas = JSON.parse(localStorage.getItem("pf_recorrido_jornadas") || "[]"); } catch(e) {}
-  if (!jornadas.length) {
-    jornadas = [{ jornada: "DIA", label: "Jornada del día", puntos: [] }];
+  if (typeof pfInsertarPuntoRecorrido !== "function") {
+    pfModal("No se pudo agregar: módulo de recorrido no disponible.");
+    return;
   }
 
-  // Determinar siguiente número de punto
-  var jornadaTarget = jornadas[0];
-  var maxNum = 0;
-  jornadaTarget.puntos.forEach(function(p) { if ((p.num||0) > maxNum) maxNum = p.num; });
-  var nextNum = maxNum + 1;
+  // Insertador canónico: mismo path y mismo dedup que las proformas
+  var res = pfInsertarPuntoRecorrido(_pfPedidoAProf(ped), "manana");
+  if (res && res.dup) { pfModal("Este pedido ya está en el recorrido."); return; }
 
-  var items = [];
-  try { items = JSON.parse(String(ped.items_json || "[]")); } catch(e) {}
-  var itemsStr = items.map(function(it) { return (it.nombre||it.name||"") + " ×" + (it.cantidad||it.qty||1); }).join(", ");
-  var mision = "Entregar pedido PyroShield #" + (ped.id_pedido || "") + " ($" + parseFloat(ped.total || 0).toFixed(2) + ")";
-  if (itemsStr) mision += "\nProductos: " + itemsStr;
+  _pfRegistrarPedidoEnRecorrido(ped);
 
-  var nuevoPunto = {
-    num: nextNum,
-    nombre: ped.nombre_dist || "Distribuidor PyroShield",
-    _nomPunto: ped.nombre_dist || "Distribuidor PyroShield",
-    locales: [{
-      id: Date.now(),
-      nombre: ped.nombre_dist || "Distribuidor PyroShield",
-      mision: mision,
-      tipo: detectarTipoTrabajo(mision),
-      done: false,
-      ext: []
-    }]
-  };
-  jornadaTarget.puntos.push(nuevoPunto);
-  localStorage.setItem("pf_recorrido_jornadas", JSON.stringify(jornadas));
+  // Actualizar estado en memoria del recorrido del técnico
+  try {
+    var jornadas = JSON.parse(localStorage.getItem("pf_recorrido_jornadas") || "[]");
+    JORNADAS = jornadas;
+    if (JORNADAS[JORNADA_ACTIVA]) {
+      PUNTOS = JORNADAS[JORNADA_ACTIVA].puntos;
+      _pfRecalcProgress();
+      _pfUpdateProgressUI();
+    }
+  } catch(e) {}
 
-  // Registrar el pedido como agregado
-  var ids = [];
-  try { ids = JSON.parse(localStorage.getItem("pf_pedidos_en_recorrido") || "[]"); } catch(e) {}
-  if (ids.indexOf(pedidoId) === -1) ids.push(pedidoId);
-  localStorage.setItem("pf_pedidos_en_recorrido", JSON.stringify(ids));
-
-  // Actualizar estado en memoria
-  JORNADAS = jornadas;
-  if (JORNADAS[JORNADA_ACTIVA]) {
-    PUNTOS = JORNADAS[JORNADA_ACTIVA].puntos;
-    _pfRecalcProgress();
-    _pfUpdateProgressUI();
-  }
-
-  // Refrescar lista de pedidos
   var el = document.getElementById("spedidospyro-lista");
   if (el && _PF_PEDIDOS_PYRO) _pfRenderPedidosLista(el, _PF_PEDIDOS_PYRO);
 
-  pfModal("✅ Pedido agregado al recorrido como Punto " + nextNum + ".");
+  pfModal("✅ Pedido agregado al recorrido" + (res && res.n ? " como Punto " + res.n + "." : "."));
 }
 
 // ════════════════════════════════════════════════════════════
@@ -3094,7 +3122,7 @@ function pfRenderPedidosAdmin() {
 function _pfRenderPedidosAdminLista(el, pedidos) {
   var insertados = {};
   try {
-    var ids = JSON.parse(localStorage.getItem("pf_pedidos_en_recorrido_admin") || "[]");
+    var ids = JSON.parse(localStorage.getItem("pf_pedidos_en_recorrido") || "[]");
     ids.forEach(function(id) { insertados[id] = true; });
   } catch(e) {}
   function esc(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -3128,6 +3156,12 @@ function pfInsertarPedidoEnRecorrido(pedidoId) {
   if (!ped) return;
   var txt = document.getElementById("admin-txt");
   if (!txt) return;
+
+  // Dedup compartido: si ya está en el recorrido, no duplicar
+  var ids = [];
+  try { ids = JSON.parse(localStorage.getItem("pf_pedidos_en_recorrido") || "[]"); } catch(e) {}
+  if (ids.indexOf(pedidoId) !== -1) { pfModal("Este pedido ya está en el recorrido."); return; }
+
   var actual = txt.value;
   var matches = actual.match(/Punto\s+(\d+)/gi) || [];
   var maxPunto = 0;
@@ -3147,10 +3181,10 @@ function pfInsertarPedidoEnRecorrido(pedidoId) {
   txt.focus();
   txt.setSelectionRange(txt.value.length, txt.value.length);
   previsualizarRecorrido();
-  var ids = [];
-  try { ids = JSON.parse(localStorage.getItem("pf_pedidos_en_recorrido_admin") || "[]"); } catch(e) {}
-  if (ids.indexOf(pedidoId) === -1) ids.push(pedidoId);
-  localStorage.setItem("pf_pedidos_en_recorrido_admin", JSON.stringify(ids));
+
+  // Clave de dedup compartida con la vista del técnico + mapa para cerrar entrega
+  _pfRegistrarPedidoEnRecorrido(ped);
+
   var el = document.getElementById("adm-pedidos-lista");
   if (el && _PF_PEDIDOS_PYRO) _pfRenderPedidosAdminLista(el, _PF_PEDIDOS_PYRO);
   admTab(1);
