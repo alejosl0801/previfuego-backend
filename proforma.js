@@ -480,7 +480,6 @@ function pfRenderTabProformas() {
   h += '<div style="padding:12px 12px 0">';
   h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
   h += '<div style="font-size:16px;font-weight:700">Proformas Pyroshield</div>';
-  h += '<button onclick="pfAbrirNuevaProforma()" style="padding:8px 16px;border-radius:10px;border:none;background:var(--r);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ Nueva</button>';
   h += '</div>';
 
   // Filtros por estado
@@ -509,7 +508,7 @@ function pfRenderTabProformas() {
 
   if (lista.length === 0) {
     h += '<div style="padding:40px 16px;text-align:center;color:var(--g3);font-size:14px">';
-    h += filtro === "todas" ? 'No hay proformas aún.<br><br><button onclick="pfAbrirNuevaProforma()" style="padding:10px 20px;border-radius:12px;border:none;background:var(--r);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">+ Crear primera proforma</button>' : "No hay proformas en este estado.";
+    h += filtro === "todas" ? 'Las proformas se generan desde el portal PyroShield.<br>Cuando un distribuidor crea un pedido, aparecerá aquí.' : "No hay proformas en este estado.";
     h += '</div>';
   } else {
     h += '<div style="padding:0 12px 80px">';
