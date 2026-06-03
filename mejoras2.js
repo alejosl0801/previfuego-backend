@@ -308,7 +308,7 @@ function pfRenderSemaforo(modo) {
   h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 12px 12px">';
   h += '<div style="background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:12px 8px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--r)">'+vencidos+'</div><div style="font-size:11px;color:var(--g3)">Vencidos</div></div>';
   h += '<div style="background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:12px 8px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--n)">'+proximos+'</div><div style="font-size:11px;color:var(--g3)">Por vencer</div></div>';
-  h += '<div style="background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:12px 8px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--g4)">'+locales.length+'</div><div style="font-size:11px;color:var(--g3)">Total</div></div>';
+  h += '<div style="background:#fff;border-radius:12px;border:1.5px solid var(--bo);padding:12px 8px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--g4)">'+items.length+'</div><div style="font-size:11px;color:var(--g3)">Total</div></div>';
   h += '</div>';
 
   // Aplicar filtro activo

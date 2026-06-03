@@ -493,7 +493,7 @@ function previsualizarRecorrido() {
   var puntos = parsearRecorrido(txt);
   if (puntos.length === 0) { prev.innerHTML = '<div class="empty">No se detectaron puntos. Verifica el formato.</div>'; return; }
 
-  var tipoLabel = { mantenimiento:"🔧 Mantenimiento", retiro:"📦 Retiro", entrega:"🚚 Entrega", instalacion:"🔩 Instalación", cobro:"💰 Cobro", otro:"📋 Otro" };
+  var tipoLabel = { mantenimiento:"🔧 Mantenimiento", retiro:"📦 Retiro", entrega:"🚚 Entrega", instalacion:"🔩 Instalación", cobro:"💰 Cobro", distribuidor:"🏢 Distribuidor", otro:"📋 Otro" };
   var h = '<div class="slbl">'+puntos.length+' punto(s) detectado(s)</div>';
   for (var i = 0; i < puntos.length; i++) {
     var p = puntos[i];
@@ -762,9 +762,9 @@ function actualizarItemLista(pi, li) {
   _pfUpdateProgressUI();
 }
 
-var TIPO_ICON = { mantenimiento:"🔧", retiro:"📦", entrega:"🚚", instalacion:"🔩", cobro:"💰", otro:"📋" };
-var TIPO_COLOR = { mantenimiento:"var(--a)", retiro:"var(--n)", entrega:"var(--v)", instalacion:"var(--r)", cobro:"#888", otro:"var(--g4)" };
-var TIPO_BG    = { mantenimiento:"var(--ac)", retiro:"var(--nc)", entrega:"var(--vc)", instalacion:"var(--rc)", cobro:"var(--g1)", otro:"var(--g1)" };
+var TIPO_ICON = { mantenimiento:"🔧", retiro:"📦", entrega:"🚚", instalacion:"🔩", cobro:"💰", distribuidor:"🏢", otro:"📋" };
+var TIPO_COLOR = { mantenimiento:"var(--a)", retiro:"var(--n)", entrega:"var(--v)", instalacion:"var(--r)", cobro:"#888", distribuidor:"var(--n)", otro:"var(--g4)" };
+var TIPO_BG    = { mantenimiento:"var(--ac)", retiro:"var(--nc)", entrega:"var(--vc)", instalacion:"var(--rc)", cobro:"var(--g1)", distribuidor:"var(--nc)", otro:"var(--g1)" };
 
 function pfFiltrarRecorrido(q) {
   // Re-renderizar con el filtro activo
@@ -1542,7 +1542,8 @@ function cerrarSesion() {
     USUARIO_ACTUAL=null;TECNICO_NOMBRE="";JORNADAS=[];PUNTOS=[];JORNADA_ACTIVA=0;
     LOCAL_ACTUAL=null;PUNTO_ACTUAL=null;FD={};FB64={};ACCS=[];NOV=null;FIRMADO=false;
     localStorage.removeItem("pf_usuario");
-    localStorage.removeItem("pf_token"); // limpiar token de sync al cerrar sesión
+    localStorage.removeItem("pf_token");
+    localStorage.removeItem("pf_dispositivo");
     // #019 FIX: limpiar interval de badge
     if (window._pfBadgeInterval) { clearInterval(window._pfBadgeInterval); window._pfBadgeInterval = null; }
     HISTORIAL = []; HISTORIAL_DIA = [];
@@ -1698,7 +1699,6 @@ function renderResumenJornadas() {
 //  NAVEGACIÓN A GOOGLE MAPS
 // ════════════════════════════════════════════════════════════
 function abrirMaps(nombre, direccion) {
-  var query = encodeURIComponent((nombre || "") + " " + (direccion || "") + " Guayaquil Ecuador");
   var ciudad = localStorage.getItem("pf_ciudad") || "Guayaquil Ecuador"; // #59 FIX: ciudad configurable
   window.open("https://maps.google.com/maps?q=" + encodeURIComponent((nombre||"")+" "+(direccion||"")+" "+ciudad), "_blank");
 }

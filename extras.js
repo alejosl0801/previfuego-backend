@@ -59,12 +59,35 @@ function pfAgregarMarcaAgua(canvas, ctx) {
 // Reemplazar fotoOk para agregar marca de agua en compresión
 window.addEventListener("load", function() {
   var _fotoOkOrig = window.fotoOk;
-  // #60 FIX: si app.js no cargó aún, no parchear
+  // #60 FIX: si app.js no cargó aún, reintentar con parche completo
   if (typeof _fotoOkOrig !== "function") {
     console.warn("extras.js: fotoOk no encontrada en app.js — carga diferida");
     setTimeout(function(){
       var _fo2 = window.fotoOk;
-      if (typeof _fo2 === "function") window.fotoOk = function(n,input){ _fo2(n,input); };
+      if (typeof _fo2 === "function") {
+        window.fotoOk = function(n, input) {
+          if (!input.files || !input.files[0]) return;
+          var file = input.files[0];
+          var url = URL.createObjectURL(file);
+          _fo2.call(this, n, input);
+          // Aplicar marca de agua al blob ya cargado
+          (function(idx, src) {
+            var img = new Image();
+            img.onload = function() {
+              var cvs = document.createElement("canvas");
+              var MAX = 900, w = img.width, h = img.height;
+              if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+              if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+              cvs.width = w; cvs.height = h;
+              var c = cvs.getContext("2d");
+              c.drawImage(img, 0, 0, w, h);
+              pfAgregarMarcaAgua(cvs, c);
+              FB64[idx] = cvs.toDataURL("image/jpeg", 0.70);
+            };
+            img.src = src;
+          })(n, url);
+        };
+      }
     }, 500);
     return;
   }
@@ -218,7 +241,8 @@ function pfHacerBackup() {
     "pf_certCount", "pyro_ordenes", "pyro_oe_nro", "pf_usuario",
     "pf_clientes_custom", "pf_correos_clientes", "pf_facturas_emitidas", "pf_precios_accs", "pf_iva",
     "pf_taller", "pf_tareas", "pf_crm", "pf_proformas", "pf_entregas_pendientes", "pf_prof_count", // #125 FIX: incluir taller, tareas, CRM y proformas en backup
-    "pf_productos_extra", "pf_pedidos_en_recorrido", "pf_pedidos_map" // catálogo extra + tracking de pedidos PyroShield
+    "pf_productos_extra", "pf_pedidos_en_recorrido", "pf_pedidos_map", // catálogo extra + tracking de pedidos PyroShield
+    "pf_pizarra_hist", "pf_nota_num", "pf_nota_validez", "pf_nota_pago", "pf_ciudad" // configuración y contadores
   ];
   var backup = { version: "1.0", fecha: new Date().toISOString(), datos: {} };
   claves.forEach(function(k) {

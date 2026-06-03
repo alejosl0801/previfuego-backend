@@ -275,15 +275,15 @@ window.addEventListener("load", function() {
     admScr.appendChild(panel);
 
     window.PF_TAB_HANDLERS[14] = function() { window.pfRenderHistorialFacturas(); };
+  })();
 
-  // Tab 15 = Proformas (proforma.js)
+  // Tab 15 = Proformas (proforma.js) — fuera del IIFE de Tab 14
   window.PF_TAB_HANDLERS[15] = function() {
     if (typeof pfRenderTabProformas === "function") pfRenderTabProformas();
   };
 
-  // #MEJORA: flechas de scroll para la barra de tabs admin
-  if (!window._pfFlechasInj) { window._pfFlechasInj=true; pfInyectarFlechasTabs(); }
-  })();
+  // Flechas de scroll para la barra de tabs admin
+  if (!window._pfFlechasInj) { window._pfFlechasInj = true; pfInyectarFlechasTabs(); }
 
   // Función guardar api_key Azur (llama a Code.gs)
   window.pfGuardarAzurKey = function() {

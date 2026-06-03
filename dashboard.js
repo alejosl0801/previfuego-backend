@@ -58,8 +58,9 @@ function pfCalcDashboard() {
     });
   });
 
-  // Certificados hoy
-  var certsHoy  = histHoy.filter(function(h){ return h.tipo === "cert"; }).length;
+  // Certificados hoy — tipo "cert" nunca se guarda; los certificados KFC quedan como
+  // entradas con url (PDF generado). Sin_cert y no_disponible no son certs.
+  var certsHoy  = histHoy.filter(function(h){ return h.url && h.tipo !== "sin_cert" && h.tipo !== "no_disponible" && h.tipo !== "retiro"; }).length;
   var visitasHoy = histHoy.length;
 
   // Tiempo promedio hoy (segundos)
