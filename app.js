@@ -6,6 +6,8 @@
 var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwiIAupZxy2T33EiDHbwkLBHTw0Q2Uv98r8pc9L351b6lXwY_mOD6kI2tvfzqdIUdxG/exec";
 var VERSION    = "3.6";
 
+function esc(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
 // ── TOKEN DE SINCRONIZACIÓN ──────────────────────────────────
 // Se asegura de que el dispositivo siempre tenga el token correcto para
 // autenticar contra el servidor. Sin esto, la sincronización de fichas falla
