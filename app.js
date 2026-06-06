@@ -11,10 +11,27 @@ var VERSION    = "3.6";
 // autenticar contra el servidor. Sin esto, la sincronización de fichas falla
 // silenciosamente si el servidor tiene pf_token configurado.
 var PF_SYNC_TOKEN = "previfuego2026";
+
+// Escapa caracteres HTML para prevenir XSS en innerHTML
+function esc(s) {
+  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
 (function(){
   try {
     if (localStorage.getItem("pf_token") !== PF_SYNC_TOKEN) {
       localStorage.setItem("pf_token", PF_SYNC_TOKEN);
+    }
+  } catch(e){}
+})();
+
+// #23 FIX: migrar IVA 12% antiguo a 15% actual al arrancar
+(function(){
+  try {
+    var ivaGuardado = localStorage.getItem("pf_iva");
+    if (ivaGuardado === "0.12") {
+      localStorage.setItem("pf_iva", "0.15");
+      console.warn("IVA migrado automáticamente de 12% a 15%");
     }
   } catch(e){}
 })();
@@ -200,8 +217,11 @@ function seleccionarUsuario(key) {
       count = correos ? Object.keys(JSON.parse(correos)).length : 0;
     } catch(e) { count = 0; } // dato corrupto → tratar como vacío y re-descargar
     if (count < 50) { // si tiene menos de 50 correos, descargar del servidor
+      var _correoCtrl = new AbortController();
+      setTimeout(function(){ _correoCtrl.abort(); }, 15000);
       fetch(SCRIPT_URL, {
         method: "POST",
+        signal: _correoCtrl.signal,
         body: JSON.stringify({ accion: "get_kv", token: localStorage.getItem("pf_token")||"", clave: "pf_correos_clientes" })
       }).then(function(r){ return r.json(); }).then(function(d){
         if (d.ok && d.valor) {
@@ -485,9 +505,9 @@ function previsualizarRecorrido() {
       var loc = p.locales[j];
       h += '<div style="padding:10px 14px;border-bottom:1px solid var(--bo)">';
       h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">';
-      h += '<div style="font-size:14px;font-weight:700;color:var(--ng)">'+loc.nombre+'</div>';
+      h += '<div style="font-size:14px;font-weight:700;color:var(--ng)">'+esc(loc.nombre)+'</div>';
       h += '<div style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--ac);color:var(--a)">'+(tipoLabel[loc.tipo]||loc.tipo)+'</div></div>';
-      if (loc.mision) h += '<div style="font-size:12px;color:var(--g4);line-height:1.5;white-space:pre-wrap">'+loc.mision+'</div>';
+      if (loc.mision) h += '<div style="font-size:12px;color:var(--g4);line-height:1.5;white-space:pre-wrap">'+esc(loc.mision)+'</div>';
       h += '</div>';
     }
     h += '</div>';
@@ -737,8 +757,8 @@ function actualizarItemLista(pi, li) {
   el.querySelector(".pnm").textContent = loc.nombre;
   el.querySelector(".psb").textContent = loc.done ? "Completado ✓" : PUNTOS[pi].nombre;
   el.querySelector(".pch").textContent = loc.done ? "✓" : "›";
-  // #CRÍTICO FIX O(1): actualizar solo el contador, no recorrer todo
-  if (loc.done) _PF_PROGRESS.comp = Math.min(_PF_PROGRESS.comp + 1, _PF_PROGRESS.total);
+  // Recalcular desde el estado real para evitar doble conteo (#24)
+  _pfRecalcProgress();
   _pfUpdateProgressUI();
 }
 
@@ -845,12 +865,12 @@ function renderPuntos() {
       h += '<div class="cd'+(loc.done?" dn":"")+'"'+_cl+' id="loc_item_'+i+'_'+j+'">';
       h += '<div class="pr">';
       h += '<div class="pn" style="'+(loc.done?'background:var(--vc);color:var(--v)':'background:'+bg+';color:'+col)+'">'+ico+'</div>';
-      h += '<div class="pi"><div class="pnm">'+loc.nombre+'</div>';
-      h += '<div class="psb">'+(loc.done?"Completado ✓":p.nombre)+'</div>'+_co2Badge+'</div>';
+      h += '<div class="pi"><div class="pnm">'+esc(loc.nombre)+'</div>';
+      h += '<div class="psb">'+(loc.done?"Completado ✓":esc(p.nombre))+'</div>'+_co2Badge+'</div>';
       h += '<div class="pch">'+(loc.done?"✓":"›")+'</div></div>';
       if (loc.mision && !loc.done) {
         var misionCorta = loc.mision.length > 80 ? loc.mision.substring(0,80)+"..." : loc.mision;
-        h += '<div style="padding:0 14px 10px;font-size:12px;color:var(--g4);line-height:1.5">'+misionCorta+'</div>';
+        h += '<div style="padding:0 14px 10px;font-size:12px;color:var(--g4);line-height:1.5">'+esc(misionCorta)+'</div>';
       }
       h += '</div>';
     }
@@ -2327,8 +2347,11 @@ function pfSincronizarFichas(callback) {
   localStorage.setItem("pf_dispositivo", dispositivo);
 
   // 1. Subir fichas locales
+  var _fichasCtrl = new AbortController();
+  setTimeout(function(){ _fichasCtrl.abort(); }, 20000);
   fetch(SCRIPT_URL, {
     method:  "POST",
+    signal:  _fichasCtrl.signal,
     body: JSON.stringify({
       accion:      "guardar_fichas",
       fichas:      fichasLocales,
@@ -2339,8 +2362,11 @@ function pfSincronizarFichas(callback) {
   .then(function(r){ return r.json(); })
   .then(function() {
     // 2. Bajar fichas merged de todos los dispositivos
+    var _fichasCtrl2 = new AbortController();
+    setTimeout(function(){ _fichasCtrl2.abort(); }, 20000);
     return fetch(SCRIPT_URL, {
       method:  "POST",
+      signal:  _fichasCtrl2.signal,
       body: JSON.stringify({ accion: "get_fichas", dispositivo: dispositivo, token: localStorage.getItem("pf_token") || "" })
     });
   })

@@ -67,9 +67,10 @@ self.addEventListener('fetch', function(event) {
 
   // Assets: cache-first
   // #112 FIX: stale-while-revalidate para JS/CSS — sirve caché y actualiza en background
+  // #43 FIX: ignoreSearch:true para que los scripts versionados (?v=N) hagan match en caché
   var isJSorCSS = /\.(js|css)(\?.*)?$/.test(url);
   event.respondWith(
-    caches.match(event.request).then(function(cached) {
+    caches.match(event.request, { ignoreSearch: true }).then(function(cached) {
       var fetchPromise = fetch(event.request).then(function(response) {
         if (response && response.status === 200) {
           var clone = response.clone();
